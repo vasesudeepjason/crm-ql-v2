@@ -8,7 +8,7 @@
   <nav class="card subnav" aria-label="Settings sections">
     <a class="ni {% if section == 'profile' %}on{% endif %}" href="{% url 'accounts:profile' %}"><svg class="ic"><use href="#i-users"/></svg><span>Profile &amp; security</span></a>
     {% if perms_set|can:"users.manage" %}<a class="ni {% if section == 'users' %}on{% endif %}" href="{% url 'accounts:users' %}"><svg class="ic"><use href="#i-ok"/></svg><span>Users &amp; roles</span></a>{% endif %}
-    {% if perms_set|can:"settings.manage" %}<a class="ni" href="{% url 'dashboard:soon' 'setup' %}"><svg class="ic"><use href="#i-set"/></svg><span>Workspace</span></a>{% endif %}
+    {% if perms_set|can:"settings.manage" %}<a class="ni {% if section == 'workspace' %}on{% endif %}" href="{% url 'tenants:workspace' %}"><svg class="ic"><use href="#i-set"/></svg><span>Workspace</span></a>{% endif %}
     {% if perms_set|can:"data.import" %}<a class="ni {% if section == 'imports' %}on{% endif %}" href="{% url 'imports:index' %}"><svg class="ic"><use href="#i-dl"/></svg><span>Import wizard</span></a>{% endif %}
     {% if perms_set|can:"audit.view" %}<a class="ni {% if section == 'audit' %}on{% endif %}" href="{% url 'core:audit' %}"><svg class="ic"><use href="#i-file"/></svg><span>Audit log</span></a>{% endif %}
   </nav>

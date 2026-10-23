@@ -69,3 +69,5 @@
 .seg label.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,20,31,.12)}
 .seg label{height:28px;padding:0 12px;border-radius:var(--r-pill);font:500 12.5px var(--font);color:var(--ink-2);display:inline-flex;align-items:center;white-space:nowrap}
 input[type=file]{font:400 13px var(--font);padding:9px 0}
+.banner.support{background:var(--brand-100);border:1px solid var(--brand-200)}
+.banner.support form{margin-left:auto}

@@ -21,9 +21,9 @@
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
     <a class="ni" href="{% url 'dashboard:soon' 'tasks' %}" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
     {% if perms_set|can:"reports.view" %}<a class="ni" href="{% url 'dashboard:soon' 'reports' %}" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>{% endif %}
-    <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup,audit' or request.resolver_match.namespace == 'imports' %}open{% endif %}">
+    <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup,audit,workspace' or request.resolver_match.namespace == 'imports' %}open{% endif %}">
       <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>
-      <div class="sub"><a class="{% active 'accounts:profile' 'accounts:totp_setup' %}" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="{% active 'accounts:users' %}" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}{% if perms_set|can:"data.import" %}<a class="{% active 'imports' %}" href="{% url 'imports:index' %}">Import wizard</a>{% endif %}{% if perms_set|can:"audit.view" %}<a class="{% active 'core:audit' %}" href="{% url 'core:audit' %}">Audit log</a>{% endif %}</div>
+      <div class="sub"><a class="{% active 'accounts:profile' 'accounts:totp_setup' %}" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="{% active 'accounts:users' %}" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}{% if perms_set|can:"settings.manage" %}<a class="{% active 'tenants:workspace' %}" href="{% url 'tenants:workspace' %}">Workspace</a>{% endif %}{% if perms_set|can:"data.import" %}<a class="{% active 'imports' %}" href="{% url 'imports:index' %}">Import wizard</a>{% endif %}{% if perms_set|can:"audit.view" %}<a class="{% active 'core:audit' %}" href="{% url 'core:audit' %}">Audit log</a>{% endif %}</div>
     </div>
   </nav>
   <div class="sb-foot">

@@ -17,6 +17,7 @@
   {% include "partials/sidebar.html" %}
   <div class="content">
     {% include "partials/topbar.html" %}
+    {% if request.support_session %}<div class="banner support"><svg class="ic"><use href="#i-lock"/></svg><span><b>Support session</b> in {{ tenant.name }} until {{ request.support_session.expires_at|date:"H:i" }} · {{ request.support_session.reason }} · every action is logged for this customer's admins</span><form method="post" action="{% url 'tenants:support_leave' %}">{% csrf_token %}<button class="btn btn-sm btn-dark" type="submit">Leave workspace</button></form></div>{% endif %}
     {% if messages %}<div class="flash">{% for m in messages %}<div class="flash-item {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
     {% block content %}{% endblock %}
   </div>

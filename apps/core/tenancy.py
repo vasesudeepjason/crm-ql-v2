@@ -22,6 +22,7 @@ from django.db import connection
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 
 _current_tenant_id: contextvars.ContextVar[int | None] = contextvars.ContextVar("tenant_id", default=None)
 _bypass: contextvars.ContextVar[bool] = contextvars.ContextVar("rls_bypass", default=False)
@@ -76,18 +77,25 @@ class TenantMiddleware:
     def __call__(self, request):
         request.tenant = None
         request.membership = None
+        request.support_session = None
         user = getattr(request, "user", None)
         if user is not None and user.is_authenticated:
-            membership = user.active_membership()
-            if membership is not None:
-                request.tenant = membership.tenant
-                request.membership = membership
+            if user.is_staff:
+                self._attach_support_session(request, user)
+            if request.tenant is None:
+                membership = user.active_membership()
+                if membership is not None:
+                    request.tenant = membership.tenant
+                    request.membership = membership
         exempt = request.path.startswith(self.EXEMPT_PREFIXES)
         if request.tenant is None and user is not None and user.is_authenticated and not exempt:
             if user.is_staff:
                 return redirect("/platform/")
             return HttpResponseForbidden("Your account is not a member of any workspace. Ask your admin for an invite.")
 
+        from django.conf import settings as dj_settings
+
+        timezone.activate((request.tenant.timezone if request.tenant else "") or dj_settings.DEFAULT_TENANT_TIMEZONE)
         token = _current_tenant_id.set(request.tenant.id if request.tenant else None)
         btoken = _bypass.set(bool(user and user.is_authenticated and user.is_staff and request.path.startswith("/platform/")))
         try:
@@ -97,3 +105,29 @@ class TenantMiddleware:
             _current_tenant_id.reset(token)
             _bypass.reset(btoken)
             _apply_to_connection()
+            timezone.deactivate()
+
+    @staticmethod
+    def _attach_support_session(request, user):
+        """A staff member with an active support session acts as Admin inside that tenant."""
+        sid = request.session.get("support_session_id")
+        if not sid:
+            return
+        from apps.tenants.models import SupportSession
+        from apps.tenants.support import SupportMembership
+
+        ss = SupportSession.objects.select_related("tenant", "tenant__plan", "staff").filter(pk=sid, staff=user).first()
+        if ss is None:
+            request.session.pop("support_session_id", None)
+            return
+        if not ss.is_active:
+            if ss.ended_at is None:
+                ss.end(reason="expired")
+                from apps.core.models import AuditLog
+
+                AuditLog.objects.create(tenant=ss.tenant, actor=user, action="support.expire", model="SupportSession", object_id=str(ss.pk))
+            request.session.pop("support_session_id", None)
+            return
+        request.tenant = ss.tenant
+        request.membership = SupportMembership(ss)
+        request.support_session = ss

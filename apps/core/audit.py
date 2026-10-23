@@ -11,6 +11,9 @@ def snapshot(obj, fields=None) -> dict:
 
 
 def audit(request, action: str, obj=None, *, before=None, after=None, note: str = ""):
+    ss = getattr(request, "support_session", None)
+    if ss is not None:
+        note = f"support session #{ss.pk}" + (f" · {note}" if note else "")
     AuditLog.objects.create(
         actor=request.user if request is not None and request.user.is_authenticated else None,
         action=action,

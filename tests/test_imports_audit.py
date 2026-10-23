@@ -1,10 +1,12 @@
 import io
+import zoneinfo
 from datetime import date
 
 import openpyxl
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.core.models import AuditLog
 from apps.core.tenancy import rls_bypass, tenant_context
@@ -94,7 +96,7 @@ def test_companies_dry_run_commit_and_rollback(two_tenants, login, client):
     with tenant_context(two_tenants["a"].id):
         c = Company.objects.get(name="Sri Lakshmi Traders")
         assert c.owner == two_tenants["tc_a"] and c.gstin == "27AAPFU0939F1ZV" and c.external_id == "C-1" and c.source_system == "generic"
-        assert c.created_at.date() == date(2025, 4, 1)
+        assert timezone.localtime(c.created_at, zoneinfo.ZoneInfo("Asia/Kolkata")).date() == date(2025, 4, 1)  # midnight in the tenant's zone
         assert Contact.objects.get(company=c).name == "Ramesh Rao"
         d = Company.objects.get(name="Deccan Infra")
         assert d.owner == two_tenants["owner_a"]  # unknown owner → importer

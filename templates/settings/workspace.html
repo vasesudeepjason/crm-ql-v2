@@ -1,0 +1,48 @@
+{% extends "settings/_layout.html" %}{% load humanize ql %}
+{% block title %}Workspace{% endblock %}
+{% block settings %}
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Workspace</h2><p>Details shown on invoices and used for dates and times.</p></div><span class="pill pill-neutral">{{ t.plan.name|default:"No" }} plan · {{ counts.users }} / {{ t.user_limit }} users</span></div>
+  <form method="post" class="form-grid" style="max-width:520px">{% csrf_token %}
+    <label>Workspace name<span class="input"><input name="name" value="{{ t.name }}" required></span></label>
+    <label>Timezone<span class="input select"><select name="timezone">{% for z in timezones %}<option value="{{ z }}" {% if z == t.timezone %}selected{% endif %}>{{ z }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>GSTIN<span class="input"><input name="gstin" value="{{ t.gstin }}" placeholder="15-character GSTIN" maxlength="15" style="font-family:var(--mono)"></span></label>
+    <label>Registered address<span class="input" style="height:auto"><textarea name="address" rows="3" style="border:0;outline:0;background:transparent;font:inherit;width:100%;padding:10px 0;resize:vertical">{{ t.address }}</textarea></span></label>
+    <div><button class="btn btn-dark" type="submit">Save details</button></div>
+  </form>
+</div>
+
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Support access</h2><p>QuantumLoop staff can only enter this workspace through a time-limited session. You see every one here and can end it.</p></div>{% if active_sessions %}<span class="pill pill-warning">{{ active_sessions|length }} active now</span>{% else %}<span class="pill pill-success">No one inside</span>{% endif %}</div>
+  {% if sessions %}
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Who</th><th>Reason</th><th class="hide-m">Started</th><th>Ends</th><th class="r">Status</th></tr></thead>
+    <tbody>{% for s in sessions %}
+    <tr><td>{{ s.staff.name }}</td><td style="white-space:normal;max-width:320px">{{ s.reason }}</td><td class="hide-m muted">{{ s.started_at|date:"j M, H:i" }}</td><td class="muted">{{ s.ended_at|default:s.expires_at|date:"j M, H:i" }}</td>
+      <td class="r">{% if s.is_active %}<form method="post" action="{% url 'tenants:revoke_support' s.id %}" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-danger">End access</button></form>{% elif s.end_reason == 'revoked' %}<span class="pill pill-danger">Ended by {{ s.ended_by.first_name }}</span>{% elif s.end_reason == 'expired' %}<span class="pill pill-neutral">Expired</span>{% else %}<span class="pill pill-neutral">Ended</span>{% endif %}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">No support sessions have ever been opened on this workspace.</p>{% endif %}
+  <p class="muted" style="font-size:12.5px;margin-top:10px">Every action taken inside a support session is tagged in the <a href="{% url 'core:audit' %}?group=support">audit log</a>.</p>
+</div>
+
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Your data</h2><p>You are the data fiduciary; QuantumLoop is your processor. Take everything with you at any time.</p></div></div>
+  <div class="strip" style="padding:0 0 16px;grid-template-columns:repeat(5,1fr)">
+    <div>Companies<b>{{ counts.companies|intcomma }}</b></div><div>Contacts<b>{{ counts.contacts|intcomma }}</b></div><div>Leads<b>{{ counts.leads|intcomma }}</b></div><div>Activities<b>{{ counts.activities|intcomma }}</b></div><div>Approvals<b>{{ counts.approvals|intcomma }}</b></div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    {% if perms_set|can:"data.export" %}<form method="post" action="{% url 'tenants:export_all' %}">{% csrf_token %}<button class="btn btn-secondary"><svg class="ic"><use href="#i-dl"/></svg>Export all data (.zip of CSVs)</button></form>{% endif %}
+    {% if perms_set|can:"billing.manage" %}
+    <div x-data="{open:false}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-outline" x-show="!open" @click="open=true" style="color:var(--red-700)">Request workspace deletion…</button>
+      <form method="post" action="{% url 'tenants:request_deletion' %}" x-show="open" x-cloak style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" onsubmit="return confirm('Request deletion of this whole workspace? QuantumLoop will confirm with you before anything is removed.')">{% csrf_token %}
+        <label class="input" style="width:280px"><input name="reason" placeholder="Why? (optional)"></label>
+        <button class="btn btn-danger">Send request</button><button type="button" class="btn btn-neutral" @click="open=false">Cancel</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  <p class="muted" style="font-size:12.5px;margin-top:12px">Deletion is never instant: we confirm with an Owner, keep the export available, then remove the data and tell you when it is done.</p>
+</div>
+{% endblock %}

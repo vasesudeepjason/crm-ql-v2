@@ -1,0 +1,60 @@
+{% load static ql %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support console · QuantumLoop platform</title>
+<link rel="icon" href="{% static 'img/logo-mark.png' %}">
+<link rel="stylesheet" href="{% static 'css/quantum.css' %}">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.8/cdn.min.js"></script>
+<style>.wrap{max-width:1100px;margin:0 auto;padding:24px 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:20px}.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}</style>
+</head>
+<body>
+{% include "partials/icons.svg" %}
+<div class="wrap">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:14px"><img src="{% static 'img/logo-navy.webp' %}" alt="Quantum" style="width:110px"><span class="pill pill-brand">Platform</span></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="muted" style="font-size:13px">{{ user.email }}</span><a class="btn btn-sm btn-outline" href="/platform/">Django admin</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn-sm btn-neutral">Log out</button></form></div>
+  </div>
+  {% if messages %}<div class="flash">{% for m in messages %}<div class="flash-item {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+
+  {% if current %}
+  <div class="banner"><svg class="ic"><use href="#i-lock"/></svg><span>You are inside <b>{{ current.tenant.name }}</b> until {{ current.expires_at|date:"H:i" }} · {{ current.reason }}</span><a class="btn btn-sm btn-dark" href="{% url 'dashboard:home' %}">Open workspace</a><form method="post" action="{% url 'tenants:support_leave' %}">{% csrf_token %}<button class="btn btn-sm btn-neutral">Leave</button></form></div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-h"><div><h2>Enter a workspace</h2><p>Support sessions are time-limited and logged. The customer's admins see who entered, why, and everything done inside.</p></div>
+      <form method="get" class="input grey" style="width:260px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search tenants"></form></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Tenant</th><th>Plan</th><th>Status</th><th class="r">Users</th><th class="r">Enter</th></tr></thead>
+      <tbody>{% for t in tenants %}
+      <tr x-data="{open:false}">
+        <td><div class="name"><b>{{ t.name }}</b><span class="sub">{{ t.slug }} · #{{ t.id }}</span></div></td>
+        <td>{{ t.plan.name|default:"—" }}</td>
+        <td>{% if t.status == 'active' %}<span class="pill pill-success">Active</span>{% elif t.status == 'pilot' %}<span class="pill pill-info">Pilot</span>{% else %}<span class="pill pill-neutral">{{ t.get_status_display }}</span>{% endif %}</td>
+        <td class="r">{{ t.members }}</td>
+        <td class="r">
+          <button class="btn btn-sm btn-outline" x-show="!open" @click="open=true">Start session</button>
+          <form method="post" action="{% url 'tenants:support_start' t.id %}" x-show="open" x-cloak style="display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap">{% csrf_token %}
+            <label class="input" style="height:34px;width:260px"><input name="reason" placeholder="Ticket # or reason (shown to customer)" required minlength="5"></label>
+            <label class="input select" style="height:34px;width:110px"><select name="minutes"><option value="30">30 min</option><option value="60" selected>60 min</option><option value="120">2 hrs</option><option value="240">4 hrs</option></select><svg class="ic chev"><use href="#i-down"/></svg></label>
+            <button class="btn btn-sm btn-dark">Enter</button><button type="button" class="btn btn-sm btn-neutral" @click="open=false">Cancel</button>
+          </form>
+        </td>
+      </tr>{% empty %}<tr><td colspan="5" class="muted" style="padding:24px 20px">No tenants match.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><div><h2>Sessions</h2><p>{{ active|length }} active now · last 30</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Staff</th><th>Tenant</th><th>Reason</th><th>Started</th><th>Ends</th><th>Status</th></tr></thead>
+      <tbody>{% for s in recent %}
+      <tr><td>{{ s.staff.name }}</td><td>{{ s.tenant.name }}</td><td style="white-space:normal;max-width:300px">{{ s.reason }}</td><td class="muted">{{ s.started_at|date:"j M, H:i" }}</td><td class="muted">{{ s.ended_at|default:s.expires_at|date:"j M, H:i" }}</td>
+        <td>{% if s.is_active %}<span class="pill pill-success">Active</span>{% elif s.end_reason == 'revoked' %}<span class="pill pill-danger">Revoked by {{ s.ended_by.first_name }}</span>{% elif s.end_reason == 'expired' %}<span class="pill pill-neutral">Expired</span>{% else %}<span class="pill pill-neutral">Ended</span>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="6" class="muted" style="padding:24px 20px">No sessions yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</div>
+</body>
+</html>

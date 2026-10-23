@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
+    path("", include("apps.tenants.urls")),  # before admin: /platform/support/ must not be swallowed by its catch-all
     path("platform/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
     path("approvals/", include("apps.approvals.urls")),

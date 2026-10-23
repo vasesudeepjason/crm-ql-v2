@@ -28,7 +28,9 @@ Invite colleagues from **Set up → Users & roles** (role, optional manager). Th
 
 **Audit log** (Set up → Audit log): filter by group, person, period and text; click a row for before/after and IP.
 
-Platform admin (QuantumLoop staff): `python manage.py createsuperuser`, then http://localhost:8000/platform/.
+**Workspace** (Set up → Workspace): name, timezone, GSTIN, address; the list of support sessions with "End access"; DPDP export of all data as a zip of CSVs; deletion request (Owner only, confirmed by QuantumLoop before anything is removed).
+
+Platform staff (`is_staff`): `python manage.py createsuperuser`, then http://localhost:8000/platform/support/. Staff enter a customer workspace only through a **support session** — a reason and a time limit (5 min to 4 h) — during which they act as an Admin and every action is audited with the session id. The customer's admins see the session on their Workspace page and can end it; sessions expire on their own. The Django admin at /platform/ remains for tenants, plans and users.
 
 ## Tests
 
