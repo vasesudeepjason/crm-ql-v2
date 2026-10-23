@@ -1,0 +1,22 @@
+{% load ql %}
+<header class="topbar">
+  <button class="icon-btn raised burger" id="burger" aria-label="Open menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+  <form class="input grey pill search" role="search" action="{% url 'crm:leads' %}" method="get"><svg class="ic"><use href="#i-search"/></svg><input type="search" name="q" placeholder="Search leads, companies…" aria-label="Search" value="{{ request.GET.q }}"><span class="kbd">⌘K</span></form>
+  <div class="meta">
+    <div>Workspace<b>{{ tenant.name }}</b></div>
+    <div>Local time<b id="clock" data-tz="{{ tenant.timezone }}">—</b></div>
+  </div>
+  <div class="icon-group">
+    <button class="icon-btn" aria-label="Help"><svg class="ic"><use href="#i-help"/></svg></button>
+    <button class="icon-btn raised" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg>{% if pending_badge %}<span class="dot"></span>{% endif %}</button>
+  </div>
+  <div x-data="{open:false}" style="position:relative">
+    <button class="user" @click="open=!open" :aria-expanded="open"><span class="avatar">{{ user.name|initials }}</span><span class="nm"><b>{{ user.name }}</b><small>{{ membership.role_name }}</small></span><svg class="ic chev" style="color:var(--muted);width:16px"><use href="#i-down"/></svg></button>
+    <div class="menu" x-show="open" x-cloak @click.outside="open=false">
+      <div class="menu-h"><b>{{ user.name }}</b><small>{{ user.email }}</small></div>
+      <a class="menu-i" href="{% url 'dashboard:soon' 'setup' %}">Profile &amp; security</a>
+      {% if user.is_staff %}<a class="menu-i" href="/platform/">Platform admin</a>{% endif %}
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="menu-i" type="submit"><svg class="ic"><use href="#i-out"/></svg>Log out</button></form>
+    </div>
+  </div>
+</header>

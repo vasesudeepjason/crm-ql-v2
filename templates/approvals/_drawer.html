@@ -1,0 +1,58 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>Request #{{ a.id }}</small><h3>{{ a.company_name|default:a.title }}</h3></div>
+  <div class="btns">
+    <button class="icon-btn" aria-label="Previous" {% if prev_id %}hx-get="{% url 'approvals:detail' prev_id %}" hx-target="#drawer"{% else %}disabled{% endif %}><svg class="ic"><use href="#i-arrow-up"/></svg></button>
+    <button class="icon-btn" aria-label="Next" {% if next_id %}hx-get="{% url 'approvals:detail' next_id %}" hx-target="#drawer"{% else %}disabled{% endif %}><svg class="ic"><use href="#i-arrow-down"/></svg></button>
+    <button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+</div>
+<div class="dr-b">
+  {% if a.status == 'pending' %}<span class="pill {% if a.is_stale %}pill-danger{% else %}pill-warning{% endif %}">Pending · {{ a.submitted_at|waiting }}</span>
+  {% elif a.status == 'info' %}<span class="pill pill-info">Info requested · {{ a.submitted_at|waiting }}</span>
+  {% elif a.status == 'approved' %}<span class="pill pill-success">Approved · {{ a.decided_at|date:"j M, H:i" }}</span>
+  {% else %}<span class="pill pill-danger">Rejected · {{ a.decided_at|date:"j M, H:i" }}</span>{% endif %}
+  <div class="info2">
+    <div class="info"><small>Submitted by</small><b>{{ a.submitter.name }}</b><span>{{ a.submitter.memberships.first.role_name }}</span></div>
+    <div class="info"><small>{{ a.get_kind_display }}</small><b>{{ a.company_name|default:a.title }}</b>{% if a.summary.outcome %}<span>{{ a.summary.outcome }}</span>{% endif %}</div>
+  </div>
+  <h4>Details</h4>
+  <dl class="kv">
+    <dt>Submitted</dt><dd>{{ a.submitted_at|date:"j M Y, H:i" }}</dd>
+    {% if a.summary.location %}<dt>Location</dt><dd>{{ a.summary.location }}</dd>{% endif %}
+    {% if a.kind == 'visit' %}<dt>Mock location</dt><dd><span class="ok">Not detected</span></dd>{% endif %}
+    {% if a.summary.duration %}<dt>Duration</dt><dd>{{ a.summary.duration }}</dd>{% endif %}
+    {% if rec.phone %}<dt>Phone</dt><dd class="mono">{{ rec.phone }}</dd>{% endif %}
+    {% if rec.source %}<dt>Source</dt><dd>{{ rec.source }}</dd>{% endif %}
+    <dt>Est. value</dt><dd>{{ a.value_paise|rupees }}</dd>
+    {% if rec.consent_note %}<dt>Consent</dt><dd>{{ rec.consent_note }}</dd>{% endif %}
+  </dl>
+  {% if a.summary.note %}<h4>{% if a.kind == 'visit' %}Executive's{% else %}Caller's{% endif %} note</h4><div class="quote">{{ a.summary.note }}</div>{% endif %}
+  {% if a.reason %}<h4>{% if a.status == 'info' %}Information requested{% else %}Reason{% endif %}</h4><div class="quote">{{ a.reason }}</div>{% endif %}
+  <h4>Activity</h4>
+  <ul class="tl">
+    {% if a.decided_at %}<li class="now">{{ a.get_status_display }} by {{ a.reviewer.name }}<small>{{ a.decided_at|date:"j M, H:i" }}</small></li>{% endif %}
+    {% if a.status == 'info' %}<li class="now">Information requested by {{ a.reviewer.name }}<small>{{ a.updated_at|date:"j M, H:i" }}</small></li>{% endif %}
+    <li {% if a.status == 'pending' %}class="now"{% endif %}>Submitted for approval<small>{{ a.submitted_at|date:"j M, H:i" }} · {{ a.submitter.name }}</small></li>
+  </ul>
+  <div id="drawerErr"></div>
+</div>
+{% if a.is_open %}
+<form class="dr-f" x-data="{mode:''}" hx-target="#appr-{{ a.id }}" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful){QL.closeDrawer()}" hx-target-422="#drawerErr">
+  {% csrf_token %}
+  <template x-if="mode">
+    <div style="flex-basis:100%;display:flex;gap:8px;align-items:center">
+      <label class="input" style="flex:1"><input name="reason" x-ref="reason" :placeholder="mode==='reject'?'Reason for rejection (required)':'What do you need from the submitter?'" required></label>
+      <button class="btn" :class="mode==='reject'?'btn-danger':'btn-dark'" :hx-post="mode==='reject'?'{% url 'approvals:reject' a.id %}':'{% url 'approvals:info' a.id %}'" x-init="$nextTick(()=>htmx.process($el))" type="button" @click="htmx.trigger($el,'submit-decision')" hx-trigger="submit-decision" hx-include="closest form" x-text="mode==='reject'?'Confirm reject':'Send request'"></button>
+      <button class="btn btn-neutral" type="button" @click="mode=''">Cancel</button>
+    </div>
+  </template>
+  {% if decidable.0 %}
+  <button class="btn btn-neutral" type="button" @click="mode='reject';$nextTick(()=>$refs.reason.focus())" x-show="!mode">Reject</button>
+  <button class="btn btn-neutral" type="button" @click="mode='info';$nextTick(()=>$refs.reason.focus())" x-show="!mode">Ask for info</button>
+  <span class="grow"></span>
+  <button class="btn btn-dark" type="button" x-show="!mode" hx-post="{% url 'approvals:approve' a.id %}" hx-include="closest form"><svg class="ic"><use href="#i-check"/></svg>Approve</button>
+  {% else %}<span class="muted" style="font-size:13px"><svg class="ic" style="vertical-align:-4px"><use href="#i-lock"/></svg> {{ decidable.1 }}</span>{% endif %}
+</form>
+{% endif %}
+<script>QL.openDrawer()</script>

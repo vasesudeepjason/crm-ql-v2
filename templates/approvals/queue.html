@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Approvals</h1><p>Field visits and telecaller leads waiting for a decision</p></div>
+</section>
+<section class="grid">
+  <div class="card s12" id="queue">
+    {% include "approvals/_table.html" %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Leads{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Leads</h1><p>{{ total|intcomma }} leads{% if stage %} · filtered{% endif %}</p></div>
+  <div class="actions">{% if perms_set|can:"leads.create" %}<button class="btn btn-primary"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</button>{% endif %}</div>
+</section>
+<section class="grid">
+  <div class="card s12">
+    <div class="tbl-tools">
+      <div class="seg sm"><a class="{% if not stage %}on{% endif %}" href="?q={{ q|urlencode }}">All <span class="n">{{ total }}</span></a>{% for code, name in stages %}{% if counts|get_item:code %}<a class="{% if stage == code %}on{% endif %}" href="?stage={{ code }}&q={{ q|urlencode }}">{{ name }} <span class="n">{{ counts|get_item:code }}</span></a>{% endif %}{% endfor %}</div>
+      <form class="input grey" style="margin-left:auto;width:260px" method="get"><input type="hidden" name="stage" value="{{ stage }}"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search name, company, phone"></form>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Lead</th><th class="hide-m">Company</th><th>Stage</th><th class="hide-m">Owner</th><th class="hide-m">Follow-up</th><th class="r">Value</th></tr></thead>
+        <tbody>{% include "crm/_lead_rows.html" %}</tbody>
+      </table>
+    </div>
+    <div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?stage={{ stage }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a href="?stage={{ stage }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>
+  </div>
+</section>
+{% endblock %}

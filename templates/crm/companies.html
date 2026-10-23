@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Companies{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Companies</h1><p>{{ page.paginator.count|intcomma }} companies · the hub every lead, contract and visit hangs off</p></div>
+  <div class="actions">{% if perms_set|can:"companies.create" %}<button class="btn btn-primary"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New company</button>{% endif %}</div>
+</section>
+<section class="grid">
+  <div class="card s12">
+    <div class="tbl-tools"><form class="input grey" style="width:280px" method="get"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search name, city, GSTIN"></form></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Company</th><th class="hide-m">City</th><th class="hide-m">GSTIN</th><th>Phone</th><th class="hide-m">Owner</th><th class="r">Leads</th></tr></thead>
+        <tbody>{% for c in page %}
+        <tr>
+          <td><div class="who"><span class="avatar sm">{{ c.name|initials }}</span><div class="name"><b>{{ c.name }}</b>{% if c.tags %}<span class="sub">{{ c.tags|join:" · " }}</span>{% endif %}</div></div></td>
+          <td class="hide-m">{{ c.city }}{% if c.state %}, {{ c.state }}{% endif %}</td>
+          <td class="hide-m mono" style="font-size:12px">{{ c.gstin|default:"—" }}</td>
+          <td>{{ c.phone|default:"—" }}</td>
+          <td class="hide-m">{{ c.owner.name|default:"—" }}</td>
+          <td class="r num">{{ c.lead_count }}</td>
+        </tr>{% empty %}<tr><td colspan="6" class="muted" style="padding:28px 20px">No companies match.</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a href="?q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>
+  </div>
+</section>
+{% endblock %}

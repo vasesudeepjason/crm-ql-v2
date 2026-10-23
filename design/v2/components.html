@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuantumLoop – Components</title>
+<link rel="icon" href="../assets/logo-mark.png">
+<link rel="stylesheet" href="quantum.css">
+<style>
+  body{padding:32px}
+  .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+  .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .hdr h1{font:700 32px/1.1 var(--font);letter-spacing:-.025em}
+  .hdr p{color:var(--ink-2);margin-top:6px}
+  .sec{padding:20px 24px 24px}
+  .sec h2{font:600 16px var(--font);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .sec h2 small{font:500 11px var(--mono);color:var(--muted);letter-spacing:.08em}
+  .row{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:12px 16px;margin-bottom:12px}
+  .row>small{font:500 11.5px var(--mono);color:var(--muted)}
+  .row>div{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .sw{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .swatch{border-radius:var(--r-inner);border:1px solid var(--line);overflow:hidden}
+  .swatch i{display:block;height:64px}
+  .swatch div{padding:10px 12px;font-size:12.5px}
+  .swatch b{display:block;font-weight:600}
+  .swatch span{font-family:var(--mono);color:var(--muted);font-size:11px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .navdemo{width:272px;background:#fff;border:1px solid var(--line);border-radius:var(--r-card);padding:12px}
+  @media (max-width:900px){.two{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
+  @media (max-width:640px){body{padding:12px}.sec{padding:16px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></symbol>
+  <symbol id="i-leads" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 14v5h14v-5"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+  <div class="hdr">
+    <div><h1>Components</h1><p>QuantumLoop design system v2 · one brand colour, pill buttons, dot-status pills, 20 px cards</p></div>
+    <a class="btn btn-secondary" href="home.html">← Dashboard</a>
+  </div>
+
+  <section class="card sec">
+    <h2>Colours <small>USAGE SPLIT: BRAND 10 · GREY 42 · DARK 40 · GREEN 2 · YELLOW 2</small></h2>
+    <div class="sw">
+      <div class="swatch"><i style="background:var(--brand)"></i><div><b>Brand · navy</b><span>#293359 · from logo</span></div></div>
+      <div class="swatch"><i style="background:var(--brand-500)"></i><div><b>Brand 500 · interactive</b><span>#4A5A96 · links, checks</span></div></div>
+      <div class="swatch"><i style="background:var(--brand-100)"></i><div><b>Brand 100 · soft</b><span>#E5E8F5</span></div></div>
+      <div class="swatch"><i style="background:var(--surface)"></i><div><b>Grey · surface</b><span>#F3F2F7</span></div></div>
+      <div class="swatch"><i style="background:var(--ink)"></i><div><b>Dark · ink</b><span>#16141F</span></div></div>
+      <div class="swatch"><i style="background:var(--green)"></i><div><b>Green · success</b><span>#30A46C</span></div></div>
+      <div class="swatch"><i style="background:var(--yellow)"></i><div><b>Yellow · warning</b><span>#F5A524</span></div></div>
+      <div class="swatch"><i style="background:var(--red)"></i><div><b>Red · danger / accent</b><span>#EE3239 · from logo</span></div></div>
+    </div>
+  </section>
+
+  <section class="card sec">
+    <h2>Buttons</h2>
+    <div class="row"><small>PRIMARY</small><div><button class="btn btn-primary"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Add lead</button><button class="btn btn-primary" disabled><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Add lead</button></div></div>
+    <div class="row"><small>SECONDARY</small><div><button class="btn btn-secondary"><svg class="ic"><use href="#i-export"/></svg>Export</button><button class="btn btn-secondary" disabled><svg class="ic"><use href="#i-export"/></svg>Export</button></div></div>
+    <div class="row"><small>DARK</small><div><button class="btn btn-dark"><svg class="ic"><use href="#i-check"/></svg>Approve</button><button class="btn btn-dark" disabled>Approve</button></div></div>
+    <div class="row"><small>SOFT</small><div><button class="btn btn-soft">Filters <span class="count">2</span></button><button class="btn btn-soft" disabled>Filters</button></div></div>
+    <div class="row"><small>NEUTRAL</small><div><button class="btn btn-neutral">Ask for info</button><button class="btn btn-neutral" disabled>Ask for info</button></div></div>
+    <div class="row"><small>OUTLINE</small><div><button class="btn btn-outline">Mass import</button><button class="btn btn-sm btn-outline">Small</button></div></div>
+    <div class="row"><small>DESTRUCTIVE</small><div><button class="btn btn-danger">Reject</button><button class="btn btn-danger" disabled>Reject</button></div></div>
+  </section>
+
+  <div class="two">
+    <section class="card sec">
+      <h2>Inputs</h2>
+      <div class="row"><small>TEXT</small><div style="flex-direction:column;align-items:stretch">
+        <label class="input"><input placeholder="Enter company name"></label>
+        <label class="input"><input value="Sri Lakshmi Traders"></label>
+        <div><label class="input error"><input placeholder="Enter GSTIN"></label><div class="field-err">Required · 15 characters</div></div>
+        <label class="input disabled"><input placeholder="Disabled" disabled></label>
+      </div></div>
+      <div class="row"><small>SELECT</small><div style="flex-direction:column;align-items:stretch">
+        <label class="input select"><select><option>Select owner…</option><option>Ravi Kumar</option></select><svg class="ic chev"><use href="#i-down"/></svg></label>
+      </div></div>
+      <div class="row"><small>SEARCH</small><div style="flex-direction:column;align-items:stretch">
+        <label class="input grey pill"><svg class="ic"><use href="#i-search"/></svg><input placeholder="Search leads, companies, invoices…"><span class="kbd">⌘K</span></label>
+      </div></div>
+    </section>
+
+    <section class="card sec">
+      <h2>Nav item</h2>
+      <div class="navdemo">
+        <a class="ni" href="#"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Default</span></a>
+        <a class="ni" href="#" style="background:var(--field)"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Hover</span></a>
+        <a class="ni on" href="#"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Active</span></a>
+        <div class="ng open">
+          <button class="ni"><svg class="ic"><use href="#i-leads"/></svg><span class="tx">Group open</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+          <div class="sub"><a href="#">All leads</a><a class="on" href="#">Add lead</a><a href="#">Pipeline</a></div>
+        </div>
+      </div>
+      <h2 style="margin-top:24px">Controls</h2>
+      <div class="row"><small>SWITCH</small><div><input type="checkbox" class="switch" checked><input type="checkbox" class="switch"></div></div>
+      <div class="row"><small>CHECKBOX</small><div><input type="checkbox" class="chk" checked><input type="checkbox" class="chk"></div></div>
+      <div class="row"><small>RADIO</small><div><input type="radio" class="radio" name="r" checked><input type="radio" class="radio" name="r"></div></div>
+      <div class="row"><small>SEGMENTED</small><div><div class="seg"><button>All <span class="n">34</span></button><button class="on">Active <span class="n">29</span></button><button>Pending <span class="n">5</span></button></div></div></div>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="card sec">
+      <h2>Status pill</h2>
+      <div class="row"><small>SUCCESS</small><div><span class="pill pill-success">Approved</span></div></div>
+      <div class="row"><small>WARNING</small><div><span class="pill pill-warning">Pending</span></div></div>
+      <div class="row"><small>DANGER</small><div><span class="pill pill-danger">Rejected</span></div></div>
+      <div class="row"><small>NEUTRAL</small><div><span class="pill pill-neutral">Inactive</span></div></div>
+      <div class="row"><small>BRAND</small><div><span class="pill pill-brand">Private</span></div></div>
+      <div class="row"><small>INFO</small><div><span class="pill pill-info">Info requested</span></div></div>
+    </section>
+    <section class="card sec">
+      <h2>Chip · badge</h2>
+      <div class="row"><small>CHIP ON</small><div><span class="chip on"><svg class="ic"><use href="#i-check"/></svg>Telecaller</span><span class="chip">Field sales</span></div></div>
+      <div class="row"><small>FILTER CHIP</small><div><span class="tag" style="background:var(--brand-100);color:var(--brand)">Status: Pending <svg class="ic x"><use href="#i-x"/></svg></span></div></div>
+      <div class="row"><small>TAG</small><div><span class="tag">AMC</span><span class="tag">Subscription</span><span class="tag">Hidden</span></div></div>
+      <div class="row"><small>DELTA</small><div><span class="delta delta-down"><svg class="ic"><use href="#i-arrow-down"/></svg>19%</span><span class="delta delta-up"><svg class="ic"><use href="#i-arrow-up"/></svg>4.2%</span></div></div>
+      <div class="row"><small>COUNT</small><div><span class="count">12</span><span class="count soft">12</span><span class="count hot">58</span></div></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

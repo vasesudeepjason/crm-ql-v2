@@ -1,0 +1,54 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · QuantumLoop</title>
+<link rel="icon" href="{% static 'img/logo-mark.png' %}">
+<link rel="stylesheet" href="{% static 'css/quantum.css' %}">
+<style>
+  body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+  .side{background:linear-gradient(160deg,var(--brand-500),var(--brand) 55%,var(--brand-700));color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+  .side img{width:160px}
+  .side h2{font:600 30px/1.2 var(--font);letter-spacing:-.02em;max-width:420px}
+  .side p{opacity:.8;margin-top:12px;max-width:420px;line-height:1.5}
+  .side ul{list-style:none;padding:0;margin-top:28px;display:grid;gap:10px;font-size:14px}
+  .side li::before{content:"✓";margin-right:10px;opacity:.7}
+  .form{display:grid;place-items:center;padding:32px}
+  .box{width:100%;max-width:400px}
+  .box h1{font:700 28px/1.1 var(--font);letter-spacing:-.025em;margin-bottom:6px}
+  .box p{color:var(--ink-2);margin-bottom:24px}
+  .f{display:grid;gap:14px}
+  .f label{display:grid;gap:6px;font:500 13px var(--font);color:var(--ink-2)}
+  .f input{height:44px;border:1px solid var(--line);border-radius:var(--r-input);padding:0 14px;font:400 14px var(--font);background:#fff}
+  .f input:focus{outline:0;border-color:var(--ink);box-shadow:0 0 0 3px rgba(22,20,31,.06)}
+  .f .btn{height:46px;justify-content:center;margin-top:6px}
+  .hint{margin-top:20px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  @media (max-width:900px){body{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<section class="side">
+  <img src="{% static 'img/logo-white.png' %}" alt="Quantum">
+  <div>
+    <h2>Your sales, approvals and renewals in one place.</h2>
+    <p>Built for Indian businesses that run telecalling and field teams and earn repeat revenue from AMCs and subscriptions.</p>
+    <ul><li>Telecaller and field-visit approval flow</li><li>Renewal tracker with 90/60/30-day reminders</li><li>GST-ready invoices, exported to Zoho Books and Tally</li></ul>
+  </div>
+  <small style="opacity:.6">Data stays in India · DPDP-ready</small>
+</section>
+<section class="form">
+  <div class="box">
+    <h1>Sign in</h1>
+    <p>Use the email your admin invited.</p>
+    <form method="post" class="f">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="field-err">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <label>Email {{ form.username }}</label>
+      <label>Password {{ form.password }}</label>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-primary" type="submit">Sign in</button>
+    </form>
+    <div class="hint">OTP sign-in, Google sign-in and TOTP for owners and admins arrive in Phase 0 hardening.</div>
+  </div>
+</section>
+</body>
+</html>

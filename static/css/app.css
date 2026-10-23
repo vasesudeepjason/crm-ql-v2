@@ -1,0 +1,20 @@
+/* App-specific additions on top of the design system */
+[x-cloak]{display:none!important}
+.menu{position:absolute;right:0;top:calc(100% + 8px);width:240px;background:#fff;border-radius:var(--r-inner);box-shadow:var(--shadow-pop);padding:6px;z-index:40}
+.menu-h{padding:10px 12px 8px;border-bottom:1px solid var(--line-2);margin-bottom:4px}
+.menu-h b{display:block;font-weight:600}.menu-h small{color:var(--muted);font-size:12px}
+.menu-i{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:0;background:transparent;border-radius:9px;font:500 13.5px var(--font);color:var(--ink);text-decoration:none;cursor:pointer;text-align:left}
+.menu-i:hover{background:var(--field)}
+.menu form{margin:0}
+.flash{display:grid;gap:8px}
+.flash-item{background:#fff;border-left:4px solid var(--brand-500);border-radius:var(--r-inner);padding:12px 16px;box-shadow:var(--shadow)}
+.flash-item.error{border-color:var(--red)}.flash-item.success{border-color:var(--green)}
+.tbl tr.stale td .who b::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle}
+.seg a{height:32px;padding:0 14px;border-radius:var(--r-pill);font:500 13px var(--font);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.seg.sm a{height:28px;padding:0 12px;font-size:12.5px}
+.seg a .n{color:var(--muted)}
+.seg a:hover{color:var(--ink)}
+.seg a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,20,31,.12)}
+.htmx-request .icon-btn{opacity:.5}
+.drawer:empty{display:none}
+.tbl-foot a{color:var(--brand-500);text-decoration:none;font-weight:500}

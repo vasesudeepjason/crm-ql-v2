@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<section class="page-head"><div><h1>{{ name }}</h1><p>Arrives in {{ phase }} of the roadmap.</p></div></section>
+<section class="grid"><div class="card s12" style="padding:48px 24px;text-align:center">
+  <div class="avatar" style="margin:0 auto 14px;width:52px;height:52px;font-size:20px">{{ phase|slice:"-1:" }}</div>
+  <h2 style="font:600 18px var(--font)">{{ name }} is on the way</h2>
+  <p class="muted" style="margin-top:6px">This module is scheduled for {{ phase }}. The navigation shows it so the information architecture is complete from day one.</p>
+</div></section>
+{% endblock %}

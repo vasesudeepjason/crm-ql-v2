@@ -1,0 +1,13 @@
+{% load ql %}
+<div class="tbl-tools">
+  <div class="seg sm">{% for code, name, n in tabs %}<a class="{% if code == tab %}on{% endif %}" href="?tab={{ code }}" hx-get="?tab={{ code }}&q={{ q|urlencode }}" hx-target="#queue" hx-push-url="true">{{ name }} <span class="n">{{ n }}</span></a>{% endfor %}</div>
+  <form class="input grey" style="margin-left:auto;width:260px" hx-get="?tab={{ tab }}" hx-target="#queue" hx-trigger="submit, keyup changed delay:400ms from:input"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search by name or company"></form>
+  <button class="icon-btn" aria-label="Refresh" hx-get="?tab={{ tab }}&q={{ q|urlencode }}" hx-target="#queue"><svg class="ic"><use href="#i-refresh"/></svg></button>
+</div>
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>Submitted by</th><th class="hide-m">Type</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
+    <tbody>{% for a in items %}{% include "approvals/_row.html" %}{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">Nothing here.</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+<div class="tbl-foot"><span>{{ items|length }} shown</span><span>Click a row to review</span></div>

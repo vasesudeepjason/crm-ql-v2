@@ -1,0 +1,34 @@
+{% load static ql %}
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sb-top">
+    <a class="logo" href="{% url 'dashboard:home' %}" aria-label="Quantum"><img class="lg-full" src="{% static 'img/logo-navy.webp' %}" alt="Quantum"><img class="lg-mark" src="{% static 'img/logo-mark.png' %}" alt=""></a>
+    <button class="sb-col" id="sbCol" aria-label="Collapse sidebar"><svg class="ic"><use href="#i-col"/></svg></button>
+  </div>
+  <nav class="nav">
+    <a class="ni {% active 'dashboard:home' %}" href="{% url 'dashboard:home' %}" title="Dashboard"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Dashboard</span></a>
+    {% if perms_set|can:"leads.view" %}
+    <div class="ng {% active 'crm:leads' %}{% if request.resolver_match.url_name == 'leads' %} open{% endif %}">
+      <button class="ni" title="Leads"><svg class="ic"><use href="#i-leads"/></svg><span class="tx">Leads</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'crm:leads' %}" href="{% url 'crm:leads' %}">All leads</a><a href="{% url 'crm:leads' %}?stage=new">New</a><a href="{% url 'crm:leads' %}?stage=follow_up">Follow-ups</a><a href="{% url 'dashboard:soon' 'setup' %}">Import leads</a></div>
+    </div>
+    {% endif %}
+    {% if perms_set|can:"companies.view" %}<a class="ni {% active 'crm:companies' %}" href="{% url 'crm:companies' %}" title="Companies"><svg class="ic"><use href="#i-co"/></svg><span class="tx">Companies</span></a>{% endif %}
+    <a class="ni {% active 'approvals' %}" href="{% url 'approvals:queue' %}" title="Approvals"><svg class="ic"><use href="#i-ok"/></svg><span class="tx">Approvals</span>{% if pending_badge %}<em class="count hot" style="font-style:normal">{{ pending_badge }}</em>{% endif %}</a>
+    {% if perms_set|can:"visits.view" %}<a class="ni" href="{% url 'dashboard:soon' 'field' %}" title="Field sales"><svg class="ic"><use href="#i-pin"/></svg><span class="tx">Field sales</span></a>{% endif %}
+    {% if perms_set|can:"calls.view" %}<a class="ni" href="{% url 'dashboard:soon' 'telecaller' %}" title="Telecaller"><svg class="ic"><use href="#i-phone"/></svg><span class="tx">Telecaller</span></a>{% endif %}
+    {% if perms_set|can:"contracts.view" %}<a class="ni" href="{% url 'dashboard:soon' 'contracts' %}" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span></a>{% endif %}
+    {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}
+    {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
+    <a class="ni" href="{% url 'dashboard:soon' 'tasks' %}" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
+    {% if perms_set|can:"reports.view" %}<a class="ni" href="{% url 'dashboard:soon' 'reports' %}" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>{% endif %}
+    {% if perms_set|can:"settings.manage" %}
+    <div class="ng">
+      <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a href="{% url 'dashboard:soon' 'setup' %}">Settings</a><a href="{% url 'dashboard:soon' 'setup' %}">Users &amp; roles</a><a href="{% url 'dashboard:soon' 'setup' %}">Import wizard</a><a href="{% url 'dashboard:soon' 'setup' %}">Audit log</a></div>
+    </div>
+    {% endif %}
+  </nav>
+  <div class="sb-foot">
+    <button class="ws" title="Workspace"><span class="ws-i">{{ tenant.name|initials|slice:":1" }}</span><span class="ws-n"><b>{{ tenant.name }}</b><small>{{ tenant.plan.name|default:"No plan" }} plan · {{ membership.role_name }}</small></span></button>
+  </div>
+</aside>

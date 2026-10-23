@@ -1,0 +1,1 @@
+{% if d is not None %}<span class="delta {% if d >= 0 %}delta-up{% else %}delta-down{% endif %}"><svg class="ic"><use href="{% if d >= 0 %}#i-arrow-up{% else %}#i-arrow-down{% endif %}"/></svg>{% if d < 0 %}{{ d|slice:"1:" }}{% else %}{{ d }}{% endif %}%</span>{% endif %}

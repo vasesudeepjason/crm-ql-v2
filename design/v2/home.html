@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuantumLoop – Dashboard</title>
+<link rel="icon" href="../assets/logo-mark.png">
+<link rel="stylesheet" href="quantum.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></symbol>
+  <symbol id="i-leads" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></symbol>
+  <symbol id="i-co" viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 9h8v12M7 9h2M7 13h2M7 17h2M15 13h2M15 17h2"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-inv" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14a5 5 0 0 1 4.5 5"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V5M19 20v-5"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5"/></symbol>
+  <symbol id="i-ud" viewBox="0 0 24 24"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></symbol>
+  <symbol id="i-col" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M13 10l-2 2 2 2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17v-6a6 6 0 0 1 12 0v6l2 2H4zM10 21h4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 14v5h14v-5"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5h10"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v4a6 6 0 0 1-12 0zM12 18v3"/></symbol>
+</defs></svg>
+
+<div class="app" id="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sb-top">
+      <a class="logo" href="#" aria-label="Quantum"><img class="lg-full" src="../assets/logo-navy.webp" alt="Quantum"><img class="lg-mark" src="../assets/logo-mark.png" alt=""></a>
+      <button class="sb-col" id="sbCol" aria-label="Collapse sidebar"><svg class="ic"><use href="#i-col"/></svg></button>
+    </div>
+    <nav class="nav">
+      <a class="ni on" href="#" title="Dashboard"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Dashboard</span></a>
+      <div class="ng">
+        <button class="ni" title="Leads"><svg class="ic"><use href="#i-leads"/></svg><span class="tx">Leads</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">All leads</a><a href="#">Add lead</a><a href="#">Pipeline</a><a href="#">Import leads</a></div>
+      </div>
+      <a class="ni" href="#" title="Companies"><svg class="ic"><use href="#i-co"/></svg><span class="tx">Companies</span></a>
+      <a class="ni" href="#" title="Approvals"><svg class="ic"><use href="#i-ok"/></svg><span class="tx">Approvals</span><em class="count hot" style="font-style:normal">58</em></a>
+      <div class="ng">
+        <button class="ni" title="Field sales"><svg class="ic"><use href="#i-pin"/></svg><span class="tx">Field sales</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">Sessions</a><a href="#">Visits</a><a href="#">Review queue</a><a href="#">Executives</a></div>
+      </div>
+      <div class="ng">
+        <button class="ni" title="Telecaller"><svg class="ic"><use href="#i-phone"/></svg><span class="tx">Telecaller</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">Call log</a><a href="#">Submitted leads</a><a href="#">Targets</a></div>
+      </div>
+      <div class="ng">
+        <button class="ni" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">All contracts</a><a href="#">Renewal tracker</a><a href="#">Products &amp; services</a></div>
+      </div>
+      <div class="ng">
+        <button class="ni" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">All invoices</a><a href="#">Payments</a><a href="#">Outstanding &amp; ageing</a></div>
+      </div>
+      <div class="ng">
+        <button class="ni" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">Employees</a><a href="#">Attendance</a><a href="#">Leave</a><a href="#">Documents</a></div>
+      </div>
+      <a class="ni" href="#" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
+      <a class="ni" href="#" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>
+      <div class="ng">
+        <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+        <div class="sub"><a href="#">Settings</a><a href="#">Users &amp; roles</a><a href="#">Import wizard</a><a href="#">Integrations</a><a href="#">Audit log</a></div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <button class="ws" title="Switch workspace"><span class="ws-i">Q</span><span class="ws-n"><b>QuantumLoop HQ</b><small>Tenant 1 · Growth plan</small></span><svg class="ic chev"><use href="#i-ud"/></svg></button>
+    </div>
+  </aside>
+
+  <!-- ============ Content ============ -->
+  <div class="content">
+    <header class="topbar">
+      <button class="icon-btn raised burger" id="burger" aria-label="Open menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <label class="input grey pill search"><svg class="ic"><use href="#i-search"/></svg><input type="search" placeholder="Search leads, companies, invoices…" aria-label="Search"><span class="kbd">⌘K</span></label>
+      <div class="meta">
+        <div>Revenue at risk<b>₹6.4L</b></div>
+        <div>Local time<b id="clock">14:52</b></div>
+      </div>
+      <div class="icon-group">
+        <button class="icon-btn" aria-label="Help"><svg class="ic"><use href="#i-help"/></svg></button>
+        <button class="icon-btn raised" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><span class="dot"></span></button>
+      </div>
+      <button class="user"><span class="avatar">AR</span><span class="nm"><b>Aisha Rao</b><small>Owner</small></span><svg class="ic chev" style="color:var(--muted);width:16px"><use href="#i-down"/></svg></button>
+    </header>
+
+    <section class="page-head">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Sales, approvals and renewals across your team · updated 14:52</p>
+      </div>
+      <div class="actions">
+        <label class="input select" style="height:40px;border-radius:999px;padding-right:12px"><select aria-label="Period"><option>This month</option><option>Last month</option><option>This quarter</option><option>Financial year</option></select><svg class="ic chev"><use href="#i-down"/></svg></label>
+        <button class="btn btn-secondary"><svg class="ic"><use href="#i-export"/></svg><span>Export</span></button>
+        <button class="btn btn-soft"><svg class="ic"><use href="#i-filter"/></svg>Filters <span class="count">2</span></button>
+        <button class="btn btn-primary"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</button>
+      </div>
+    </section>
+
+    <!-- KPI row -->
+    <section class="grid">
+      <div class="card kpi s3">
+        <div class="lbl">New leads</div><span class="when">TODAY</span>
+        <div class="val">46 <span class="delta delta-up"><svg class="ic"><use href="#i-arrow-up"/></svg>12%</span></div>
+        <div class="rows"><div>Yesterday<b>41</b></div><div>This month<b>612</b></div><div>Last month<b>548</b></div></div>
+      </div>
+      <div class="card kpi s3">
+        <div class="lbl">Calls logged</div><span class="when">TODAY</span>
+        <div class="val">312 <span class="delta delta-up"><svg class="ic"><use href="#i-arrow-up"/></svg>8%</span></div>
+        <div class="rows"><div>Yesterday<b>289</b></div><div>This month<b>5,840</b></div><div>Last month<b>5,112</b></div></div>
+      </div>
+      <div class="card kpi hi s3">
+        <div class="lbl">Won revenue</div><span class="when">IN CHART</span>
+        <div class="val">₹7.2L <span class="delta"><svg class="ic"><use href="#i-arrow-up"/></svg>19%</span></div>
+        <div class="rows"><div>Yesterday<b>₹38,400</b></div><div>This month<b>₹7,20,440</b></div><div>Last month<b>₹6,08,120</b></div></div>
+      </div>
+      <div class="card kpi s3">
+        <div class="lbl">Revenue at risk</div><span class="when">90 DAYS</span>
+        <div class="val">₹6.4L <span class="delta delta-down"><svg class="ic"><use href="#i-arrow-down"/></svg>8%</span></div>
+        <div class="rows"><div>Next 30 days<b>₹2.7L</b></div><div>31 – 60 days<b>₹2.1L</b></div><div>61 – 90 days<b>₹1.6L</b></div></div>
+      </div>
+
+      <!-- Dynamics chart -->
+      <div class="card s8">
+        <div class="card-h">
+          <div><h2>Dynamics</h2><p>Daily won revenue · this month vs last month</p></div>
+          <div class="legend">
+            <div><span class="k"><i></i>This month</span><b>₹7,20,440</b></div>
+            <div><span class="k"><i class="dash"></i>Last month</span><b>₹6,08,120</b></div>
+          </div>
+        </div>
+        <div class="chart-tools">
+          <div class="seg" id="chartSeg"><button>Leads</button><button>Calls</button><button>Visits</button><button class="on">Revenue</button><button>Invoices</button><button>Collections</button></div>
+        </div>
+        <div class="chart" id="chart"><div class="tip" id="tip"></div></div>
+      </div>
+
+      <!-- Renewals -->
+      <div class="card s4">
+        <div class="card-h"><div><h2>Renewals due</h2><p>Contracts expiring soon</p></div><a class="btn btn-sm btn-outline" href="#">Tracker</a></div>
+        <div class="strip" style="grid-template-columns:repeat(3,1fr);padding:14px 20px 6px">
+          <div>30 days<b class="warn">9</b></div><div>60 days<b>14</b></div><div>90 days<b>11</b></div>
+        </div>
+        <ul class="mini">
+          <li><span class="avatar sm" style="background:var(--yellow-100);color:var(--yellow-700)">MH</span><div class="t"><b>Metro Hospitals</b><small>AMC · expires in 6 days · Ravi K.</small></div><span class="v">₹84,000</span></li>
+          <li><span class="avatar sm">KL</span><div class="t"><b>Kiran Logistics</b><small>Support · 12 days · Sneha P.</small></div><span class="v">₹52,500</span></li>
+          <li><span class="avatar sm" style="background:var(--green-100);color:var(--green-700)">VR</span><div class="t"><b>Vista Retail</b><small>Subscription · 24 days · Mohan A.</small></div><span class="v">₹36,000</span></li>
+          <li><span class="avatar sm" style="background:var(--red-100);color:var(--red-700)">AP</span><div class="t"><b>Anand Pharma</b><small>AMC · 28 days · unassigned</small></div><span class="v">₹48,000</span></li>
+        </ul>
+      </div>
+      <!-- Approvals table -->
+      <div class="card s12">
+        <div class="card-h">
+          <div><h2>Awaiting your approval</h2><p>Field visits and telecaller leads submitted by your team</p></div>
+          <a class="btn btn-sm btn-outline" href="#">Open queue</a>
+        </div>
+        <div class="tbl-tools">
+          <div class="seg sm" id="tblSeg"><button class="on">Pending <span class="n">58</span></button><button>Info requested <span class="n">5</span></button><button>Approved <span class="n">41</span></button><button>Rejected <span class="n">6</span></button><button>All <span class="n">110</span></button></div>
+          <label class="input grey"><svg class="ic"><use href="#i-search"/></svg><input placeholder="Search by name or company"></label>
+          <button class="icon-btn" aria-label="Refresh"><svg class="ic"><use href="#i-refresh"/></svg></button>
+          <button class="icon-btn" aria-label="Download"><svg class="ic"><use href="#i-dl"/></svg></button>
+        </div>
+        <div class="tbl-wrap">
+        <table class="tbl" id="apprTbl">
+          <thead><tr>
+            <th style="width:36px"><input type="checkbox" class="chk" aria-label="Select all"></th>
+            <th>Submitted by <svg class="ic"><use href="#i-sort"/></svg></th>
+            <th class="hide-m">Type <svg class="ic"><use href="#i-sort"/></svg></th>
+            <th>Company</th>
+            <th>Status</th>
+            <th class="r hide-m sorted">Waiting <svg class="ic"><use href="#i-arrow-down"/></svg></th>
+            <th class="r hide-m">Value</th>
+            <th class="r">Actions</th>
+          </tr></thead>
+          <tbody>
+            <tr data-id="4120" data-who="Ravi Kumar" data-role="Field Executive · Hyderabad" data-type="Field visit" data-co="Sri Lakshmi Traders" data-wait="Pending · 2 days" data-tone="warning">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="who"><span class="avatar sm">RK</span><div class="name"><b>Ravi Kumar</b><span class="sub">ID 1000123 · Field</span></div></div></td>
+              <td class="hide-m">Field visit</td>
+              <td><div class="name"><b>Sri Lakshmi Traders</b></div><div class="tags"><span class="tag">AMC</span><span class="tag">Interested</span></div></td>
+              <td><span class="pill pill-warning">Pending</span></td>
+              <td class="r hide-m num">2 days</td>
+              <td class="r hide-m">₹84,000</td>
+              <td><div class="row-actions"><button class="icon-btn" aria-label="Approve"><svg class="ic"><use href="#i-check"/></svg></button><button class="icon-btn" aria-label="Reject"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" aria-label="More"><svg class="ic"><use href="#i-more"/></svg></button></div></td>
+            </tr>
+            <tr data-id="4121" data-who="Sneha Pillai" data-role="Telecaller · Hyderabad" data-type="Telecaller lead" data-co="Deccan Infra Pvt Ltd" data-wait="Pending · 3 hours" data-tone="warning">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="who"><span class="avatar sm" style="background:var(--red-100);color:var(--red-700)">SP</span><div class="name"><b>Sneha Pillai</b><span class="sub">ID 1000172 · Telecaller</span></div></div></td>
+              <td class="hide-m">Telecaller lead</td>
+              <td><div class="name"><b>Deccan Infra Pvt Ltd</b></div><div class="tags"><span class="tag">New</span><span class="tag">Subscription</span></div></td>
+              <td><span class="pill pill-warning">Pending</span></td>
+              <td class="r hide-m num">3 hrs</td>
+              <td class="r hide-m">—</td>
+              <td><div class="row-actions"><button class="icon-btn" aria-label="Approve"><svg class="ic"><use href="#i-check"/></svg></button><button class="icon-btn" aria-label="Reject"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" aria-label="More"><svg class="ic"><use href="#i-more"/></svg></button></div></td>
+            </tr>
+            <tr data-id="4118" data-who="Mohan Agarwal" data-role="Field Executive · Secunderabad" data-type="Field visit" data-co="Anand Pharma" data-wait="Info requested · 1 day" data-tone="info">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="who"><span class="avatar sm" style="background:var(--green-100);color:var(--green-700)">MA</span><div class="name"><b>Mohan Agarwal</b><span class="sub">ID 1000158 · Field</span></div></div></td>
+              <td class="hide-m">Field visit</td>
+              <td><div class="name"><b>Anand Pharma</b></div><div class="tags"><span class="tag">Renewal</span></div></td>
+              <td><span class="pill pill-info">Info requested</span></td>
+              <td class="r hide-m num">1 day</td>
+              <td class="r hide-m">₹52,500</td>
+              <td><div class="row-actions"><button class="icon-btn" aria-label="Approve"><svg class="ic"><use href="#i-check"/></svg></button><button class="icon-btn" aria-label="Reject"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" aria-label="More"><svg class="ic"><use href="#i-more"/></svg></button></div></td>
+            </tr>
+            <tr data-id="4109" data-who="Kavya Venkat" data-role="Telecaller · Hyderabad" data-type="Telecaller lead" data-co="Greenfield Schools" data-wait="Pending · 3 days" data-tone="danger">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="who"><span class="avatar sm" style="background:var(--yellow-100);color:var(--yellow-700)">KV</span><div class="name"><b>Kavya Venkat</b><span class="sub">ID 1000130 · Telecaller</span></div></div></td>
+              <td class="hide-m">Telecaller lead</td>
+              <td><div class="name"><b>Greenfield Schools</b></div><div class="tags"><span class="tag">New</span><span class="tag">Service contract</span></div></td>
+              <td><span class="pill pill-danger">Overdue</span></td>
+              <td class="r hide-m num">3 days</td>
+              <td class="r hide-m">—</td>
+              <td><div class="row-actions"><button class="icon-btn" aria-label="Approve"><svg class="ic"><use href="#i-check"/></svg></button><button class="icon-btn" aria-label="Reject"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" aria-label="More"><svg class="ic"><use href="#i-more"/></svg></button></div></td>
+            </tr>
+            <tr data-id="4105" data-who="Imran Shaikh" data-role="Field Executive · Vijayawada" data-type="Field visit" data-co="Metro Hospitals" data-wait="Pending · 5 hours" data-tone="warning">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="who"><span class="avatar sm">IS</span><div class="name"><b>Imran Shaikh</b><span class="sub">ID 1000201 · Field</span></div></div></td>
+              <td class="hide-m">Field visit</td>
+              <td><div class="name"><b>Metro Hospitals</b></div><div class="tags"><span class="tag">AMC</span><span class="tag">Proposal</span></div></td>
+              <td><span class="pill pill-warning">Pending</span></td>
+              <td class="r hide-m num">5 hrs</td>
+              <td class="r hide-m">₹1,20,000</td>
+              <td><div class="row-actions"><button class="icon-btn" aria-label="Approve"><svg class="ic"><use href="#i-check"/></svg></button><button class="icon-btn" aria-label="Reject"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" aria-label="More"><svg class="ic"><use href="#i-more"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="tbl-foot"><span>Showing 5 of 58 pending · 12 waiting more than 2 working days</span><span>Click a row to review</span></div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<div class="sb-scrim" id="sbScrim"></div>
+
+<!-- ============ Detail drawer ============ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Approval request">
+  <div class="dr-h">
+    <div><small>Request <span id="drId">#4120</span></small><h3 id="drTitle">Sri Lakshmi Traders</h3></div>
+    <div class="btns">
+      <button class="icon-btn" aria-label="Previous" id="drPrev"><svg class="ic"><use href="#i-arrow-up"/></svg></button>
+      <button class="icon-btn" aria-label="Next" id="drNext"><svg class="ic"><use href="#i-arrow-down"/></svg></button>
+      <button class="icon-btn" aria-label="Close" id="drClose"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+  </div>
+  <div class="dr-b">
+    <span class="pill pill-warning" id="drPill">Pending · 2 days</span>
+    <div class="info2">
+      <div class="info"><small>Submitted by</small><b id="drWho">Ravi Kumar</b><span id="drRole">Field Executive · Hyderabad</span><a href="#">Open profile →</a></div>
+      <div class="info"><small id="drType">Field visit</small><b id="drCo">Sri Lakshmi Traders</b><span>Interested · follow-up 28 Oct</span><a href="#">Open company →</a></div>
+    </div>
+    <h4>Visit details</h4>
+    <dl class="kv">
+      <dt>Captured</dt><dd>21 Oct 2026, 11:42</dd>
+      <dt>Location</dt><dd>17.4401, 78.3489 · ±8 m</dd>
+      <dt>Mock location</dt><dd><span class="ok">Not detected</span></dd>
+      <dt>Duration</dt><dd>34 min</dd>
+      <dt>Outcome</dt><dd>Interested · AMC renewal</dd>
+      <dt>Est. value</dt><dd>₹84,000</dd>
+    </dl>
+    <div class="photo">Visit photo · 0.3 MB</div>
+    <h4>Executive's note</h4>
+    <div class="quote">Met the purchase manager. They want the AMC renewed for two years with quarterly billing. Asked for a revised quote before Friday.</div>
+    <h4>Activity</h4>
+    <ul class="tl">
+      <li class="now">Visit submitted for approval<small>2 days ago · Ravi Kumar</small></li>
+      <li>Session started · Hyderabad<small>21 Oct, 09:05</small></li>
+      <li>Follow-up scheduled from last visit<small>14 Oct</small></li>
+    </ul>
+  </div>
+  <div class="dr-f">
+    <button class="btn btn-neutral">Reject</button>
+    <button class="btn btn-neutral">Ask for info</button>
+    <span class="grow"></span>
+    <button class="btn btn-dark"><svg class="ic"><use href="#i-check"/></svg>Approve</button>
+  </div>
+</aside>
+
+<script>
+// ---- Sidebar: nav groups, rail collapse, mobile drawer ----
+(function(){
+  const app=document.getElementById('app'),sb=document.getElementById('sidebar'),sc=document.getElementById('sbScrim');
+  const key='ql2-rail';
+  try{if(localStorage.getItem(key)==='1')app.classList.add('rail')}catch(e){}
+  document.querySelectorAll('.ng>.ni').forEach(b=>b.onclick=()=>{
+    if(app.classList.contains('rail')&&!matchMedia('(max-width:1100px)').matches){app.classList.remove('rail');try{localStorage.setItem(key,'0')}catch(e){}}
+    b.parentElement.classList.toggle('open');
+  });
+  document.getElementById('sbCol').onclick=()=>{
+    if(matchMedia('(max-width:1100px)').matches){open(false);return}
+    const r=app.classList.toggle('rail');try{localStorage.setItem(key,r?'1':'0')}catch(e){}
+  };
+  const open=o=>{sb.classList.toggle('open',o);sc.classList.toggle('show',o)};
+  document.getElementById('burger').onclick=()=>open(true);
+  sc.onclick=()=>open(false);
+  addEventListener('keydown',e=>{if(e.key==='Escape'){open(false);closeDrawer()}});
+  // local time
+  const c=document.getElementById('clock');const tick=()=>c.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Kolkata'});tick();setInterval(tick,30000);
+})();
+document.querySelectorAll('.seg').forEach(s=>s.querySelectorAll('button').forEach(b=>b.onclick=()=>{s.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}));
+
+// ---- Dynamics chart: this month bars, last month dashes, hatched hover + future ----
+(function(){
+  const host=document.getElementById('chart'),tip=document.getElementById('tip');
+  const days=31,today=23;
+  const seed=[18,22,31,26,35,12,8,29,33,41,38,44,15,10,36,39,45,42,48,17,11,40,43,47,44,50,20,14,46,49,52].map(v=>v*1000);
+  const last=[20,19,25,28,30,10,9,26,29,35,37,39,12,11,31,34,40,38,42,15,10,36,41,44,43,46,18,13,44,47,49].map(v=>v*900);
+  const cur=seed.map((v,i)=>i<today?v:null);
+  const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  const fmtK=n=>n>=100000?'₹'+(n/100000).toFixed(1)+'L':'₹'+Math.round(n/1000)+'K';
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function render(){
+    const W=host.clientWidth-20,H=parseFloat(getComputedStyle(host).getPropertyValue('--h'))||260;
+    const padL=54,padR=6,padT=14,padB=28,plotW=W-padL-padR,plotH=H-padT-padB;
+    const max=50000,slot=plotW/days,bw=Math.max(6,slot*.62);
+    const y=v=>padT+plotH-(v/max)*plotH;
+    let s=`<svg viewBox="0 0 ${W} ${H}" style="height:${H}px"><defs>
+      <pattern id="hatchOn" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1.6" height="5" fill="rgba(255,255,255,.45)"/></pattern>
+      <pattern id="hatchOff" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#F3F2F7"/><rect width="1.4" height="5" fill="#DDDCE6"/></pattern></defs>`;
+    for(let g=0;g<=4;g++){const v=max*g/4,yy=y(v);s+=`<line class="gl" x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}"/><text class="yl" x="${padL-8}" y="${yy+4}" text-anchor="end">${fmtK(v)}</text>`}
+    for(let i=0;i<days;i++){
+      const x=padL+i*slot+(slot-bw)/2;
+      if(cur[i]!=null){const h=plotH-(y(cur[i])-padT);s+=`<rect class="bar" data-i="${i}" x="${x}" y="${y(cur[i])}" width="${bw}" height="${h}" rx="4"/><rect class="bar-hatch" x="${x}" y="${y(cur[i])}" width="${bw}" height="${h}" rx="4"/>`}
+      else{const h=plotH-(y(last[i])-padT);s+=`<rect class="bar-future" x="${x}" y="${y(last[i])}" width="${bw}" height="${h}" rx="4"/>`}
+      s+=`<line class="lm" x1="${x-2}" x2="${x+bw+2}" y1="${y(last[i])}" y2="${y(last[i])}"/>`;
+      s+=`<rect class="hit" data-i="${i}" x="${padL+i*slot}" y="${padT}" width="${slot}" height="${plotH}"/>`;
+      if(i===0||(i+1)%5===0)s+=`<text class="xl" x="${x+bw/2}" y="${H-8}" text-anchor="middle">${i+1} Oct</text>`;
+    }
+    s+='</svg>';
+    host.querySelector('svg')?.remove();host.insertAdjacentHTML('afterbegin',s);
+    const svg=host.querySelector('svg');
+    svg.querySelectorAll('.hit').forEach(h=>{
+      h.onmouseenter=()=>{const i=+h.dataset.i;svg.querySelectorAll('.bar').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+        const d=new Date(2026,9,i+1).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+        const a=cur[i],b=last[i];const dl=a!=null?Math.round((a-b)/b*100):null;
+        tip.innerHTML=`<b>${d}</b><div><span class="k"><i></i>This month</span><span>${a!=null?inr(a):'—'}</span></div><div><span class="k"><i class="dash"></i>Last month</span><span>${inr(b)}</span></div>${dl!=null?`<span class="delta ${dl>=0?'delta-up':'delta-down'}">${dl>=0?'↑':'↓'} ${Math.abs(dl)}% vs last month</span>`:'<span class="muted" style="font-size:12px">No data yet</span>'}`;
+        tip.style.display='block';const bx=padL+i*slot+slot/2;const tw=tip.offsetWidth;
+        tip.style.left=Math.min(Math.max(bx-tw/2+8,0),W-tw+8)+'px';tip.style.top=(y(a??b)-tip.offsetHeight-14)+'px'};
+      h.onmouseleave=()=>{tip.style.display='none';svg.querySelectorAll('.bar').forEach(b=>b.classList.remove('on'))};
+    });
+  }
+  render();new ResizeObserver(()=>render()).observe(host);
+})();
+
+// ---- Approval drawer ----
+const drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim');
+let rows=[...document.querySelectorAll('#apprTbl tbody tr')],cur=-1;
+function openRow(i){
+  cur=(i+rows.length)%rows.length;const r=rows[cur];rows.forEach(x=>x.classList.remove('sel'));r.classList.add('sel');
+  const d=r.dataset;drId.textContent='#'+d.id;drTitle.textContent=d.co;drWho.textContent=d.who;drRole.textContent=d.role;drType.textContent=d.type;drCo.textContent=d.co;
+  drPill.textContent=d.wait;drPill.className='pill pill-'+d.tone;
+  drawer.classList.add('open');scrim.classList.add('show');
+}
+function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('show');rows.forEach(x=>x.classList.remove('sel'))}
+rows.forEach((r,i)=>r.onclick=e=>{if(e.target.closest('button,input'))return;openRow(i)});
+drClose.onclick=closeDrawer;scrim.onclick=closeDrawer;drPrev.onclick=()=>openRow(cur-1);drNext.onclick=()=>openRow(cur+1);
+document.querySelectorAll('.chk').forEach(c=>c.onclick=e=>e.stopPropagation());
+</script>
+</body>
+</html>

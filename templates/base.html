@@ -1,0 +1,30 @@
+{% load static ql %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}QuantumLoop{% endblock %} · QuantumLoop</title>
+<link rel="icon" href="{% static 'img/logo-mark.png' %}">
+<link rel="stylesheet" href="{% static 'css/quantum.css' %}">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.4/htmx.min.js" defer></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.8/cdn.min.js"></script>
+<meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% include "partials/icons.svg" %}
+<div class="app" id="app">
+  {% include "partials/sidebar.html" %}
+  <div class="content">
+    {% include "partials/topbar.html" %}
+    {% if messages %}<div class="flash">{% for m in messages %}<div class="flash-item {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+<div class="sb-scrim" id="sbScrim"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Details"></aside>
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

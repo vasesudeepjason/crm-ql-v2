@@ -1,0 +1,77 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Good {% if now.hour < 12 %}morning{% elif now.hour < 17 %}afternoon{% else %}evening{% endif %}, {{ user.first_name }}</h1>
+    <p>Sales, approvals and follow-ups across your team · {{ now|date:"D, j M Y" }}</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary"><svg class="ic"><use href="#i-export"/></svg><span>Export</span></button>
+    {% if perms_set|can:"leads.create" %}<a class="btn btn-primary" href="{% url 'crm:leads' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</a>{% endif %}
+  </div>
+</section>
+
+<section class="grid">
+  {% with k=kpis.leads %}
+  <div class="card kpi s3">
+    <div class="lbl">New leads</div><span class="when">TODAY</span>
+    <div class="val">{{ k.today|intcomma }} {% include "partials/delta.html" with d=k.delta %}</div>
+    <div class="rows"><div>Yesterday<b>{{ k.yday|intcomma }}</b></div><div>This month<b>{{ k.month|intcomma }}</b></div><div>Last month<b>{{ k.last|intcomma }}</b></div></div>
+  </div>
+  {% endwith %}
+  {% with k=kpis.calls %}
+  <div class="card kpi s3">
+    <div class="lbl">Calls logged</div><span class="when">TODAY</span>
+    <div class="val">{{ k.today|intcomma }} {% include "partials/delta.html" with d=k.delta %}</div>
+    <div class="rows"><div>Yesterday<b>{{ k.yday|intcomma }}</b></div><div>This month<b>{{ k.month|intcomma }}</b></div><div>Last month<b>{{ k.last|intcomma }}</b></div></div>
+  </div>
+  {% endwith %}
+  {% with k=kpis.won %}
+  <div class="card kpi hi s3">
+    <div class="lbl">Won revenue</div><span class="when">IN CHART</span>
+    <div class="val">{{ k.month|short_rupees }} {% include "partials/delta.html" with d=k.delta %}</div>
+    <div class="rows"><div>Today<b>{{ k.today|rupees }}</b></div><div>This month<b>{{ k.month|rupees }}</b></div><div>Last month<b>{{ k.last|rupees }}</b></div></div>
+  </div>
+  {% endwith %}
+  <div class="card kpi s3">
+    <div class="lbl">Awaiting approval</div><span class="when">QUEUE</span>
+    <div class="val">{{ pending_total }} {% if stale %}<span class="delta delta-down">{{ stale }} overdue</span>{% endif %}</div>
+    <div class="rows"><div>Open leads<b>{{ open_leads|intcomma }}</b></div><div>Follow-ups due<b>{{ due_total }}</b></div><div>Overdue follow-ups<b>{{ overdue }}</b></div></div>
+  </div>
+
+  <div class="card s8">
+    <div class="card-h">
+      <div><h2>Dynamics</h2><p>Daily won revenue · this month vs last month</p></div>
+      <div class="legend">
+        <div><span class="k"><i></i>This month</span><b>{{ kpis.won.month|rupees }}</b></div>
+        <div><span class="k"><i class="dash"></i>Last month</span><b>{{ kpis.won.last|rupees }}</b></div>
+      </div>
+    </div>
+    <div class="chart" id="chart" data-chart='{{ chart_json }}'><div class="tip" id="tip"></div></div>
+  </div>
+
+  <div class="card s4">
+    <div class="card-h"><div><h2>Follow-ups due</h2><p>Leads to contact today or earlier</p></div><a class="btn btn-sm btn-outline" href="{% url 'crm:leads' %}?stage=follow_up">All</a></div>
+    <ul class="mini">
+      {% for l in follow_ups %}
+      <li><span class="avatar sm">{{ l.name|initials }}</span><div class="t"><b>{{ l.name }}</b><small>{{ l.get_stage_display }} · {% if l.next_follow_up < now.date %}<span style="color:var(--red-700)">overdue {{ l.next_follow_up|date:"j M" }}</span>{% else %}today{% endif %} · {{ l.owner.first_name|default:"unassigned" }}</small></div><span class="v">{{ l.est_value_paise|short_rupees }}</span></li>
+      {% empty %}<li><div class="t muted">Nothing due. Enjoy the quiet.</div></li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="card s12">
+    <div class="card-h">
+      <div><h2>Awaiting approval</h2><p>Field visits and telecaller leads submitted by your team{% if stale %} · <span style="color:var(--red-700)">{{ stale }} waiting more than 2 working days</span>{% endif %}</p></div>
+      <a class="btn btn-sm btn-outline" href="{% url 'approvals:queue' %}">Open queue</a>
+    </div>
+    <div class="tbl-wrap" style="padding-top:8px">
+      <table class="tbl" id="apprTbl">
+        <thead><tr><th>Submitted by</th><th class="hide-m">Type</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
+        <tbody>{% for a in pending %}{% include "approvals/_row.html" %}{% empty %}<tr><td colspan="7" class="muted" style="padding:24px 20px">No pending approvals.</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/dynamics.js"></script>{% endblock %}

@@ -1,0 +1,15 @@
+{% load ql %}
+<tr id="appr-{{ a.id }}" hx-get="{% url 'approvals:detail' a.id %}" hx-target="#drawer" hx-swap="innerHTML" hx-trigger="click" class="{% if a.is_stale %}stale{% endif %}">
+  <td><div class="who"><span class="avatar sm">{{ a.submitter.name|initials }}</span><div class="name"><b>{{ a.submitter.name }}</b><span class="sub">#{{ a.id }} · {{ a.get_kind_display }}</span></div></div></td>
+  <td class="hide-m">{{ a.get_kind_display }}</td>
+  <td><div class="name"><b>{{ a.company_name|default:a.title }}</b></div>{% if a.summary.outcome %}<div class="tags"><span class="tag">{{ a.summary.outcome }}</span></div>{% endif %}</td>
+  <td>{% if a.status == 'pending' %}<span class="pill {% if a.is_stale %}pill-danger{% else %}pill-warning{% endif %}">{% if a.is_stale %}Overdue{% else %}Pending{% endif %}</span>{% elif a.status == 'info' %}<span class="pill pill-info">Info requested</span>{% elif a.status == 'approved' %}<span class="pill pill-success">Approved</span>{% else %}<span class="pill pill-danger">Rejected</span>{% endif %}</td>
+  <td class="r hide-m num">{{ a.submitted_at|waiting }}</td>
+  <td class="r hide-m">{{ a.value_paise|rupees }}</td>
+  {% if can_review %}<td><div class="row-actions">
+    {% if a.is_open %}
+    <button class="icon-btn" aria-label="Approve" hx-post="{% url 'approvals:approve' a.id %}" hx-target="#appr-{{ a.id }}" hx-swap="outerHTML" hx-confirm="Approve this {{ a.get_kind_display|lower }}?"><svg class="ic"><use href="#i-check"/></svg></button>
+    <button class="icon-btn" aria-label="Reject" hx-get="{% url 'approvals:detail' a.id %}" hx-target="#drawer" hx-swap="innerHTML"><svg class="ic"><use href="#i-x"/></svg></button>
+    {% else %}<span class="muted" style="font-size:12px">{{ a.reviewer.first_name }} · {{ a.decided_at|date:"j M" }}</span>{% endif %}
+  </div></td>{% endif %}
+</tr>
