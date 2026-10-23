@@ -13,7 +13,7 @@
   </form>
   <div class="tbl-wrap">
     <table class="tbl">
-      <thead><tr><th>User</th><th>Role</th><th class="hide-m">Reports to</th><th class="hide-m">Last sign-in</th><th>Status</th><th class="r">Actions</th></tr></thead>
+      <thead><tr><th>User</th><th>Role</th><th class="hide-m">Reports to</th><th class="hide-m hide-l">Last sign-in</th><th>Status</th><th class="r">Actions</th></tr></thead>
       <tbody>
         {% for m in members %}
         <tr class="{% if not m.is_active %}inactive{% endif %}" x-data="{edit:false}">
@@ -27,7 +27,7 @@
             </form>
           </td>
           <td class="hide-m">{{ m.manager.user.name|default:"—" }}{% if m.n_reports %} <span class="tag">{{ m.n_reports }} report{{ m.n_reports|pluralize }}</span>{% endif %}</td>
-          <td class="hide-m muted">{{ m.user.last_login|date:"j M, H:i"|default:"never" }}</td>
+          <td class="hide-m hide-l muted">{{ m.user.last_login|date:"j M, H:i"|default:"never" }}</td>
           <td>{% if m.is_active %}<span class="pill pill-success">Active</span>{% else %}<span class="pill pill-neutral">Deactivated</span>{% endif %}</td>
           <td><div class="row-actions">
             {% if m.user_id != user.id and m.is_active %}<button class="btn btn-sm btn-outline" type="button" @click="edit=!edit">Change role</button>{% endif %}
@@ -40,7 +40,7 @@
           <td><div class="who"><span class="avatar sm" style="background:var(--yellow-100);color:var(--yellow-700)">✉</span><div class="name"><b>{{ inv.email }}</b><span class="sub">invited by {{ inv.invited_by.first_name }} · expires {{ inv.expires_at|date:"j M" }}</span></div></div></td>
           <td><span class="pill pill-neutral">{{ inv.get_role_display }}</span></td>
           <td class="hide-m">{{ inv.manager.user.name|default:"—" }}</td>
-          <td class="hide-m muted">—</td>
+          <td class="hide-m hide-l muted">—</td>
           <td><span class="pill pill-warning">Invited</span></td>
           <td><div class="row-actions">
             <form method="post" action="{% url 'accounts:resend_invite' inv.id %}">{% csrf_token %}<button class="btn btn-sm btn-outline" type="submit">Resend</button></form>

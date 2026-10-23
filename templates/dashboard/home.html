@@ -68,7 +68,7 @@
     </div>
     <div class="tbl-wrap" style="padding-top:8px">
       <table class="tbl" id="apprTbl">
-        <thead><tr><th>Submitted by</th><th class="hide-m">Type</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
+        <thead><tr><th>Submitted by</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
         <tbody>{% for a in pending %}{% include "approvals/_row.html" %}{% empty %}<tr><td colspan="7" class="muted" style="padding:24px 20px">No pending approvals.</td></tr>{% endfor %}</tbody>
       </table>
     </div>

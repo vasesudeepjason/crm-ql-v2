@@ -52,11 +52,11 @@ button{font:inherit}
 .ng.open{background:var(--field)}
 .ng.open>.ni .chev{transform:rotate(180deg)}
 .ng.open>.ni:hover{background:#ECEBF1}
-.sub{display:none;padding:0 8px 8px 44px}
+.ng .sub{display:none;padding:0 8px 8px 44px}
 .ng.open .sub{display:block}
-.sub a{display:block;padding:7px 10px;border-radius:9px;font:500 13px var(--font);color:var(--ink-2);text-decoration:none;white-space:nowrap}
-.sub a:hover{color:var(--ink);background:#ECEBF1}
-.sub a.on{background:var(--ink);color:#fff}
+.ng .sub a{display:block;padding:7px 10px;border-radius:9px;font:500 13px var(--font);color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.ng .sub a:hover{color:var(--ink);background:#ECEBF1}
+.ng .sub a.on{background:var(--ink);color:#fff}
 .sb-foot{border-top:1px solid var(--line-2);padding-top:12px;margin-top:8px}
 .ws{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:12px;background:transparent;cursor:pointer;text-align:left;color:var(--ink)}
 .ws:hover{background:var(--field)}

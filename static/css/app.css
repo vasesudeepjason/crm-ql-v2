@@ -107,3 +107,25 @@ input[type=file]{font:400 13px var(--font);padding:9px 0}
 .kv-lead dd{min-width:0;overflow-wrap:anywhere}
 @media (max-width:640px){.kv-lead{grid-template-columns:1fr}}
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gutter);align-content:start;min-width:0}
+
+/* ---- Table density & column balance (overrides quantum.css) ---- */
+.tbl th{padding:8px 12px 10px;font-size:11.5px;letter-spacing:.01em}
+.tbl td{padding:9px 12px;font-size:13.5px}
+.tbl th:first-child,.tbl td:first-child{padding-left:20px;width:1%}
+.tbl th:last-child,.tbl td:last-child{padding-right:20px}
+.tbl .who{gap:10px}
+.tbl .name b{font-size:13.5px;line-height:1.25}
+.tbl .name .sub{display:block;font:400 11px var(--mono);letter-spacing:0;margin-top:1px;color:var(--muted)}
+.tbl .avatar.sm{width:28px;height:28px;font-size:11px}
+.tbl .pill{height:24px;font-size:11.5px;padding:0 9px}
+.tbl .tags{gap:3px;margin-top:3px}
+.tbl .row-actions .icon-btn{width:28px;height:28px}
+.tbl-tools{padding:14px 20px 10px;gap:10px}
+.tbl-foot{padding:10px 20px}
+.tbl-foot,.tbl th{color:var(--muted)}
+.tbl td .muted,.tbl td.muted{color:var(--muted)}
+.tbl td.r,.tbl th.r{font-variant-numeric:tabular-nums}
+.tbl td:empty::after,.tbl td.dash{color:#C3C2CC}
+.tbl .name .sub{font:400 12px var(--font);letter-spacing:0;margin-top:2px}
+.tbl .name .sub.mono{font:400 11px var(--mono)}
+@media (max-width:1280px){.hide-l{display:none}}

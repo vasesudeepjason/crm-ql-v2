@@ -6,7 +6,7 @@
 </div>
 <div class="tbl-wrap">
   <table class="tbl">
-    <thead><tr><th>Submitted by</th><th class="hide-m">Type</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
+    <thead><tr><th>Submitted by</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
     <tbody>{% for a in items %}{% include "approvals/_row.html" %}{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">Nothing here.</td></tr>{% endfor %}</tbody>
   </table>
 </div>
