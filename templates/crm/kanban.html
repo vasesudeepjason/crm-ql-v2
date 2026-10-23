@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Pipeline{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Pipeline</h1><p>Drag a card to move it. Won needs a company; Lost asks for a reason.</p></div>
+  <div class="actions">
+    <form method="get" style="display:flex;gap:8px;flex-wrap:wrap">
+      <label class="input grey" style="width:220px;height:40px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search leads"></label>
+      <label class="input select" style="height:40px;border-radius:999px"><select name="owner" onchange="this.form.submit()"><option value="">Everyone</option>{% for id, name in owners %}<option value="{{ id }}" {% if owner == id|stringformat:"s" %}selected{% endif %}>{{ name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+    </form>
+    <a class="btn btn-outline" href="{% url 'crm:leads' %}">List</a>
+    {% if perms_set|can:"leads.create" %}<a class="btn btn-primary" href="{% url 'crm:lead_create' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</a>{% endif %}
+  </div>
+</section>
+<div class="board" id="board" data-can-move="{{ can_move|yesno:'1,0' }}" data-csrf="{{ csrf_token }}">
+  {% for col in columns %}
+  <section class="col" data-stage="{{ col.code }}">
+    <header class="col-h"><span>{{ col.label }}</span><span class="n">{{ col.n }}</span><span class="v">{{ col.value|short_rupees }}</span></header>
+    <div class="col-b">
+      {% for l in col.leads %}
+      <article class="kcard" draggable="{{ can_move|yesno:'true,false' }}" data-id="{{ l.pk }}" data-url="{% url 'crm:kanban_move' l.pk %}">
+        <a class="kname" href="{% url 'crm:lead_detail' l.pk %}">{{ l.name }}</a>
+        {% if l.company %}<div class="kco">{{ l.company.name }}</div>{% endif %}
+        <div class="kfoot">
+          <span class="avatar sm" title="{{ l.owner.name|default:'Unassigned' }}">{{ l.owner.name|default:"?"|initials }}</span>
+          {% if l.next_follow_up %}<span class="tag {% if l.next_follow_up < today %}overdue{% endif %}">{{ l.next_follow_up|date:"j M" }}</span>{% endif %}
+          <span class="kval">{{ l.est_value_paise|short_rupees }}</span>
+        </div>
+      </article>
+      {% endfor %}
+      {% if col.more %}<a class="kmore" href="{% url 'crm:leads' %}?stage={{ col.code }}">+{{ col.more }} more</a>{% endif %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/kanban.js"></script>{% endblock %}

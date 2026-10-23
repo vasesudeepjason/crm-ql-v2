@@ -28,6 +28,8 @@ Invite colleagues from **Set up → Users & roles** (role, optional manager). Th
 
 **Audit log** (Set up → Audit log): filter by group, person, period and text; click a row for before/after and IP.
 
+**Leads** (Phase 1): create/edit with owner assignment by scope and an inline new company; a live duplicate check on phone, email and similar name that suggests matches and never merges (tick "Create anyway" to override, which is audited); a detail page with calls, notes, tasks, stage history and approval events on one timeline; stage changes with the rules (Won needs a company, Lost needs a reason); and a drag-and-drop pipeline board at Leads → Pipeline (tap-to-move on touch). Telecaller-created leads go to the approval queue as "Pending approval".
+
 **Workspace** (Set up → Workspace): name, timezone, GSTIN, address; the list of support sessions with "End access"; DPDP export of all data as a zip of CSVs; deletion request (Owner only, confirmed by QuantumLoop before anything is removed).
 
 Platform staff (`is_staff`): `python manage.py createsuperuser`, then http://localhost:8000/platform/support/. Staff enter a customer workspace only through a **support session** — a reason and a time limit (5 min to 4 h) — during which they act as an Admin and every action is audited with the session id. The customer's admins see the session on their Workspace page and can end it; sessions expire on their own. The Django admin at /platform/ remains for tenants, plans and users.

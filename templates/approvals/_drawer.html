@@ -14,7 +14,7 @@
   {% else %}<span class="pill pill-danger">Rejected · {{ a.decided_at|date:"j M, H:i" }}</span>{% endif %}
   <div class="info2">
     <div class="info"><small>Submitted by</small><b>{{ a.submitter.name }}</b><span>{{ a.submitter.memberships.first.role_name }}</span></div>
-    <div class="info"><small>{{ a.get_kind_display }}</small><b>{{ a.company_name|default:a.title }}</b>{% if a.summary.outcome %}<span>{{ a.summary.outcome }}</span>{% endif %}</div>
+    <div class="info"><small>{{ a.get_kind_display }}</small><b>{{ a.company_name|default:a.title }}</b>{% if a.summary.outcome %}<span>{{ a.summary.outcome }}</span>{% endif %}{% if rec %}<a href="{% url 'crm:lead_detail' rec.pk %}">Open lead →</a>{% endif %}</div>
   </div>
   <h4>Details</h4>
   <dl class="kv">

@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}{% if is_new %}New lead{% else %}Edit {{ lead.name }}{% endif %}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>{% if is_new %}New lead{% else %}Edit lead{% endif %}</h1><p>{% if is_new %}{% if needs_approval %}Your lead goes to your manager for approval before it joins the pipeline.{% else %}Phone or email is checked for duplicates as you type.{% endif %}{% else %}{{ lead.name }} · {{ lead.get_stage_display }}{% endif %}</p></div>
+  <div class="actions"><a class="btn btn-outline" href="{% if is_new %}{% url 'crm:leads' %}{% else %}{% url 'crm:lead_detail' lead.pk %}{% endif %}">Cancel</a></div>
+</section>
+<section class="grid">
+  <form method="post" class="card sec s8" id="leadForm">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+    <div class="form-2">
+      <label class="span2">Lead name *<span class="input {% if form.name.errors %}error{% endif %}">{{ form.name }}</span>{% if form.name.errors %}<div class="field-err">{{ form.name.errors.0 }}</div>{% endif %}</label>
+      <label>Phone<span class="input {% if form.phone.errors %}error{% endif %}">{{ form.phone }}</span>{% if form.phone.errors %}<div class="field-err">{{ form.phone.errors.0 }}</div>{% endif %}</label>
+      <label>Email<span class="input {% if form.email.errors %}error{% endif %}">{{ form.email }}</span>{% if form.email.errors %}<div class="field-err">{{ form.email.errors.0 }}</div>{% endif %}</label>
+      <label>Company<span class="input select">{{ form.company }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>New company<span class="input {% if form.new_company.errors %}error{% endif %}">{{ form.new_company }}</span>{% if form.new_company.errors %}<div class="field-err">{{ form.new_company.errors.0 }}</div>{% endif %}</label>
+      <label>Stage<span class="input select">{{ form.stage }}<svg class="ic chev"><use href="#i-down"/></svg></span>{% if form.stage.errors %}<div class="field-err">{{ form.stage.errors.0 }}</div>{% endif %}</label>
+      <label>Owner<span class="input select">{{ form.owner }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>Source<span class="input">{{ form.source }}</span><datalist id="sources">{% for s in sources %}<option value="{{ s }}">{% endfor %}</datalist></label>
+      <label>Estimated value (₹)<span class="input">{{ form.est_value }}</span></label>
+      <label>Next follow-up<span class="input">{{ form.next_follow_up }}</span></label>
+      <label>Tags<span class="input">{{ form.tags_text }}</span></label>
+      <label class="span2">Consent note<span class="input">{{ form.consent_note }}</span><small class="muted">Required under DPDP for data captured from third parties: say how it was collected and that follow-up was agreed.</small></label>
+      <label class="chk-row"><input type="checkbox" class="chk" name="do_not_contact" {% if form.do_not_contact.value %}checked{% endif %}> Do not contact</label>
+    </div>
+    <div id="dupBox" hx-get="{% url 'crm:check_duplicate' %}{% if lead %}?exclude={{ lead.pk }}{% endif %}" hx-trigger="input changed delay:500ms from:#id_phone, input changed delay:500ms from:#id_email, input changed delay:700ms from:#id_name, change from:#id_phone, change from:#id_email" hx-include="#id_phone,#id_email,#id_name" hx-swap="innerHTML">
+      {% include "crm/_duplicates.html" with dups=dups live=False %}
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line-2);flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit">{% if is_new %}{% if needs_approval %}Submit for approval{% else %}Create lead{% endif %}{% else %}Save changes{% endif %}</button>
+      {% if is_new %}<label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)"><input type="checkbox" class="chk" name="create_anyway" {% if form.create_anyway.value %}checked{% endif %}> Create anyway if it looks like a duplicate</label>{% endif %}
+    </div>
+  </form>
+  <aside class="s4">
+    <div class="card sec">
+      <h2 style="font:600 15px var(--font);margin-bottom:8px">Pipeline stages</h2>
+      <p class="muted" style="font-size:13px;line-height:1.5">New → Attempted → Contacted → Follow up → Interested → Qualified → Proposal sent → Negotiation → Won / Lost. Every change is kept in the lead's history. Won needs a company attached; Lost needs a reason.</p>
+    </div>
+  </aside>
+</section>
+{% endblock %}

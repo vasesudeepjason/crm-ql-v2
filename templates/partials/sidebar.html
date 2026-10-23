@@ -7,9 +7,9 @@
   <nav class="nav">
     <a class="ni {% active 'dashboard:home' %}" href="{% url 'dashboard:home' %}" title="Dashboard"><svg class="ic"><use href="#i-grid"/></svg><span class="tx">Dashboard</span></a>
     {% if perms_set|can:"leads.view" %}
-    <div class="ng {% active 'crm:leads' %}{% if request.resolver_match.url_name == 'leads' %} open{% endif %}">
+    <div class="ng {% if request.resolver_match.url_name in 'leads,kanban,lead_create,lead_detail,lead_edit' %}open{% endif %}">
       <button class="ni" title="Leads"><svg class="ic"><use href="#i-leads"/></svg><span class="tx">Leads</span><svg class="ic chev"><use href="#i-down"/></svg></button>
-      <div class="sub"><a class="{% active 'crm:leads' %}" href="{% url 'crm:leads' %}">All leads</a><a href="{% url 'crm:leads' %}?stage=new">New</a><a href="{% url 'crm:leads' %}?stage=follow_up">Follow-ups</a><a href="{% url 'imports:new' %}">Import leads</a></div>
+      <div class="sub"><a class="{% active 'crm:leads' %}" href="{% url 'crm:leads' %}">All leads</a><a class="{% active 'crm:kanban' %}" href="{% url 'crm:kanban' %}">Pipeline</a>{% if perms_set|can:"leads.create" %}<a class="{% active 'crm:lead_create' %}" href="{% url 'crm:lead_create' %}">Add lead</a>{% endif %}<a href="{% url 'imports:new' %}">Import leads</a></div>
     </div>
     {% endif %}
     {% if perms_set|can:"companies.view" %}<a class="ni {% active 'crm:companies' %}" href="{% url 'crm:companies' %}" title="Companies"><svg class="ic"><use href="#i-co"/></svg><span class="tx">Companies</span></a>{% endif %}

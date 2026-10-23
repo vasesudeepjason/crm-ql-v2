@@ -1,0 +1,13 @@
+{% load ql %}
+{% if dups %}
+<div class="dups">
+  <div class="dups-h"><svg class="ic"><use href="#i-help"/></svg><b>{% if dups|length == 1 %}This may already exist{% else %}{{ dups|length }} possible duplicates{% endif %}</b><span class="muted">We never merge automatically — open the match if it is the same lead.</span></div>
+  {% for d in dups %}
+  <a class="dup" href="{% url 'crm:lead_detail' d.lead.pk %}">
+    <span class="avatar sm">{{ d.lead.name|initials }}</span>
+    <span class="t"><b>{{ d.lead.name }}</b><small>{{ d.lead.company.name|default:"no company" }} · {{ d.lead.get_stage_display }} · {{ d.lead.owner.first_name|default:"unassigned" }} · {{ d.lead.created_at|date:"j M Y" }}</small></span>
+    <span class="tag">{{ d.why }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% elif live %}<div class="muted" style="font-size:12.5px;margin-top:10px">No matching lead found.</div>{% endif %}

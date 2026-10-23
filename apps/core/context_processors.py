@@ -8,7 +8,11 @@ def tenant_context(request):
         if m.role == "manager":
             qs = qs.filter(submitter_id__in=m.team_user_ids())
         badge = qs.count()
+    from django.utils import timezone
+
     return {
+        "today": timezone.localdate(),
+        "can_review": bool(m and (m.has_perm("leads.approve") or m.has_perm("visits.approve"))),
         "tenant": getattr(request, "tenant", None),
         "membership": m,
         "perms_set": m.permissions() if m else frozenset(),

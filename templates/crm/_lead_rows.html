@@ -1,9 +1,9 @@
 {% load ql %}
 {% for l in page %}
-<tr>
+<tr onclick="location.href='{% url 'crm:lead_detail' l.pk %}'">
   <td><div class="who"><span class="avatar sm">{{ l.name|initials }}</span><div class="name"><b>{{ l.name }}</b><span class="sub">{{ l.phone|default:"no phone" }}{% if l.status == 'pending' %} · pending approval{% endif %}</span></div></div></td>
   <td class="hide-m">{{ l.company.name|default:"—" }}</td>
-  <td>{% if l.stage == 'won' %}<span class="pill pill-success">Won</span>{% elif l.stage == 'lost' %}<span class="pill pill-neutral">Lost</span>{% elif l.stage in 'qualified,proposal,negotiation' %}<span class="pill pill-brand">{{ l.get_stage_display }}</span>{% elif l.stage == 'new' %}<span class="pill pill-info">New</span>{% else %}<span class="pill pill-warning">{{ l.get_stage_display }}</span>{% endif %}</td>
+  <td>{% include "crm/_stage_pill.html" with stage=l.stage label=l.get_stage_display %}</td>
   <td class="hide-m">{{ l.owner.name|default:"—" }}</td>
   <td class="hide-m">{% if l.next_follow_up %}{{ l.next_follow_up|date:"j M" }}{% else %}—{% endif %}</td>
   <td class="r">{{ l.est_value_paise|rupees }}</td>

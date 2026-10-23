@@ -1,0 +1,95 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}{{ lead.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <h1>{{ lead.name }}</h1>
+      {% include "crm/_stage_pill.html" with stage=lead.stage label=lead.get_stage_display %}
+      {% if lead.status == 'pending' %}<span class="pill pill-warning">Pending approval</span>{% elif lead.status == 'rejected' %}<span class="pill pill-danger">Rejected</span>{% endif %}
+      {% if lead.do_not_contact %}<span class="pill pill-danger">Do not contact</span>{% endif %}
+    </div>
+    <p>{% if lead.company %}<a href="{% url 'crm:companies' %}?q={{ lead.company.name|urlencode }}" style="color:var(--brand-500);text-decoration:none;font-weight:500">{{ lead.company.name }}</a> · {% endif %}{{ lead.source|default:"no source" }} · owner {{ lead.owner.name|default:"unassigned" }} · created {{ lead.created_at|date:"j M Y" }}{% if lead.source_system %} · imported from {{ lead.source_system }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'crm:kanban' %}">Kanban</a>
+    {% if can_edit %}<a class="btn btn-secondary" href="{% url 'crm:lead_edit' lead.pk %}">Edit</a>{% endif %}
+    {% if lead.phone %}<a class="btn btn-primary" href="tel:{{ lead.phone_normalized|default:lead.phone }}"><svg class="ic"><use href="#i-phone"/></svg>Call</a>{% endif %}
+  </div>
+</section>
+
+{% if approval %}<div class="banner"><svg class="ic"><use href="#i-ok"/></svg><span>Submitted by {{ approval.submitter.name }} · {{ approval.get_status_display|lower }} for {{ approval.submitted_at|waiting }}{% if approval.reason %} · "{{ approval.reason }}"{% endif %}</span>{% if can_review %}<a class="btn btn-sm btn-dark" href="{% url 'approvals:queue' %}">Open queue</a>{% endif %}</div>{% endif %}
+
+<section class="grid">
+  <div class="s8 stack">
+    {% if can_edit or perms_set|can:"calls.create" %}
+    <div class="card sec" x-data="{tab:'call'}">
+      <div class="seg sm" style="margin-bottom:14px">
+        {% if perms_set|can:"calls.create" or can_edit %}<button type="button" :class="tab==='call'&&'on'" @click="tab='call'">Log a call</button><button type="button" :class="tab==='note'&&'on'" @click="tab='note'">Add note</button><button type="button" :class="tab==='task'&&'on'" @click="tab='task'">Add task</button>{% endif %}
+        {% if can_edit %}<button type="button" :class="tab==='stage'&&'on'" @click="tab='stage'">Change stage</button>{% endif %}
+      </div>
+      <form x-show="tab!=='stage'" hx-post="{% url 'crm:activity_add' lead.pk %}" hx-target="#actErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+        <input type="hidden" name="type" :value="tab">
+        <label x-show="tab==='call'">Outcome<span class="input select">{{ activity_form.outcome }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label x-show="tab==='call'">Duration<span class="input">{{ activity_form.duration_minutes }}</span></label>
+        <label x-show="tab==='task'" class="span2">Due<span class="input">{{ activity_form.due_at }}</span></label>
+        <label class="span2"><span x-text="tab==='task'?'What needs doing':'Notes'"></span><span class="input" style="height:auto">{{ activity_form.notes }}</span></label>
+        <label>Next follow-up<span class="input">{{ activity_form.next_follow_up }}</span></label>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-dark" type="submit" x-text="tab==='call'?'Save call':tab==='note'?'Save note':'Save task'"></button></div>
+        <div id="actErr" class="span2"></div>
+      </form>
+      <form x-show="tab==='stage'" x-cloak hx-post="{% url 'crm:lead_stage' lead.pk %}" hx-target="#stageErr" hx-swap="innerHTML" class="form-2" x-data="{stage:'{{ lead.stage }}'}">{% csrf_token %}
+        <label>Stage<span class="input select"><select name="stage" x-model="stage">{% for code, name in stage_form.fields.stage.choices %}<option value="{{ code }}" {% if code == lead.stage %}selected{% endif %}>{{ name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Next follow-up<span class="input">{{ stage_form.next_follow_up }}</span></label>
+        <label class="span2" x-show="stage!=='lost'">Note<span class="input">{{ stage_form.note }}</span></label>
+        <label class="span2" x-show="stage==='lost'" x-cloak>Reason lost *<span class="input">{{ stage_form.lost_reason }}</span></label>
+        {% if not lead.company %}<div class="muted span2" style="font-size:12.5px" x-show="stage==='won'" x-cloak>Attach a company (Edit) before marking Won.</div>{% endif %}
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-dark" type="submit">Update stage</button></div>
+        <div id="stageErr" class="span2"></div>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-h"><div><h2>Timeline</h2><p>Calls, notes, tasks, stage changes and approvals</p></div></div>
+      <ul class="tl" style="padding:8px 20px 20px">
+        {% for e in timeline %}
+        {% if e.kind == 'activity' %}{% with a=e.obj %}
+        <li class="{% if forloop.first %}now{% endif %}">
+          <b>{% if a.type == 'call' %}Call · {{ a.get_outcome_display|default:"logged" }}{% if a.duration_seconds %} · {{ a.duration_seconds|floatformat:0|add:0 }}s{% endif %}{% elif a.type == 'task' %}Task{% if a.done_at %} · done{% else %} · due {{ a.due_at|date:"j M, H:i" }}{% endif %}{% elif a.type == 'meeting' %}Meeting{% else %}Note{% endif %}</b>
+          {% if a.notes %}<div class="quote" style="margin-top:6px;padding:10px 12px">{{ a.notes|linebreaksbr }}</div>{% endif %}
+          <small>{{ a.created_at|date:"j M Y, H:i" }} · {{ a.created_by.name|default:"system" }}{% if a.type == 'task' and not a.done_at and can_edit %} · <button class="link" hx-post="{% url 'crm:task_done' lead.pk a.pk %}">mark done</button>{% endif %}</small>
+        </li>{% endwith %}
+        {% elif e.kind == 'stage' %}{% with h=e.obj %}
+        <li><b>{% if h.from_stage %}Stage {{ h.from_stage }} → {{ h.to_stage }}{% else %}Created as {{ h.to_stage }}{% endif %}</b>{% if h.note and h.note != 'created' %}<div class="muted" style="font-size:13px;margin-top:2px">{{ h.note }}</div>{% endif %}<small>{{ h.created_at|date:"j M Y, H:i" }} · {{ h.changed_by.name|default:"system" }}</small></li>{% endwith %}
+        {% else %}{% with ap=e.obj %}
+        <li><b>Approval · {{ ap.get_status_display }}</b>{% if ap.reason %}<div class="muted" style="font-size:13px;margin-top:2px">{{ ap.reason }}</div>{% endif %}<small>{{ e.at|date:"j M Y, H:i" }} · {% if ap.reviewer %}{{ ap.reviewer.name }}{% else %}submitted by {{ ap.submitter.name }}{% endif %}</small></li>{% endwith %}
+        {% endif %}
+        {% empty %}<li class="muted">Nothing yet. Log the first call.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <aside class="s4 stack">
+    <div class="card sec">
+      <dl class="kv kv-lead">
+        <dt>Phone</dt><dd>{% if lead.phone %}<a href="tel:{{ lead.phone_normalized|default:lead.phone }}" class="mono" style="color:var(--brand-500);text-decoration:none">{{ lead.phone }}</a>{% else %}—{% endif %}</dd>
+        <dt>Email</dt><dd>{% if lead.email %}<a href="mailto:{{ lead.email }}" style="color:var(--brand-500);text-decoration:none">{{ lead.email }}</a>{% else %}—{% endif %}</dd>
+        <dt>Value</dt><dd>{{ lead.est_value_paise|rupees }}</dd>
+        <dt>Follow-up</dt><dd>{% if lead.next_follow_up %}{% if lead.next_follow_up < today %}<span style="color:var(--red-700)">{{ lead.next_follow_up|date:"j M Y" }} · overdue</span>{% else %}{{ lead.next_follow_up|date:"j M Y" }}{% endif %}{% else %}—{% endif %}</dd>
+        <dt>Owner</dt><dd>{{ lead.owner.name|default:"Unassigned" }}</dd>
+        <dt>Source</dt><dd>{{ lead.source|default:"—" }}</dd>
+        {% if lead.tags %}<dt>Tags</dt><dd><div class="tags">{% for t in lead.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div></dd>{% endif %}
+        {% if lead.won_at %}<dt>Won</dt><dd>{{ lead.won_at|date:"j M Y" }}</dd>{% endif %}
+        {% if lead.lost_reason %}<dt>Lost</dt><dd>{{ lead.lost_reason }}</dd>{% endif %}
+        <dt>Consent</dt><dd class="muted" style="font-size:12.5px">{{ lead.consent_note|default:"Not recorded" }}</dd>
+        {% if lead.external_id %}<dt>Original ID</dt><dd class="mono" style="font-size:12px">{{ lead.external_id }}</dd>{% endif %}
+      </dl>
+    </div>
+    {% if open_tasks %}
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Open tasks</h2><ul class="mini" style="padding:0">{% for t in open_tasks %}<li><div class="t"><b style="white-space:normal">{{ t.notes|truncatechars:60 }}</b><small>due {{ t.due_at|date:"j M, H:i" }}</small></div></li>{% endfor %}</ul></div>
+    {% endif %}
+    {% if dups %}<div class="card sec">{% include "crm/_duplicates.html" with dups=dups live=False %}</div>{% endif %}
+  </aside>
+</section>
+{% endblock %}

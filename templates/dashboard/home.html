@@ -8,7 +8,7 @@
   </div>
   <div class="actions">
     <button class="btn btn-secondary"><svg class="ic"><use href="#i-export"/></svg><span>Export</span></button>
-    {% if perms_set|can:"leads.create" %}<a class="btn btn-primary" href="{% url 'crm:leads' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</a>{% endif %}
+    {% if perms_set|can:"leads.create" %}<a class="btn btn-primary" href="{% url 'crm:lead_create' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</a>{% endif %}
   </div>
 </section>
 
@@ -56,7 +56,7 @@
     <div class="card-h"><div><h2>Follow-ups due</h2><p>Leads to contact today or earlier</p></div><a class="btn btn-sm btn-outline" href="{% url 'crm:leads' %}?stage=follow_up">All</a></div>
     <ul class="mini">
       {% for l in follow_ups %}
-      <li><span class="avatar sm">{{ l.name|initials }}</span><div class="t"><b>{{ l.name }}</b><small>{{ l.get_stage_display }} · {% if l.next_follow_up < now.date %}<span style="color:var(--red-700)">overdue {{ l.next_follow_up|date:"j M" }}</span>{% else %}today{% endif %} · {{ l.owner.first_name|default:"unassigned" }}</small></div><span class="v">{{ l.est_value_paise|short_rupees }}</span></li>
+      <li onclick="location.href='{% url 'crm:lead_detail' l.pk %}'" style="cursor:pointer"><span class="avatar sm">{{ l.name|initials }}</span><div class="t"><b>{{ l.name }}</b><small>{{ l.get_stage_display }} · {% if l.next_follow_up < now.date %}<span style="color:var(--red-700)">overdue {{ l.next_follow_up|date:"j M" }}</span>{% else %}today{% endif %} · {{ l.owner.first_name|default:"unassigned" }}</small></div><span class="v">{{ l.est_value_paise|short_rupees }}</span></li>
       {% empty %}<li><div class="t muted">Nothing due. Enjoy the quiet.</div></li>{% endfor %}
     </ul>
   </div>
