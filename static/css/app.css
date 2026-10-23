@@ -54,3 +54,18 @@
 .banner .btn{margin-left:auto}
 @media (max-width:1100px){.settings{grid-template-columns:minmax(0,1fr)}.subnav{position:static;display:flex;gap:4px;overflow-x:auto;padding:8px}.subnav .ni{white-space:nowrap;width:auto;flex:none}}
 @media (max-width:640px){.totp{grid-template-columns:1fr}.kv.wide{grid-template-columns:1fr}.sec{padding:16px}.banner{flex-wrap:wrap}.banner .btn{margin-left:0}}
+
+/* ---- Imports & audit ---- */
+.steps{padding-left:20px;display:grid;gap:8px;font-size:13.5px;color:var(--ink-2)}
+.steps b{color:var(--ink)}
+.map-tbl td{white-space:nowrap}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.stage-grid label{display:flex;align-items:center;gap:10px}
+.stage-grid .input{flex:1}
+.stage-grid select{width:100%}
+.diff{display:grid;gap:6px;margin-top:8px}
+.diff small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.diff code{display:block;font:400 12px var(--mono);background:var(--field);border-radius:8px;padding:6px 8px;white-space:pre-wrap;word-break:break-all}
+.seg label.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,20,31,.12)}
+.seg label{height:28px;padding:0 12px;border-radius:var(--r-pill);font:500 12.5px var(--font);color:var(--ink-2);display:inline-flex;align-items:center;white-space:nowrap}
+input[type=file]{font:400 13px var(--font);padding:9px 0}

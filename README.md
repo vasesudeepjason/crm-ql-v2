@@ -24,6 +24,10 @@ Sign-in options: email + password, or "Email me a sign-in code" (6-digit code, 1
 
 Invite colleagues from **Set up → Users & roles** (role, optional manager). The invite email carries a single-use link valid for 7 days; plan seat limits are enforced. Role changes, deactivations, invites and sign-ins are all written to the audit log.
 
+**Import wizard** (Set up → Import wizard): upload CSV/XLSX of companies or leads, pick the source (Excel, Zoho/Bigin, Tally, IndiaMART/JustDial, Freshsales/LeadSquared/HubSpot) so columns map themselves, confirm the mapping (saved for next time) and the pipeline-stage table, then dry run → commit → roll back within 14 days. Phones are normalised, GSTIN/email/dates validated, duplicates flagged within the file and against existing records (suggested, never merged). A needs-fixing CSV lists every rejected row with its reason. Rows keep source, original ID and raw values; a re-import with the same Original ID updates instead of duplicating.
+
+**Audit log** (Set up → Audit log): filter by group, person, period and text; click a row for before/after and IP.
+
 Platform admin (QuantumLoop staff): `python manage.py createsuperuser`, then http://localhost:8000/platform/.
 
 ## Tests
@@ -43,6 +47,7 @@ apps/tenants      Tenant, Plan
 apps/accounts     User (email login, TOTP), Membership (one role per tenant), fixed roles → permissions,
                   OneTimeCode (email sign-in), Invitation, settings screens (profile, users & roles)
 apps/crm          Company, Contact, Lead (+stage history), Activity (calls, notes, tasks)
+apps/imports      Import wizard: ImportJob/ImportRow/SavedMapping, source templates, parsers, validate/commit/rollback
 apps/approvals    One Approval record for field visits and telecaller leads; approve / reject / ask-for-info rules
 apps/dashboard    Home dashboard
 templates/        base layout, partials, pages

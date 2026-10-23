@@ -1,0 +1,30 @@
+{% load ql %}
+{% if request.htmx %}
+<form class="tbl-tools" hx-get="{% url 'core:audit' %}" hx-target="#audit" hx-trigger="change, keyup changed delay:400ms from:input[name=q]" hx-push-url="true">
+  <div class="seg sm">{% for code, name in groups %}<label class="{% if group == code %}on{% endif %}" style="cursor:pointer"><input type="radio" name="group" value="{{ code }}" {% if group == code %}checked{% endif %} hidden>{{ name }}</label>{% endfor %}</div>
+  <span class="input select" style="height:36px;width:180px"><select name="actor"><option value="">Anyone</option>{% for m in actors %}<option value="{{ m.user_id }}" {% if actor == m.user_id|stringformat:"s" %}selected{% endif %}>{{ m.user.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+  <span class="input select" style="height:36px;width:140px"><select name="days">{% for d, n in day_choices %}<option value="{{ d }}" {% if days == d %}selected{% endif %}>{{ n }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+  <label class="input grey" style="margin-left:auto;width:240px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Action, record, note…"></label>
+</form>
+{% endif %}
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>When</th><th>Who</th><th>Action</th><th class="hide-m">Record</th><th class="hide-m">Details</th></tr></thead>
+    <tbody>
+      {% for e in page %}
+      <tr x-data="{open:false}" @click="open=!open" style="cursor:pointer">
+        <td class="muted" style="white-space:nowrap">{{ e.at|date:"j M, H:i:s" }}</td>
+        <td>{% if e.actor %}<div class="who"><span class="avatar sm">{{ e.actor.name|initials }}</span>{{ e.actor.name }}</div>{% else %}<span class="muted">system</span>{% endif %}</td>
+        <td><code class="mono" style="font-size:12px">{{ e.action }}</code></td>
+        <td class="hide-m">{% if e.model %}{{ e.model }} #{{ e.object_id }}{% endif %}</td>
+        <td class="hide-m" style="white-space:normal;max-width:420px">
+          {% if e.note %}<span class="tag">{{ e.note }}</span>{% endif %}
+          {% if e.before or e.after %}<span class="muted" style="font-size:12px">{% if e.after %}{% for k, v in e.after.items %}{{ k }}: <b>{{ v }}</b>{% if not forloop.last %} · {% endif %}{% endfor %}{% endif %}</span>
+          <div x-show="open" x-cloak class="diff">{% if e.before %}<div><small>Before</small><code>{{ e.before }}</code></div>{% endif %}{% if e.after %}<div><small>After</small><code>{{ e.after }}</code></div>{% endif %}{% if e.ip %}<div><small>IP</small><code>{{ e.ip }}</code></div>{% endif %}</div>{% endif %}
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="5" class="muted" style="padding:28px 20px">No entries match.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} entries</span><span>{% if page.has_previous %}<a hx-get="{% url 'core:audit' %}?group={{ group }}&actor={{ actor }}&days={{ days }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}" hx-target="#audit" href="?group={{ group }}&actor={{ actor }}&days={{ days }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a hx-get="{% url 'core:audit' %}?group={{ group }}&actor={{ actor }}&days={{ days }}&q={{ q|urlencode }}&page={{ page.next_page_number }}" hx-target="#audit" href="?group={{ group }}&actor={{ actor }}&days={{ days }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>

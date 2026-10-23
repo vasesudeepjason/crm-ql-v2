@@ -1,0 +1,26 @@
+{% load ql %}
+<div class="tbl-tools">
+  <div class="seg sm">
+    {% for code, name in row_tabs %}
+    <a class="{% if tab == code %}on{% endif %}" href="?tab={{ code }}" hx-get="{% url 'imports:rows' job.id %}?tab={{ code }}" hx-target="#rows" hx-push-url="?tab={{ code }}">{{ name }} <span class="n">{% if code == 'all' %}{{ job.row_count }}{% else %}{{ job.counts|get_item:code|default:0 }}{% endif %}</span></a>
+    {% endfor %}
+  </div>
+</div>
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>Row</th>{% for c in shown_cols %}<th>{{ c }}</th>{% endfor %}<th>Result</th></tr></thead>
+    <tbody>
+      {% for r in page %}
+      <tr>
+        <td class="mono muted">{{ r.row_no }}</td>
+        {% for c in shown_cols %}<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ r.raw|get_item:c|default:"—"|truncatechars:40 }}</td>{% endfor %}
+        <td style="white-space:normal;min-width:260px">
+          {% if r.status == 'new' %}<span class="pill pill-success">New</span>{% elif r.status == 'update' %}<span class="pill pill-info">Update</span>{% elif r.status == 'skip' %}<span class="pill pill-warning">Skipped</span>{% else %}<span class="pill pill-danger">Needs fixing</span>{% endif %}
+          {% for msg in r.messages %}<div class="muted" style="font-size:12.5px;margin-top:4px">{{ msg }}</div>{% endfor %}
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="{{ shown_cols|length|add:2 }}" class="muted" style="padding:24px 20px">Nothing in this group.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} rows</span><span>{% if page.has_previous %}<a hx-get="{% url 'imports:rows' job.id %}?tab={{ tab }}&page={{ page.previous_page_number }}" hx-target="#rows" href="?tab={{ tab }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a hx-get="{% url 'imports:rows' job.id %}?tab={{ tab }}&page={{ page.next_page_number }}" hx-target="#rows" href="?tab={{ tab }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>

@@ -1,0 +1,42 @@
+{% extends "settings/_layout.html" %}{% load humanize ql %}
+{% block title %}Map columns{% endblock %}
+{% block settings %}
+<form method="post" class="card sec" x-data="{saveMap:false}">{% csrf_token %}
+  <div class="card-h" style="padding:0 0 16px">
+    <div><h2>Step 2 · Map columns</h2><p><b>{{ job.filename }}</b> · {{ job.row_count|intcomma }} rows · {{ job.get_entity_display }} from {{ job.source }}</p></div>
+    <a class="btn btn-sm btn-outline" href="{% url 'imports:new' %}">Different file</a>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl map-tbl">
+      <thead><tr><th>Column in your file</th><th class="hide-m">Sample values</th><th>Imports as</th></tr></thead>
+      <tbody>
+        {% for col in job.columns %}
+        <tr>
+          <td><b>{{ col }}</b></td>
+          <td class="hide-m muted" style="white-space:normal;max-width:320px">{% for r in samples %}{{ r.raw|get_item:col|truncatechars:28 }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+          <td><span class="input select" style="height:36px;min-width:220px"><select name="col:{{ col }}"><option value="">— Skip this column —</option>{% for f in fields %}<option value="{{ f.key }}" {% if mapping|get_item:col == f.key %}selected{% endif %}>{{ f.label }}{% if f.required %} *{% endif %}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="font-size:12.5px;margin:12px 0 0">* required. Two columns mapped to the same field are joined (e.g. First name + Last name). Original ID lets a re-import update records instead of duplicating them.</p>
+
+  {% if stage_values %}
+  <h3 style="font:600 15px var(--font);margin:24px 0 6px">Pipeline stages</h3>
+  <p class="muted" style="font-size:13px;margin-bottom:10px">Your file uses these stage names. Choose where each lands in your pipeline; you approve this table, we never guess silently.</p>
+  <div class="stage-grid">
+    {% for v in stage_values %}
+    <label><span class="tag" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">{{ v }}</span><span class="input select" style="height:34px"><select name="stage:{{ v }}">{% for code, name in stage_choices %}<option value="{{ code }}" {% if stage_map|get_item:v == code or not stage_map and guess|get_item:v == code %}selected{% endif %}>{{ name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    {% endfor %}
+  </div>
+  {% elif job.entity == 'leads' %}<p class="muted" style="font-size:12.5px;margin-top:14px">No stage column mapped: leads will arrive as <b>New</b>. Map one and reload this step to set the stage table.</p>{% endif %}
+
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line-2)">
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px"><input type="checkbox" class="chk" name="save_mapping" x-model="saveMap"> Remember this mapping for files from {{ job.source }}</label>
+    <span class="input" x-show="saveMap" x-cloak style="height:36px"><input name="mapping_name" placeholder="Mapping name (optional)"></span>
+    <span style="flex:1"></span>
+    <button class="btn btn-primary" type="submit">Validate and dry run →</button>
+  </div>
+</form>
+{% endblock %}

@@ -8,6 +8,8 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("approvals/", include("apps.approvals.urls")),
     path("crm/", include("apps.crm.urls")),
+    path("imports/", include("apps.imports.urls")),
+    path("", include("apps.core.urls")),
     path("", include("apps.dashboard.urls")),
 ]
 if settings.DEBUG:

@@ -1,0 +1,28 @@
+{% extends "settings/_layout.html" %}{% load humanize ql %}
+{% block title %}Imports{% endblock %}
+{% block settings %}
+<div class="card">
+  <div class="card-h">
+    <div><h2>Import wizard</h2><p>Bring leads and companies in from Excel, Zoho, Tally, IndiaMART and more. Every import is a batch you can roll back for 14 days.</p></div>
+    <a class="btn btn-primary" href="{% url 'imports:new' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New import</a>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>File</th><th class="hide-m">Source</th><th>Status</th><th class="r hide-m">Rows</th><th class="r hide-m">Imported</th><th class="hide-m">By</th><th class="r">When</th></tr></thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr onclick="location.href='{% if j.status in 'uploaded,mapped' %}{% url 'imports:map' j.id %}{% else %}{% url 'imports:review' j.id %}{% endif %}'">
+          <td><div class="name"><b>{{ j.filename }}</b><span class="sub">{{ j.get_entity_display }} · #{{ j.id }}</span></div></td>
+          <td class="hide-m">{{ j.source }}</td>
+          <td>{% if j.status == 'committed' %}<span class="pill pill-success">Imported</span>{% elif j.status == 'rolled_back' %}<span class="pill pill-neutral">Rolled back</span>{% elif j.status == 'validated' %}<span class="pill pill-info">Dry run ready</span>{% elif j.status == 'failed' %}<span class="pill pill-danger">Failed</span>{% else %}<span class="pill pill-warning">{{ j.get_status_display }}</span>{% endif %}</td>
+          <td class="r hide-m">{{ j.row_count|intcomma }}</td>
+          <td class="r hide-m">{% if j.counts.created is not None %}{{ j.counts.created }} new · {{ j.counts.updated }} upd{% elif j.counts.new is not None %}{{ j.counts.new }} new · {{ j.counts.error }} fix{% else %}—{% endif %}</td>
+          <td class="hide-m">{{ j.created_by.first_name }}</td>
+          <td class="r muted">{{ j.created_at|date:"j M, H:i" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">No imports yet. Start with a template: <a href="{% url 'imports:template' 'companies' %}">companies.csv</a> · <a href="{% url 'imports:template' 'leads' %}">leads.csv</a></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "settings/_layout.html" %}
+{% block title %}Audit log{% endblock %}
+{% block settings %}
+<div class="card" id="audit">
+  <div class="card-h"><div><h2>Audit log</h2><p>Append-only record of approvals, sign-ins, role changes, invitations, imports and exports.</p></div></div>
+  <form class="tbl-tools" hx-get="{% url 'core:audit' %}" hx-target="#audit" hx-trigger="change, keyup changed delay:400ms from:input[name=q]" hx-push-url="true">
+    <div class="seg sm">{% for code, name in groups %}<label class="{% if group == code %}on{% endif %}" style="cursor:pointer"><input type="radio" name="group" value="{{ code }}" {% if group == code %}checked{% endif %} hidden>{{ name }}</label>{% endfor %}</div>
+    <span class="input select" style="height:36px;width:180px"><select name="actor"><option value="">Anyone</option>{% for m in actors %}<option value="{{ m.user_id }}" {% if actor == m.user_id|stringformat:"s" %}selected{% endif %}>{{ m.user.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+    <span class="input select" style="height:36px;width:140px"><select name="days">{% for d, n in day_choices %}<option value="{{ d }}" {% if days == d %}selected{% endif %}>{{ n }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+    <label class="input grey" style="margin-left:auto;width:240px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Action, record, note…"></label>
+  </form>
+  {% include "settings/_audit_rows.html" %}
+</div>
+{% endblock %}

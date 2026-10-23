@@ -9,7 +9,7 @@
     {% if perms_set|can:"leads.view" %}
     <div class="ng {% active 'crm:leads' %}{% if request.resolver_match.url_name == 'leads' %} open{% endif %}">
       <button class="ni" title="Leads"><svg class="ic"><use href="#i-leads"/></svg><span class="tx">Leads</span><svg class="ic chev"><use href="#i-down"/></svg></button>
-      <div class="sub"><a class="{% active 'crm:leads' %}" href="{% url 'crm:leads' %}">All leads</a><a href="{% url 'crm:leads' %}?stage=new">New</a><a href="{% url 'crm:leads' %}?stage=follow_up">Follow-ups</a><a href="{% url 'dashboard:soon' 'setup' %}">Import leads</a></div>
+      <div class="sub"><a class="{% active 'crm:leads' %}" href="{% url 'crm:leads' %}">All leads</a><a href="{% url 'crm:leads' %}?stage=new">New</a><a href="{% url 'crm:leads' %}?stage=follow_up">Follow-ups</a><a href="{% url 'imports:new' %}">Import leads</a></div>
     </div>
     {% endif %}
     {% if perms_set|can:"companies.view" %}<a class="ni {% active 'crm:companies' %}" href="{% url 'crm:companies' %}" title="Companies"><svg class="ic"><use href="#i-co"/></svg><span class="tx">Companies</span></a>{% endif %}
@@ -21,9 +21,9 @@
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
     <a class="ni" href="{% url 'dashboard:soon' 'tasks' %}" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
     {% if perms_set|can:"reports.view" %}<a class="ni" href="{% url 'dashboard:soon' 'reports' %}" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>{% endif %}
-    <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup' %}open{% endif %}">
+    <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup,audit' or request.resolver_match.namespace == 'imports' %}open{% endif %}">
       <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>
-      <div class="sub"><a class="{% active 'accounts:profile' 'accounts:totp_setup' %}" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="{% active 'accounts:users' %}" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}{% if perms_set|can:"data.import" %}<a href="{% url 'dashboard:soon' 'setup' %}">Import wizard</a>{% endif %}{% if perms_set|can:"audit.view" %}<a href="{% url 'dashboard:soon' 'setup' %}">Audit log</a>{% endif %}</div>
+      <div class="sub"><a class="{% active 'accounts:profile' 'accounts:totp_setup' %}" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="{% active 'accounts:users' %}" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}{% if perms_set|can:"data.import" %}<a class="{% active 'imports' %}" href="{% url 'imports:index' %}">Import wizard</a>{% endif %}{% if perms_set|can:"audit.view" %}<a class="{% active 'core:audit' %}" href="{% url 'core:audit' %}">Audit log</a>{% endif %}</div>
     </div>
   </nav>
   <div class="sb-foot">

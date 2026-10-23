@@ -1,0 +1,32 @@
+{% extends "settings/_layout.html" %}
+{% block title %}New import{% endblock %}
+{% block settings %}
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Step 1 · Upload a file</h2><p>CSV or XLSX, first row as headings, up to 5,000 rows per file.</p></div><a class="btn btn-sm btn-outline" href="{% url 'imports:index' %}">Cancel</a></div>
+  <form method="post" enctype="multipart/form-data" class="form-grid" style="max-width:560px" x-data="{entity:'leads'}">{% csrf_token %}
+    <label>What are you importing?
+      <div class="seg" style="margin-top:4px">{% for code, name in entities %}<button type="button" :class="entity==='{{ code }}'&&'on'" @click="entity='{{ code }}'">{{ name }}</button>{% endfor %}</div>
+      <input type="hidden" name="entity" :value="entity">
+    </label>
+    <label>Where is the file from?
+      <span class="input select"><select name="source">{% for code, s in sources %}<option value="{{ code }}">{{ s.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+      <small class="muted">Picking the right source maps the columns for you. Any CSV works with "Excel or CSV".</small>
+    </label>
+    <label>File<span class="input"><input type="file" name="file" accept=".csv,.xlsx,.xlsm,.txt" required></span></label>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit">Upload and map columns</button>
+      <a class="muted" style="font-size:13px" :href="'/imports/template/'+entity+'.csv'">Download our template</a>
+    </div>
+  </form>
+</div>
+<div class="card sec">
+  <h2 style="font:600 16px var(--font);margin-bottom:10px">How it works</h2>
+  <ol class="steps">
+    <li><b>Map columns</b> to fields. The mapping is saved for the next file from the same source.</li>
+    <li><b>Validate.</b> Phones are normalised, GSTIN, email and dates are checked, duplicates flagged within the file and against existing records.</li>
+    <li><b>Dry run.</b> See new, updated, skipped and needs-fixing counts, with a downloadable error file.</li>
+    <li><b>Commit</b> as one batch. Every row keeps its source, original ID and raw values.</li>
+    <li><b>Roll back</b> the whole batch within 14 days if needed.</li>
+  </ol>
+</div>
+{% endblock %}

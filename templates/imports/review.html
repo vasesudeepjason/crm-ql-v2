@@ -1,0 +1,28 @@
+{% extends "settings/_layout.html" %}{% load humanize ql %}
+{% block title %}Review import{% endblock %}
+{% block settings %}
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px">
+    <div><h2>{% if job.status == 'validated' %}Step 3 · Dry run{% elif job.status == 'committed' %}Imported{% elif job.status == 'rolled_back' %}Rolled back{% else %}{{ job.get_status_display }}{% endif %}</h2>
+      <p><b>{{ job.filename }}</b> · {{ job.row_count|intcomma }} rows · {{ job.get_entity_display }} from {{ job.source }}{% if job.committed_at %} · imported {{ job.committed_at|date:"j M, H:i" }} by {{ job.created_by.first_name }}{% endif %}</p></div>
+    <div class="actions">
+      {% if job.status == 'validated' %}<a class="btn btn-outline" href="{% url 'imports:map' job.id %}">← Mapping</a>{% endif %}
+      {% if job.counts.error or job.counts.skip %}<a class="btn btn-secondary" href="{% url 'imports:errors' job.id %}"><svg class="ic"><use href="#i-dl"/></svg>Needs-fixing file</a>{% endif %}
+      {% if job.status == 'validated' %}<form method="post" action="{% url 'imports:commit' job.id %}" onsubmit="return confirm('Import {{ job.counts.new }} new and update {{ job.counts.update }} {{ job.get_entity_display|lower }}?')">{% csrf_token %}<button class="btn btn-primary" type="submit" {% if not job.counts.new and not job.counts.update %}disabled{% endif %}><svg class="ic"><use href="#i-check"/></svg>Import {{ job.counts.new|add:job.counts.update }} rows</button></form>{% endif %}
+      {% if job.can_rollback %}<form method="post" action="{% url 'imports:rollback' job.id %}" onsubmit="return confirm('Roll back this whole import? Records it created are removed and updated ones restored.')">{% csrf_token %}<button class="btn btn-danger" type="submit">Roll back</button></form>{% endif %}
+    </div>
+  </div>
+  {% if job.error %}<div class="field-err" style="margin-bottom:12px">{{ job.error }}</div>{% endif %}
+  <div class="strip" style="padding:0;grid-template-columns:repeat(4,1fr)">
+    <div>New<b>{{ job.counts.new|default:0 }}</b></div>
+    <div>Updated<b>{{ job.counts.update|default:0 }}</b></div>
+    <div>Skipped <small class="muted">(duplicates)</small><b>{{ job.counts.skip|default:0 }}</b></div>
+    <div>Needs fixing<b class="{% if job.counts.error %}warn{% endif %}">{{ job.counts.error|default:0 }}</b></div>
+  </div>
+  {% if job.status == 'committed' and job.can_rollback %}<p class="muted" style="font-size:12.5px;margin-top:12px">Rollback available until {{ job.rollback_deadline|date:"j M Y" }}.</p>{% endif %}
+</div>
+
+<div class="card" id="rows">
+  {% include "imports/_rows.html" %}
+</div>
+{% endblock %}
