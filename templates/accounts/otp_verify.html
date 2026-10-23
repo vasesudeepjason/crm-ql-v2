@@ -1,0 +1,12 @@
+{% extends "accounts/_auth_base.html" %}
+{% block title %}Enter your code{% endblock %}
+{% block box %}
+<h1>Check your email</h1>
+<p>If <b>{{ email }}</b> has an account, a code is on its way.</p>
+<form method="post" class="f">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="field-err">{{ form.non_field_errors.0 }}</div>{% endif %}
+  <label class="code">Sign-in code {{ form.code }}{{ form.code.errors }}</label>
+  <button class="btn btn-primary" type="submit">Continue</button>
+</form>
+<div class="alt">Didn't get it? <a href="{% url 'accounts:otp' %}">Send another code</a> · <a href="{% url 'accounts:login' %}">Use a password</a></div>
+{% endblock %}

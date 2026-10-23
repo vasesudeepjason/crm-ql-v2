@@ -17,6 +17,7 @@ jobs:
     env:
       DATABASE_URL: postgres://quantum:quantum@localhost:5432/quantumloop
       DJANGO_SECRET_KEY: ci-only
+      FIELD_ENCRYPTION_KEY: "N0a43uzRBkj-L4f6ZL0vWD4GLK6pZDvEbSk5IAOU7F8="
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

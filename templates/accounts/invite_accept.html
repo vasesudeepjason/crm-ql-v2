@@ -1,0 +1,13 @@
+{% extends "accounts/_auth_base.html" %}
+{% block title %}Join {{ inv.tenant.name }}{% endblock %}
+{% block box %}
+<h1>Join {{ inv.tenant.name }}</h1>
+<p>{{ inv.invited_by.name }} invited <b>{{ inv.email }}</b> as <b>{{ inv.get_role_display }}</b>.</p>
+<form method="post" class="f">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="field-err">{{ form.non_field_errors.0 }}</div>{% endif %}
+  <label>Your name {{ form.name }}{{ form.name.errors }}</label>
+  {% if not existing %}<label>Password {{ form.password }}{{ form.password.errors }}</label>{% else %}<div class="hint">You already have a QuantumLoop login for this email; it will be used for this workspace too.</div>{% endif %}
+  <button class="btn btn-primary" type="submit">Accept and sign in</button>
+</form>
+<div class="hint">By joining you agree to your workspace's use of your work contact details for this service.</div>
+{% endblock %}

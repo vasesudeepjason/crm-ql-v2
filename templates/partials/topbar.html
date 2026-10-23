@@ -14,7 +14,7 @@
     <button class="user" @click="open=!open" :aria-expanded="open"><span class="avatar">{{ user.name|initials }}</span><span class="nm"><b>{{ user.name }}</b><small>{{ membership.role_name }}</small></span><svg class="ic chev" style="color:var(--muted);width:16px"><use href="#i-down"/></svg></button>
     <div class="menu" x-show="open" x-cloak @click.outside="open=false">
       <div class="menu-h"><b>{{ user.name }}</b><small>{{ user.email }}</small></div>
-      <a class="menu-i" href="{% url 'dashboard:soon' 'setup' %}">Profile &amp; security</a>
+      <a class="menu-i" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="menu-i" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}
       {% if user.is_staff %}<a class="menu-i" href="/platform/">Platform admin</a>{% endif %}
       <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="menu-i" type="submit"><svg class="ic"><use href="#i-out"/></svg>Log out</button></form>
     </div>

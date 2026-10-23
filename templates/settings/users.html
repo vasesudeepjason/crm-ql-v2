@@ -1,0 +1,69 @@
+{% extends "settings/_layout.html" %}{% load ql %}
+{% block settings %}
+<div class="card" x-data="{invite:false}">
+  <div class="card-h">
+    <div><h2>Users &amp; roles</h2><p>{{ active_count }} of {{ limit }} seats used on the {{ tenant.plan.name|default:"current" }} plan{% if invites %} · {{ invites|length }} invitation{{ invites|length|pluralize }} pending{% endif %}</p></div>
+    <button class="btn btn-primary" @click="invite=!invite"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Invite user</button>
+  </div>
+  <form method="post" action="{% url 'accounts:invite' %}" class="invite-bar" x-show="invite" x-cloak x-transition>{% csrf_token %}
+    <label class="input" style="flex:2;min-width:220px"><svg class="ic"><use href="#i-users"/></svg>{{ invite_form.email }}</label>
+    <label class="input select" style="flex:1;min-width:160px"><select name="role">{% for code, name in assignable %}{% if code != 'owner' %}<option value="{{ code }}">{{ name }}</option>{% endif %}{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+    <label class="input select" style="flex:1;min-width:180px"><select name="manager"><option value="">Reports to… (optional)</option>{% for m in managers %}<option value="{{ m.id }}">{{ m.user.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+    <button class="btn btn-dark" type="submit">Send invitation</button>
+  </form>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>User</th><th>Role</th><th class="hide-m">Reports to</th><th class="hide-m">Last sign-in</th><th>Status</th><th class="r">Actions</th></tr></thead>
+      <tbody>
+        {% for m in members %}
+        <tr class="{% if not m.is_active %}inactive{% endif %}" x-data="{edit:false}">
+          <td><div class="who"><span class="avatar sm">{{ m.user.name|initials }}</span><div class="name"><b>{{ m.user.name }}{% if m.user_id == user.id %} <span class="tag">you</span>{% endif %}{% if m.user.totp_enabled %} <svg class="ic" style="width:13px;height:13px;color:var(--green-700)" title="Two-step on"><use href="#i-lock"/></svg>{% endif %}</b><span class="sub">{{ m.user.email }}</span></div></div></td>
+          <td>
+            <span x-show="!edit">{% if m.role == 'owner' %}<span class="pill pill-brand">Owner</span>{% elif m.role == 'admin' %}<span class="pill pill-info">Admin</span>{% else %}<span class="pill pill-neutral">{{ m.role_name }}</span>{% endif %}</span>
+            <form method="post" action="{% url 'accounts:change_role' m.id %}" x-show="edit" x-cloak class="role-form">{% csrf_token %}
+              <label class="input select" style="height:34px"><select name="role">{% for code, name in assignable %}<option value="{{ code }}" {% if code == m.role %}selected{% endif %}>{{ name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+              <label class="input select" style="height:34px"><select name="manager"><option value="">No manager</option>{% for mg in managers %}{% if mg.id != m.id %}<option value="{{ mg.id }}" {% if mg.id == m.manager_id %}selected{% endif %}>{{ mg.user.name }}</option>{% endif %}{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+              <button class="btn btn-sm btn-dark" type="submit">Save</button><button class="btn btn-sm btn-neutral" type="button" @click="edit=false">Cancel</button>
+            </form>
+          </td>
+          <td class="hide-m">{{ m.manager.user.name|default:"—" }}{% if m.n_reports %} <span class="tag">{{ m.n_reports }} report{{ m.n_reports|pluralize }}</span>{% endif %}</td>
+          <td class="hide-m muted">{{ m.user.last_login|date:"j M, H:i"|default:"never" }}</td>
+          <td>{% if m.is_active %}<span class="pill pill-success">Active</span>{% else %}<span class="pill pill-neutral">Deactivated</span>{% endif %}</td>
+          <td><div class="row-actions">
+            {% if m.user_id != user.id and m.is_active %}<button class="btn btn-sm btn-outline" type="button" @click="edit=!edit">Change role</button>{% endif %}
+            {% if m.user_id != user.id %}<form method="post" action="{% url 'accounts:toggle_active' m.id %}" onsubmit="return confirm('{% if m.is_active %}Deactivate{% else %}Reactivate{% endif %} {{ m.user.name|escapejs }}?')">{% csrf_token %}<button class="btn btn-sm {% if m.is_active %}btn-neutral{% else %}btn-soft{% endif %}" type="submit">{% if m.is_active %}Deactivate{% else %}Reactivate{% endif %}</button></form>{% endif %}
+          </div></td>
+        </tr>
+        {% endfor %}
+        {% for inv in invites %}
+        <tr class="invited">
+          <td><div class="who"><span class="avatar sm" style="background:var(--yellow-100);color:var(--yellow-700)">✉</span><div class="name"><b>{{ inv.email }}</b><span class="sub">invited by {{ inv.invited_by.first_name }} · expires {{ inv.expires_at|date:"j M" }}</span></div></div></td>
+          <td><span class="pill pill-neutral">{{ inv.get_role_display }}</span></td>
+          <td class="hide-m">{{ inv.manager.user.name|default:"—" }}</td>
+          <td class="hide-m muted">—</td>
+          <td><span class="pill pill-warning">Invited</span></td>
+          <td><div class="row-actions">
+            <form method="post" action="{% url 'accounts:resend_invite' inv.id %}">{% csrf_token %}<button class="btn btn-sm btn-outline" type="submit">Resend</button></form>
+            <form method="post" action="{% url 'accounts:revoke_invite' inv.id %}">{% csrf_token %}<button class="btn btn-sm btn-neutral" type="submit">Revoke</button></form>
+          </div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card sec" x-data="{open:''}">
+  <div class="card-h" style="padding:0 0 12px"><div><h2>What each role can do</h2><p>Fixed roles in this phase. A job title is only a label; the role decides access. Custom roles arrive with the Business plan.</p></div></div>
+  <div class="roles">
+    {% for code, name, perms in roles %}
+    <div class="role" :class="open==='{{ code }}'&&'open'">
+      <button type="button" class="role-h" @click="open = open==='{{ code }}' ? '' : '{{ code }}'"><b>{{ name }}</b><span class="muted">{{ perms|length }} permissions</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="role-b" x-show="open==='{{ code }}'" x-cloak>
+        {% for p, scope in perms %}<span class="tag"><code>{{ p }}</code> · {{ scope }}</span>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

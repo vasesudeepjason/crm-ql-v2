@@ -1,0 +1,7 @@
+{% extends "accounts/_auth_base.html" %}
+{% block title %}Invitation expired{% endblock %}
+{% block box %}
+<h1>This invitation isn't valid any more</h1>
+<p>It may have expired, been revoked, or already been used. Ask your admin to send a new one.</p>
+<div class="alt"><a href="{% url 'accounts:login' %}">← Go to sign in</a></div>
+{% endblock %}

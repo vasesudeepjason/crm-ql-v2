@@ -1,0 +1,13 @@
+{% extends "accounts/_auth_base.html" %}
+{% block title %}Sign in with a code{% endblock %}
+{% block box %}
+<h1>Sign in with a code</h1>
+<p>We'll email you a 6-digit code that works for 10 minutes.</p>
+<form method="post" class="f">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="field-err">{{ form.non_field_errors.0 }}</div>{% endif %}
+  <label>Email {{ form.email }}{{ form.email.errors }}</label>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primary" type="submit">Send code</button>
+</form>
+<div class="alt"><a href="{% url 'accounts:login' %}">← Sign in with a password instead</a></div>
+{% endblock %}

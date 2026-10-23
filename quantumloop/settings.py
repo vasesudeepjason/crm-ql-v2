@@ -7,6 +7,7 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 import os
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -122,6 +123,27 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+TESTING = "pytest" in sys.modules or (len(sys.argv) > 1 and sys.argv[1] == "test")
+FIELD_ENCRYPTION_KEY = os.environ.get("FIELD_ENCRYPTION_KEY", "")
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "QuantumLoop <no-reply@quantumloop.in>")
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
+
+CACHES = {
+    "default": (
+        {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": os.environ["REDIS_URL"]}
+        if os.environ.get("REDIS_URL") and not DEBUG
+        else {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+    )
+}
+OTP_CODE_TTL_SECONDS = 600
+INVITE_TTL_DAYS = 7
 
 RQ_QUEUES = {
     "default": {"URL": os.environ.get("REDIS_URL", "redis://localhost:6379/0"), "DEFAULT_TIMEOUT": 600},

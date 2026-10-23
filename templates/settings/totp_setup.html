@@ -1,0 +1,17 @@
+{% extends "settings/_layout.html" %}
+{% block settings %}
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Set up two-step verification</h2><p>Scan the code with your authenticator app, then enter the 6-digit code it shows.</p></div></div>
+  <div class="totp">
+    <div class="qr">{{ qr_svg|safe }}</div>
+    <div>
+      <p class="muted" style="font-size:13px">Can't scan? Enter this key manually:</p>
+      <code class="secret">{{ secret }}</code>
+      <form method="post" class="form-grid" style="margin-top:18px">{% csrf_token %}
+        <label>Code from the app<span class="input {% if form.code.errors %}error{% endif %}">{{ form.code }}</span>{% if form.code.errors %}<div class="field-err">{{ form.code.errors.0 }}</div>{% endif %}</label>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" type="submit">Turn on</button><a class="btn btn-neutral" href="{% url 'accounts:profile' %}">Cancel</a></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

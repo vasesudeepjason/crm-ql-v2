@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Settings</h1><p>Your profile, workspace users, roles and security</p></div>
+</section>
+<section class="settings">
+  <nav class="card subnav" aria-label="Settings sections">
+    <a class="ni {% if section == 'profile' %}on{% endif %}" href="{% url 'accounts:profile' %}"><svg class="ic"><use href="#i-users"/></svg><span>Profile &amp; security</span></a>
+    {% if perms_set|can:"users.manage" %}<a class="ni {% if section == 'users' %}on{% endif %}" href="{% url 'accounts:users' %}"><svg class="ic"><use href="#i-ok"/></svg><span>Users &amp; roles</span></a>{% endif %}
+    {% if perms_set|can:"settings.manage" %}<a class="ni" href="{% url 'dashboard:soon' 'setup' %}"><svg class="ic"><use href="#i-set"/></svg><span>Workspace</span></a>{% endif %}
+    {% if perms_set|can:"audit.view" %}<a class="ni" href="{% url 'dashboard:soon' 'setup' %}"><svg class="ic"><use href="#i-file"/></svg><span>Audit log</span></a>{% endif %}
+    {% if perms_set|can:"data.import" %}<a class="ni" href="{% url 'dashboard:soon' 'setup' %}"><svg class="ic"><use href="#i-dl"/></svg><span>Import wizard</span></a>{% endif %}
+  </nav>
+  <div class="settings-body">{% block settings %}{% endblock %}</div>
+</section>
+{% endblock %}

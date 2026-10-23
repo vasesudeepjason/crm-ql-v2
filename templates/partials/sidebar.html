@@ -21,12 +21,10 @@
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
     <a class="ni" href="{% url 'dashboard:soon' 'tasks' %}" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
     {% if perms_set|can:"reports.view" %}<a class="ni" href="{% url 'dashboard:soon' 'reports' %}" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>{% endif %}
-    {% if perms_set|can:"settings.manage" %}
-    <div class="ng">
+    <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup' %}open{% endif %}">
       <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>
-      <div class="sub"><a href="{% url 'dashboard:soon' 'setup' %}">Settings</a><a href="{% url 'dashboard:soon' 'setup' %}">Users &amp; roles</a><a href="{% url 'dashboard:soon' 'setup' %}">Import wizard</a><a href="{% url 'dashboard:soon' 'setup' %}">Audit log</a></div>
+      <div class="sub"><a class="{% active 'accounts:profile' 'accounts:totp_setup' %}" href="{% url 'accounts:profile' %}">Profile &amp; security</a>{% if perms_set|can:"users.manage" %}<a class="{% active 'accounts:users' %}" href="{% url 'accounts:users' %}">Users &amp; roles</a>{% endif %}{% if perms_set|can:"data.import" %}<a href="{% url 'dashboard:soon' 'setup' %}">Import wizard</a>{% endif %}{% if perms_set|can:"audit.view" %}<a href="{% url 'dashboard:soon' 'setup' %}">Audit log</a>{% endif %}</div>
     </div>
-    {% endif %}
   </nav>
   <div class="sb-foot">
     <button class="ws" title="Workspace"><span class="ws-i">{{ tenant.name|initials|slice:":1" }}</span><span class="ws-n"><b>{{ tenant.name }}</b><small>{{ tenant.plan.name|default:"No plan" }} plan · {{ membership.role_name }}</small></span></button>

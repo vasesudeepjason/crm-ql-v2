@@ -12,6 +12,7 @@
   </div>
 </section>
 
+{% if membership.role in 'owner,admin' and not user.totp_enabled %}<div class="banner"><svg class="ic"><use href="#i-lock"/></svg><span><b>Protect this workspace.</b> As {{ membership.role_name }} you should turn on two-step verification.</span><a class="btn btn-sm btn-dark" href="{% url 'accounts:totp_setup' %}">Set up</a></div>{% endif %}
 <section class="grid">
   {% with k=kpis.leads %}
   <div class="card kpi s3">

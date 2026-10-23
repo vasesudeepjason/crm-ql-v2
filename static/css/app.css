@@ -18,3 +18,39 @@
 .htmx-request .icon-btn{opacity:.5}
 .drawer:empty{display:none}
 .tbl-foot a{color:var(--brand-500);text-decoration:none;font-weight:500}
+
+/* ---- Settings ---- */
+.settings{display:grid;grid-template-columns:260px minmax(0,1fr);gap:var(--gutter);align-items:start}
+.subnav{padding:10px;position:sticky;top:var(--pad)}
+.subnav .ni{height:40px}
+.settings-body{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gutter);min-width:0}
+.sec{padding:22px 24px}
+.kv.wide{grid-template-columns:160px 1fr}
+.inline-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.form-grid{display:grid;gap:14px;max-width:420px}
+.form-grid label{display:grid;gap:6px;font:500 13px var(--font);color:var(--ink-2)}
+.form-grid .input input{height:100%}
+.invite-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:0 20px 16px}
+.invite-bar .input input,.invite-bar .input select{width:100%}
+.role-form{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.role-form .input{min-width:150px}
+.role-form .input select{width:100%}
+.tbl tr.inactive td{opacity:.55}
+.tbl tr.invited td{background:#FCFBF6}
+.row-actions form{margin:0}
+.totp{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
+.totp .qr{background:#fff;border:1px solid var(--line);border-radius:var(--r-inner);padding:10px}
+.totp .qr svg{width:100%;height:auto;display:block}
+.secret{display:inline-block;font:500 14px var(--mono);letter-spacing:.08em;background:var(--field);padding:8px 12px;border-radius:10px;word-break:break-all}
+.roles{display:grid;gap:8px}
+.role{border:1px solid var(--line);border-radius:var(--r-inner);overflow:hidden}
+.role-h{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;background:#fff;font:inherit;cursor:pointer;text-align:left}
+.role-h b{font-weight:600}.role-h .muted{margin-left:auto;font-size:12.5px}
+.role-h .chev{width:16px;height:16px;transition:transform .2s}
+.role.open .role-h .chev{transform:rotate(180deg)}
+.role-b{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 14px;background:var(--field)}
+.role-b .tag{background:#fff}
+.banner{display:flex;align-items:center;gap:12px;background:var(--yellow-100);border-radius:var(--r-inner);padding:12px 16px;font-size:13.5px}
+.banner .btn{margin-left:auto}
+@media (max-width:1100px){.settings{grid-template-columns:minmax(0,1fr)}.subnav{position:static;display:flex;gap:4px;overflow-x:auto;padding:8px}.subnav .ni{white-space:nowrap;width:auto;flex:none}}
+@media (max-width:640px){.totp{grid-template-columns:1fr}.kv.wide{grid-template-columns:1fr}.sec{padding:16px}.banner{flex-wrap:wrap}.banner .btn{margin-left:0}}

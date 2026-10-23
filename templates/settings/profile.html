@@ -1,0 +1,38 @@
+{% extends "settings/_layout.html" %}{% load ql %}
+{% block settings %}
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Profile</h2><p>How you appear to your team</p></div></div>
+  <dl class="kv wide">
+    <dt>Name</dt><dd>{{ user.name }}</dd>
+    <dt>Email</dt><dd>{{ user.email }}</dd>
+    <dt>Workspace</dt><dd>{{ tenant.name }} · {{ membership.role_name }}{% if membership.job_title %} · {{ membership.job_title }}{% endif %}</dd>
+    <dt>Manager</dt><dd>{{ membership.manager.user.name|default:"—" }}</dd>
+    <dt>Last sign-in</dt><dd>{{ user.last_login|date:"j M Y, H:i"|default:"—" }}</dd>
+  </dl>
+</div>
+
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px">
+    <div><h2>Two-step verification</h2><p>An authenticator app code after your password or email code.</p></div>
+    {% if user.totp_enabled %}<span class="pill pill-success">On</span>{% elif needs_totp %}<span class="pill pill-warning">Recommended for {{ membership.role_name }}s</span>{% else %}<span class="pill pill-neutral">Off</span>{% endif %}
+  </div>
+  {% if user.totp_enabled %}
+  <form method="post" action="{% url 'accounts:totp_disable' %}" class="inline-form">{% csrf_token %}
+    <label class="input" style="max-width:280px"><input type="password" name="password" placeholder="Current password to turn off" autocomplete="current-password" required></label>
+    <button class="btn btn-outline" type="submit">Turn off</button>
+  </form>
+  {% else %}
+  <p class="muted" style="margin-bottom:14px">Works with Google Authenticator, Authy, 1Password and similar apps.</p>
+  <a class="btn btn-primary" href="{% url 'accounts:totp_setup' %}"><svg class="ic"><use href="#i-lock"/></svg>Set up two-step verification</a>
+  {% endif %}
+</div>
+
+<div class="card sec">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Password</h2><p>At least 10 characters; not all numbers.</p></div></div>
+  <form method="post" action="{% url 'accounts:change_password' %}" class="form-grid">{% csrf_token %}
+    <label>Current password<span class="input {% if pw_form.current.errors %}error{% endif %}">{{ pw_form.current }}</span>{% if pw_form.current.errors %}<div class="field-err">{{ pw_form.current.errors.0 }}</div>{% endif %}</label>
+    <label>New password<span class="input {% if pw_form.new.errors %}error{% endif %}">{{ pw_form.new }}</span>{% if pw_form.new.errors %}<div class="field-err">{{ pw_form.new.errors.0 }}</div>{% endif %}</label>
+    <div><button class="btn btn-dark" type="submit">Change password</button></div>
+  </form>
+</div>
+{% endblock %}

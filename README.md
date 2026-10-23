@@ -20,6 +20,10 @@ Open http://localhost:8000 and sign in as `aisha@quantumloop.in` / `quantum-demo
 
 Without Docker, leave `DATABASE_URL` unset and the app runs on SQLite. Row-level security and its test only exist on PostgreSQL, so use Postgres for anything beyond a first look.
 
+Sign-in options: email + password, or "Email me a sign-in code" (6-digit code, 10 minutes, printed to the console in development). Owners and admins can turn on two-step verification (TOTP) under **Set up → Profile & security**; the seed is stored encrypted with `FIELD_ENCRYPTION_KEY`. Login and code requests are rate-limited.
+
+Invite colleagues from **Set up → Users & roles** (role, optional manager). The invite email carries a single-use link valid for 7 days; plan seat limits are enforced. Role changes, deactivations, invites and sign-ins are all written to the audit log.
+
 Platform admin (QuantumLoop staff): `python manage.py createsuperuser`, then http://localhost:8000/platform/.
 
 ## Tests
@@ -36,7 +40,8 @@ CI runs `manage.py check`, `makemigrations --check` and the test suite against P
 quantumloop/      settings, urls
 apps/core         TenantModel base, tenancy middleware, RLS, audit log, permissions, phone/GSTIN/money helpers
 apps/tenants      Tenant, Plan
-apps/accounts     User (email login), Membership (one role per tenant), fixed roles → permissions
+apps/accounts     User (email login, TOTP), Membership (one role per tenant), fixed roles → permissions,
+                  OneTimeCode (email sign-in), Invitation, settings screens (profile, users & roles)
 apps/crm          Company, Contact, Lead (+stage history), Activity (calls, notes, tasks)
 apps/approvals    One Approval record for field visits and telecaller leads; approve / reject / ask-for-info rules
 apps/dashboard    Home dashboard

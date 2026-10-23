@@ -1,0 +1,12 @@
+{% extends "accounts/_auth_base.html" %}
+{% block title %}Two-step verification{% endblock %}
+{% block box %}
+<h1>Two-step verification</h1>
+<p>Open your authenticator app and enter the code for <b>{{ user_obj.email }}</b>.</p>
+<form method="post" class="f">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="field-err">{{ form.non_field_errors.0 }}</div>{% endif %}
+  <label class="code">Authenticator code {{ form.code }}{{ form.code.errors }}</label>
+  <button class="btn btn-primary" type="submit">Verify</button>
+</form>
+<div class="alt"><a href="{% url 'accounts:login' %}">← Start over</a></div>
+{% endblock %}
