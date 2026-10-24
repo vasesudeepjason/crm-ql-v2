@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Visits{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Visits</h1><p>{% if perms_set|can:"visits.approve" %}Your team's field visits{% else %}Your field visits{% endif %}</p></div>
+  <div class="actions">{% if perms_set|can:"visits.approve" %}<a class="btn btn-outline" href="{% url 'field:team' %}">Team</a><a class="btn btn-secondary" href="{% url 'approvals:queue' %}?kind=visit">Review queue</a>{% else %}<a class="btn btn-outline" href="{% url 'field:my_day' %}">My day</a>{% endif %}</div>
+</section>
+<section class="grid"><div class="card s12">
+  <div class="tbl-tools"><div class="seg sm"><a class="{% if not status %}on{% endif %}" href="?">All</a><a class="{% if status == 'pending' %}on{% endif %}" href="?status=pending">Pending</a><a class="{% if status == 'approved' %}on{% endif %}" href="?status=approved">Approved</a><a class="{% if status == 'rejected' %}on{% endif %}" href="?status=rejected">Rejected</a></div></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Visited</th><th class="hide-m">Executive</th><th>Outcome</th><th class="hide-m">Location</th><th class="hide-m">When</th><th>Status</th></tr></thead>
+    <tbody>{% for v in visits %}
+    <tr><td><div class="who">{% if v.photo %}<img class="thumb" src="{% url 'field:visit_photo' v.pk %}" alt="">{% else %}<span class="avatar sm">{{ v.title|initials }}</span>{% endif %}<div class="name"><b>{{ v.title }}</b>{% if v.contact_name %}<span class="sub">{{ v.contact_name }}</span>{% endif %}</div></div></td>
+      <td class="hide-m">{{ v.executive.name }}</td>
+      <td>{{ v.get_outcome_display }}</td>
+      <td class="hide-m">{% if v.maps_url %}<a href="{{ v.maps_url }}" target="_blank" rel="noopener" class="muted" style="font-size:12.5px">{{ v.location_label }}</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td class="hide-m muted">{{ v.captured_at|date:"j M, H:i" }}</td>
+      <td>{% if v.status == 'approved' %}<span class="pill pill-success">Approved</span>{% elif v.status == 'rejected' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-warning">Pending</span>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6" class="muted" style="padding:24px 20px">No visits.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

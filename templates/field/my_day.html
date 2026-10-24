@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}My day{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>My day</h1><p>{{ today|date:"l, j F" }} · {% if session %}on the road since {{ session.started_at|date:"H:i" }}{% else %}day not started{% endif %}</p></div>
+  <div class="actions">
+    {% if session %}
+    {% if can_create %}<a class="btn btn-primary" href="{% url 'field:visit_new' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Record visit</a>{% endif %}
+    <form method="post" action="{% url 'field:session_end' %}" class="geo-form" onsubmit="return confirm('End your day? Location tracking stops now.')">{% csrf_token %}<input type="hidden" name="lat"><input type="hidden" name="lng"><button class="btn btn-outline" type="submit">End day</button></form>
+    {% elif can_create %}
+    <form method="post" action="{% url 'field:session_start' %}" class="geo-form">{% csrf_token %}<input type="hidden" name="lat"><input type="hidden" name="lng"><input type="hidden" name="accuracy"><button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-pin"/></svg>Start day</button></form>
+    {% endif %}
+  </div>
+</section>
+
+{% if session %}<div class="banner support" id="geoBanner"><svg class="ic"><use href="#i-pin"/></svg><span><b>Day active.</b> Your location is shared with your manager only while the day is active; it stops when you end it. <span id="geoState" class="muted">Locating…</span></span></div>
+{% else %}<div class="banner"><svg class="ic"><use href="#i-pin"/></svg><span>Start your day to record visits. Nothing is tracked until you do.</span></div>{% endif %}
+
+<section class="grid">
+  <div class="card kpi s3"><div class="lbl">Visits today</div><span class="when">TODAY</span><div class="val">{{ visits|length }}</div><div class="rows"><div>Pending approval<b>{{ pending }}</b></div><div>Rejected (7 d)<b>{{ rejected }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Planned</div><span class="when">DUE</span><div class="val">{{ planned|length }}</div><div class="rows"><div>Follow-ups due today or earlier<b>{{ planned|length }}</b></div></div></div>
+
+  <div class="card s6">
+    <div class="card-h"><div><h2>Planned visits</h2><p>Leads with a follow-up due, with a company to visit</p></div></div>
+    <ul class="mini">
+      {% for l in planned %}
+      <li><span class="avatar sm">{{ l.company.name|initials }}</span><div class="t"><b>{{ l.company.name }}</b><small>{{ l.name }} · {{ l.get_stage_display }} · {% if l.next_follow_up < today %}<span style="color:var(--red-700)">overdue {{ l.next_follow_up|date:"j M" }}</span>{% else %}today{% endif %}{% if l.company.city %} · {{ l.company.city }}{% endif %}</small></div>
+        {% if l.company.phone %}<a class="icon-btn" href="tel:{{ l.company.phone_normalized|default:l.company.phone }}" aria-label="Call"><svg class="ic"><use href="#i-phone"/></svg></a>{% endif %}
+        {% if session and can_create %}<a class="btn btn-sm btn-soft" href="{% url 'field:visit_new' %}?lead={{ l.pk }}">Visit</a>{% endif %}</li>
+      {% empty %}<li><div class="t muted">No follow-ups due. Pick from the pipeline or record a walk-in.</div></li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="card s12">
+    <div class="card-h"><div><h2>Today's visits</h2><p>Each visit goes to your manager for approval; approved visits count in reports.</p></div><a class="btn btn-sm btn-outline" href="{% url 'field:visits' %}">All my visits</a></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Visited</th><th>Outcome</th><th class="hide-m">Location</th><th class="hide-m">Time</th><th>Status</th></tr></thead>
+      <tbody>{% for v in visits %}
+      <tr><td><div class="who">{% if v.photo %}<img class="thumb" src="{% url 'field:visit_photo' v.pk %}" alt="">{% else %}<span class="avatar sm">{{ v.title|initials }}</span>{% endif %}<div class="name"><b>{{ v.title }}</b>{% if v.contact_name %}<span class="sub">{{ v.contact_name }}</span>{% endif %}</div></div></td>
+        <td>{{ v.get_outcome_display }}</td>
+        <td class="hide-m">{% if v.maps_url %}<a href="{{ v.maps_url }}" target="_blank" rel="noopener" class="muted" style="font-size:12.5px">{{ v.location_label }}</a>{% if v.low_accuracy %} <span class="tag" style="background:var(--yellow-100);color:var(--yellow-700)">low accuracy</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="hide-m muted">{{ v.captured_at|date:"H:i" }}</td>
+        <td>{% if v.status == 'approved' %}<span class="pill pill-success">Approved</span>{% elif v.status == 'rejected' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-warning">Pending</span>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="5" class="muted" style="padding:24px 20px">No visits yet today.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/field.js"></script>{% endblock %}

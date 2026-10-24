@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.crm",
     "apps.approvals",
     "apps.imports",
+    "apps.field",
     "apps.dashboard",
 ]
 

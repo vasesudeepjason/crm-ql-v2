@@ -95,7 +95,7 @@ class Approval(TenantModel):
         if not ok:
             raise ApprovalError(why)
         self._decide(membership, self.Status.APPROVED, "")
-        self._apply_to_record(approved=True)
+        self._apply_to_record(approved=True, by=membership.user)
 
     def reject(self, membership, reason: str):
         ok, why = self.can_decide(membership)
@@ -104,7 +104,7 @@ class Approval(TenantModel):
         if not (reason or "").strip():
             raise ApprovalError("A rejection needs a reason.")
         self._decide(membership, self.Status.REJECTED, reason.strip())
-        self._apply_to_record(approved=False)
+        self._apply_to_record(approved=False, by=membership.user)
 
     def request_info(self, membership, note: str):
         ok, why = self.can_decide(membership)
@@ -122,10 +122,14 @@ class Approval(TenantModel):
         self.decided_at = timezone.now()
         self.save()
 
-    def _apply_to_record(self, approved: bool):
+    def _apply_to_record(self, approved: bool, by=None):
         rec = self.record
         if rec is None:
             return
         if hasattr(rec, "status") and hasattr(rec, "Status"):
             rec.status = rec.Status.ACTIVE if approved else rec.Status.REJECTED
             rec.save(update_fields=["status", "updated_at"])
+        if self.kind == self.Kind.VISIT:
+            from apps.field.services import on_visit_decided
+
+            on_visit_decided(rec, approved, by)

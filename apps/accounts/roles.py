@@ -42,7 +42,7 @@ ROLES: dict[str, dict] = {
     },
     "sales": {"name": "Sales Executive", "perms": {**{p: OWN for p in _SALES_READ | _SALES_WRITE}, "invoices.create": OWN, "invoices.view": OWN}},
     "telecaller": {"name": "Telecaller", "perms": {"leads.view": OWN, "leads.create": OWN, "calls.view": OWN, "calls.create": OWN, "tasks.view": OWN, "companies.view": OWN}},
-    "field": {"name": "Field Executive", "perms": {"visits.view": OWN, "visits.create": OWN, "leads.view": OWN, "companies.view": OWN, "tasks.view": OWN}},
+    "field": {"name": "Field Executive", "perms": {"visits.view": OWN, "visits.create": OWN, "leads.view": OWN, "companies.view": ALL, "companies.create": OWN, "tasks.view": OWN}},
     "accountant": {"name": "Accountant", "perms": {**_all(_FINANCE), "companies.view": ALL, "reports.view": ALL, "data.export": ALL}},
     "hr": {"name": "HR", "perms": _all(_HR)},
     "viewer": {"name": "Viewer", "perms": {p: ALL for p in PERMISSIONS if p.endswith(".view")}},

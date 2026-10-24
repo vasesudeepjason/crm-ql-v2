@@ -1,13 +1,22 @@
 {% load ql %}
 <div class="tbl-tools">
-  <div class="seg sm">{% for code, name, n in tabs %}<a class="{% if code == tab %}on{% endif %}" href="?tab={{ code }}" hx-get="?tab={{ code }}&q={{ q|urlencode }}" hx-target="#queue" hx-push-url="true">{{ name }} <span class="n">{{ n }}</span></a>{% endfor %}</div>
-  <form class="input grey" style="margin-left:auto;width:260px" hx-get="?tab={{ tab }}" hx-target="#queue" hx-trigger="submit, keyup changed delay:400ms from:input"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search by name or company"></form>
-  <button class="icon-btn" aria-label="Refresh" hx-get="?tab={{ tab }}&q={{ q|urlencode }}" hx-target="#queue"><svg class="ic"><use href="#i-refresh"/></svg></button>
+  <div class="seg sm">{% for code, name, n in tabs %}<a class="{% if code == tab %}on{% endif %}" href="?tab={{ code }}&{{ qs_str }}" hx-get="?tab={{ code }}&q={{ q|urlencode }}&{{ qs_str }}" hx-target="#queue" hx-push-url="true">{{ name }} <span class="n">{{ n }}</span></a>{% endfor %}</div>
+  <form class="input grey" style="margin-left:auto;width:240px" hx-get="?tab={{ tab }}&{{ qs_str }}" hx-target="#queue" hx-trigger="submit, keyup changed delay:400ms from:input"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search by name or company"></form>
 </div>
+<form class="tbl-tools" style="padding-top:0" hx-get="?tab={{ tab }}&q={{ q|urlencode }}" hx-target="#queue" hx-trigger="change" hx-push-url="true">
+  <span class="input select" style="height:34px;width:150px"><select name="kind"><option value="">All kinds</option><option value="visit" {% if filters.kind == 'visit' %}selected{% endif %}>Field visits</option><option value="lead" {% if filters.kind == 'lead' %}selected{% endif %}>Telecaller leads</option></select><svg class="ic chev"><use href="#i-down"/></svg></span>
+  <span class="input select" style="height:34px;width:190px"><select name="who"><option value="">Everyone</option>{% for s in submitters %}<option value="{{ s.submitter_id }}" {% if filters.who == s.submitter_id|stringformat:"s" %}selected{% endif %}>{{ s.submitter__name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>
+  <span class="input" style="height:34px;width:150px"><input type="date" name="from" value="{{ filters.from }}" aria-label="From"></span>
+  <span class="input" style="height:34px;width:150px"><input type="date" name="to" value="{{ filters.to }}" aria-label="To"></span>
+  {% if filters.kind or filters.who or filters.from or filters.to %}<a class="btn btn-sm btn-neutral" href="?tab={{ tab }}" hx-get="?tab={{ tab }}" hx-target="#queue" hx-push-url="true">Clear</a>{% endif %}
+</form>
+<form method="post" action="{% url 'approvals:bulk_approve' %}" x-data="{sel:[]}" onsubmit="return confirm('Approve '+this.querySelectorAll('input[name=ids]:checked').length+' selected?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
 <div class="tbl-wrap">
   <table class="tbl">
-    <thead><tr><th>Submitted by</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
-    <tbody>{% for a in items %}{% include "approvals/_row.html" %}{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">Nothing here.</td></tr>{% endfor %}</tbody>
+    <thead><tr>{% if can_review and tab == 'pending' %}<th style="width:36px"><input type="checkbox" class="chk" aria-label="Select all" @change="sel = $event.target.checked ? [...$el.closest('table').querySelectorAll('tbody input[name=ids]')].map(i=>i.value) : []"></th>{% endif %}<th>Submitted by</th><th>Company</th><th>Status</th><th class="r hide-m">Waiting</th><th class="r hide-m">Value</th>{% if can_review %}<th class="r">Actions</th>{% endif %}</tr></thead>
+    <tbody>{% for a in items %}{% include "approvals/_row.html" with selectable=can_review|yesno:"1,"|default:"" %}{% empty %}<tr><td colspan="8" class="muted" style="padding:28px 20px">Nothing here.</td></tr>{% endfor %}</tbody>
   </table>
 </div>
+{% if can_review and tab == 'pending' %}<div class="bulk-bar" x-show="sel.length" x-cloak><b x-text="sel.length"></b>&nbsp;selected<button class="btn btn-sm btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Approve selected</button><button class="btn btn-sm btn-neutral" type="button" @click="sel=[];$el.closest('form').querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false)">Clear</button></div>{% endif %}
+</form>
 <div class="tbl-foot"><span>{{ items|length }} shown</span><span>Click a row to review</span></div>

@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Record visit{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Record visit</h1><p>Photo and location are captured now; your manager reviews it.</p></div>
+  <div class="actions"><a class="btn btn-outline" href="{% url 'field:my_day' %}">Cancel</a></div>
+</section>
+<section class="grid">
+  <form method="post" enctype="multipart/form-data" class="card sec s8" id="visitForm">{% csrf_token %}
+    {{ form.lat }}{{ form.lng }}{{ form.accuracy }}{{ form.mock_location }}{{ form.offline_id }}
+    {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+    <div class="geo-chip" id="geoChip"><svg class="ic"><use href="#i-pin"/></svg><span id="geoText">Getting your location…</span></div>
+    <div class="form-2" style="margin-top:14px">
+      <label>Company<span class="input select">{{ form.company }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>New company<span class="input">{{ form.new_company }}</span></label>
+      <label>Lead<span class="input select">{{ form.lead }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>Who you met<span class="input">{{ form.contact_name }}</span></label>
+      <label>Outcome *<span class="input select {% if form.outcome.errors %}error{% endif %}">{{ form.outcome }}<svg class="ic chev"><use href="#i-down"/></svg></span>{% if form.outcome.errors %}<div class="field-err">{{ form.outcome.errors.0 }}</div>{% endif %}</label>
+      <label>Next follow-up<span class="input {% if form.next_follow_up.errors %}error{% endif %}">{{ form.next_follow_up }}</span>{% if form.next_follow_up.errors %}<div class="field-err">{{ form.next_follow_up.errors.0 }}</div>{% endif %}</label>
+      <label class="span2">Notes<span class="input" style="height:auto">{{ form.notes }}</span></label>
+      <label>Time spent<span class="input">{{ form.duration_minutes }}</span></label>
+      <label>Photo<span class="input" style="height:auto;padding:6px 10px">{{ form.photo }}</span><small class="muted">Compressed on your phone before upload.</small></label>
+    </div>
+    <div class="photo-preview" id="photoPreview" hidden><img alt="Visit photo preview"><span class="tag" id="photoSize"></span></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line-2);flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit" id="submitBtn"><svg class="ic"><use href="#i-check"/></svg>Submit for approval</button>
+      <span class="muted" style="font-size:12.5px">Submitted visits lock until your manager decides.</span>
+    </div>
+  </form>
+  <aside class="s4"><div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Tips</h2><ul class="steps" style="padding-left:18px"><li>Take the photo at the customer's premises, with the signboard if possible.</li><li>Wait for the location chip to turn green before submitting; low accuracy is flagged to your manager.</li><li>Set the follow-up date when they want you back.</li></ul></div></aside>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/field.js"></script>{% endblock %}

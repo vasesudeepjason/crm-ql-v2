@@ -14,7 +14,12 @@
     {% endif %}
     {% if perms_set|can:"companies.view" %}<a class="ni {% active 'crm:companies' %}" href="{% url 'crm:companies' %}" title="Companies"><svg class="ic"><use href="#i-co"/></svg><span class="tx">Companies</span></a>{% endif %}
     <a class="ni {% active 'approvals' %}" href="{% url 'approvals:queue' %}" title="Approvals"><svg class="ic"><use href="#i-ok"/></svg><span class="tx">Approvals</span>{% if pending_badge %}<em class="count hot" style="font-style:normal">{{ pending_badge }}</em>{% endif %}</a>
-    {% if perms_set|can:"visits.view" %}<a class="ni" href="{% url 'dashboard:soon' 'field' %}" title="Field sales"><svg class="ic"><use href="#i-pin"/></svg><span class="tx">Field sales</span></a>{% endif %}
+    {% if perms_set|can:"visits.view" %}
+    <div class="ng {% if request.resolver_match.namespace == 'field' %}open{% endif %}">
+      <button class="ni" title="Field sales"><svg class="ic"><use href="#i-pin"/></svg><span class="tx">Field sales</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub">{% if perms_set|can:"visits.create" %}<a class="{% active 'field:my_day' 'field:visit_new' %}" href="{% url 'field:my_day' %}">My day</a>{% endif %}{% if perms_set|can:"visits.approve" %}<a class="{% active 'field:team' %}" href="{% url 'field:team' %}">Team</a><a href="{% url 'approvals:queue' %}?kind=visit">Review queue</a>{% endif %}<a class="{% active 'field:visits' %}" href="{% url 'field:visits' %}">Visits</a></div>
+    </div>
+    {% endif %}
     {% if perms_set|can:"calls.view" %}<a class="ni" href="{% url 'dashboard:soon' 'telecaller' %}" title="Telecaller"><svg class="ic"><use href="#i-phone"/></svg><span class="tx">Telecaller</span></a>{% endif %}
     {% if perms_set|can:"contracts.view" %}<a class="ni" href="{% url 'dashboard:soon' 'contracts' %}" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span></a>{% endif %}
     {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}

@@ -14,13 +14,19 @@
   {% else %}<span class="pill pill-danger">Rejected · {{ a.decided_at|date:"j M, H:i" }}</span>{% endif %}
   <div class="info2">
     <div class="info"><small>Submitted by</small><b>{{ a.submitter.name }}</b><span>{{ a.submitter.memberships.first.role_name }}</span></div>
-    <div class="info"><small>{{ a.get_kind_display }}</small><b>{{ a.company_name|default:a.title }}</b>{% if a.summary.outcome %}<span>{{ a.summary.outcome }}</span>{% endif %}{% if rec %}<a href="{% url 'crm:lead_detail' rec.pk %}">Open lead →</a>{% endif %}</div>
+    <div class="info"><small>{{ a.get_kind_display }}</small><b>{{ a.company_name|default:a.title }}</b>{% if a.summary.outcome %}<span>{{ a.summary.outcome }}</span>{% endif %}{% if a.kind == 'lead' and rec %}<a href="{% url 'crm:lead_detail' rec.pk %}">Open lead →</a>{% elif a.kind == 'visit' and rec.lead %}<a href="{% url 'crm:lead_detail' rec.lead.pk %}">Open lead →</a>{% endif %}</div>
   </div>
+  {% if a.kind == 'visit' and rec.photo %}<img class="visit-photo" src="{% url 'field:visit_photo' rec.pk %}" alt="Visit photo">{% endif %}
   <h4>Details</h4>
   <dl class="kv">
     <dt>Submitted</dt><dd>{{ a.submitted_at|date:"j M Y, H:i" }}</dd>
-    {% if a.summary.location %}<dt>Location</dt><dd>{{ a.summary.location }}</dd>{% endif %}
-    {% if a.kind == 'visit' %}<dt>Mock location</dt><dd><span class="ok">Not detected</span></dd>{% endif %}
+    {% if a.kind == 'visit' %}
+    <dt>Captured</dt><dd>{{ rec.captured_at|date:"j M Y, H:i" }}</dd>
+    <dt>Location</dt><dd>{% if rec.maps_url %}<a href="{{ rec.maps_url }}" target="_blank" rel="noopener" style="color:var(--brand-500)">{{ rec.location_label }}</a>{% if rec.low_accuracy %} <span class="tag" style="background:var(--yellow-100);color:var(--yellow-700)">low accuracy</span>{% endif %}{% else %}<span style="color:var(--red-700)">No location captured</span>{% endif %}</dd>
+    <dt>Mock location</dt><dd>{% if rec.mock_location %}<span style="color:var(--red-700);font-weight:600">Suspected</span>{% else %}<span class="ok">Not detected</span>{% endif %}</dd>
+    {% if rec.contact_name %}<dt>Met</dt><dd>{{ rec.contact_name }}</dd>{% endif %}
+    {% if rec.next_follow_up %}<dt>Next follow-up</dt><dd>{{ rec.next_follow_up|date:"j M Y" }}</dd>{% endif %}
+    {% elif a.summary.location %}<dt>Location</dt><dd>{{ a.summary.location }}</dd>{% endif %}
     {% if a.summary.duration %}<dt>Duration</dt><dd>{{ a.summary.duration }}</dd>{% endif %}
     {% if rec.phone %}<dt>Phone</dt><dd class="mono">{{ rec.phone }}</dd>{% endif %}
     {% if rec.source %}<dt>Source</dt><dd>{{ rec.source }}</dd>{% endif %}

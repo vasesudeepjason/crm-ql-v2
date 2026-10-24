@@ -21,6 +21,7 @@ from apps.accounts.models import Membership, User
 from apps.approvals.models import Approval
 from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
+from apps.field.models import FieldSession, Visit
 from apps.tenants.models import Plan, Tenant
 
 PASSWORD = "quantum-demo-2026"
@@ -129,13 +130,27 @@ class Command(BaseCommand):
                 (mohan, "visit", "Kiran Logistics", 5250000, 4, {"outcome": "Interested", "location": "17.3850, 78.4867 · ±15 m", "duration": "18 min", "note": "Wants support contract for 2 depots."}),
                 (kavya, "lead", "Nova Textiles", None, 1, {"outcome": "Interested", "note": "New lead from IndiaMART enquiry."}),
             ]
+            ct_visit = ContentType.objects.get_for_model(Visit)
+            outcome_for = {"Interested · AMC renewal": "interested", "Proposal discussed": "follow_up", "Proposal sent": "follow_up", "Interested": "interested"}
             for submitter, kind, co, value, days_ago, summary in samples:
                 comp = next((c for c in companies if c.name == co), None)
-                lead = Lead(name=co, company=comp, phone=f"+91 9{random.randint(100000000, 999999999)}", stage="new", status=Lead.Status.PENDING, owner=submitter, source="Telecalling" if kind == "lead" else "Field visit", est_value_paise=value, consent_note="Captured during call/visit; consent noted")
-                lead.created_by = submitter
-                lead.save()
-                a = Approval(kind=kind, content_type=ct_lead, object_id=lead.id, submitter=submitter, title=co, company_name=co, value_paise=value, summary=summary,
-                             submitted_at=now - timedelta(days=days_ago, hours=random.randint(1, 6)))
+                when = now - timedelta(days=days_ago, hours=random.randint(1, 6))
+                if kind == "lead":
+                    lead = Lead(name=co, company=comp, phone=f"+91 9{random.randint(100000000, 999999999)}", stage="new", status=Lead.Status.PENDING, owner=submitter, source="Telecalling", est_value_paise=value, consent_note="Captured during call; consent noted")
+                    lead.created_by = submitter
+                    lead.save()
+                    a = Approval(kind=kind, content_type=ct_lead, object_id=lead.id, submitter=submitter, title=co, company_name=co, value_paise=value, summary=summary, submitted_at=when)
+                else:
+                    lat, lng = [float(x) for x in summary["location"].split(" · ")[0].split(", ")]
+                    sess = FieldSession(executive=submitter, started_at=when - timedelta(hours=3), start_lat=lat, start_lng=lng, ended_at=when + timedelta(hours=4), end_source="manual")
+                    sess.created_by = submitter
+                    sess.save()
+                    lead = Lead.objects.filter(company=comp, owner=submitter).exclude(stage__in=["won", "lost"]).first()
+                    visit = Visit(session=sess, executive=submitter, company=comp, lead=lead, contact_name="Purchase manager", lat=lat, lng=lng, accuracy=float(summary["location"].split("±")[1].split(" ")[0]),
+                                  captured_at=when, duration_minutes=int(summary["duration"].split(" ")[0]), outcome=outcome_for.get(summary["outcome"], "other"), notes=summary["note"], next_follow_up=(when + timedelta(days=7)).date())
+                    visit.created_by = submitter
+                    visit.save()
+                    a = Approval(kind=kind, content_type=ct_visit, object_id=visit.id, submitter=submitter, title=co, company_name=co, value_paise=value, summary={**summary, "has_photo": False, "accuracy": visit.accuracy, "low_accuracy": visit.low_accuracy, "mock": False}, submitted_at=when)
                 a.created_by = submitter
                 a.save()
             # some decided ones for the other tabs

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Field team{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Field sales</h1><p>{{ live_count }} on the road now · {{ queue_count }} visit{{ queue_count|pluralize }} waiting for review{% if stale %} · <span style="color:var(--red-700)">{{ stale }} older than 2 working days</span>{% endif %}</p></div>
+  <div class="actions">
+    <form method="get" class="seg sm"><button type="submit" name="days" value="7" class="{% if days == 7 %}on{% endif %}">7 days</button><button type="submit" name="days" value="30" class="{% if days == 30 %}on{% endif %}">30 days</button><button type="submit" name="days" value="90" class="{% if days == 90 %}on{% endif %}">90 days</button></form>
+    <a class="btn btn-outline" href="{% url 'field:visits' %}">All visits</a>
+    <a class="btn btn-primary" href="{% url 'approvals:queue' %}?kind=visit"><svg class="ic"><use href="#i-ok"/></svg>Review queue{% if queue_count %} <span class="count">{{ queue_count }}</span>{% endif %}</a>
+  </div>
+</section>
+<section class="grid">
+  <div class="card s12">
+    <div class="card-h"><div><h2>Executives</h2><p>Live status today and performance over the last {{ days }} days</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Executive</th><th>Now</th><th class="r">Today</th><th class="r hide-m">Days out</th><th class="r">Visits</th><th class="r hide-m">Approved</th><th class="r hide-m">Rejected</th><th class="r hide-m">Pending</th><th class="r hide-m">Low accuracy</th><th class="r hide-m">Avg review</th><th class="r">Actions</th></tr></thead>
+      <tbody>{% for r in rows %}
+      <tr>
+        <td><div class="who"><span class="avatar sm">{{ r.user.name|initials }}</span><div class="name"><b>{{ r.user.name }}</b><span class="sub">{{ r.user.email }}</span></div></div></td>
+        <td>{% if r.live %}<span class="pill pill-success">On the road</span><div class="muted" style="font-size:12px;margin-top:3px">since {{ r.live.started_at|date:"H:i" }}{% if r.live.last_lat %} · <a href="https://maps.google.com/?q={{ r.live.last_lat }},{{ r.live.last_lng }}" target="_blank" rel="noopener">last seen {{ r.live.last_seen_at|waiting }} ago</a>{% endif %}</div>{% else %}<span class="pill pill-neutral">Off</span>{% endif %}</td>
+        <td class="r num">{{ r.today }}</td>
+        <td class="r hide-m">{{ r.sessions }}</td>
+        <td class="r">{{ r.n }}</td>
+        <td class="r hide-m" style="color:var(--green-700)">{{ r.approved }}</td>
+        <td class="r hide-m" style="color:var(--red-700)">{{ r.rejected }}</td>
+        <td class="r hide-m">{{ r.pending }}</td>
+        <td class="r hide-m">{% if r.low %}<span class="tag" style="background:var(--yellow-100);color:var(--yellow-700)">{{ r.low }}</span>{% else %}0{% endif %}</td>
+        <td class="r hide-m">{% if r.avg_review_h is not None %}{{ r.avg_review_h }} h{% else %}—{% endif %}</td>
+        <td><div class="row-actions">{% if r.live %}<form method="post" action="{% url 'field:end_session_for' r.live.pk %}" onsubmit="return confirm('End {{ r.user.name|escapejs }}\'s day?')">{% csrf_token %}<button class="btn btn-sm btn-neutral">End day</button></form>{% endif %}</div></td>
+      </tr>
+      {% empty %}<tr><td colspan="11" class="muted" style="padding:24px 20px">No field executives in your team yet. Invite one under Set up → Users &amp; roles.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</section>
+{% endblock %}

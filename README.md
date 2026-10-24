@@ -30,6 +30,8 @@ Invite colleagues from **Set up → Users & roles** (role, optional manager). Th
 
 **Leads** (Phase 1): create/edit with owner assignment by scope and an inline new company; a live duplicate check on phone, email and similar name that suggests matches and never merges (tick "Create anyway" to override, which is audited); a detail page with calls, notes, tasks, stage history and approval events on one timeline; stage changes with the rules (Won needs a company, Lost needs a reason); and a drag-and-drop pipeline board at Leads → Pipeline (tap-to-move on touch). Telecaller-created leads go to the approval queue as "Pending approval".
 
+**Field sales** (Phase 1, part 1): a field executive starts their day (location is recorded only while the day is active and the app says so), records visits with a photo (compressed on the device, shrunk again on the server, served only through a permission-checked URL), GPS position and accuracy, outcome, notes and next follow-up; each visit goes to the shared approval queue, and approved visits post a meeting activity on the lead, move its follow-up date and advance its stage. Days auto-close after 21:00 local or on the next morning (`manage.py close_sessions` nightly). Managers get Field sales → Team (who is on the road, today's counts, 7/30/90-day performance, average review time, low-accuracy counts, end someone's day) and a review queue with kind / executive / date filters and bulk approve. Offline capture and PWA install come in part 2.
+
 **Workspace** (Set up → Workspace): name, timezone, GSTIN, address; the list of support sessions with "End access"; DPDP export of all data as a zip of CSVs; deletion request (Owner only, confirmed by QuantumLoop before anything is removed).
 
 Platform staff (`is_staff`): `python manage.py createsuperuser`, then http://localhost:8000/platform/support/. Staff enter a customer workspace only through a **support session** — a reason and a time limit (5 min to 4 h) — during which they act as an Admin and every action is audited with the session id. The customer's admins see the session on their Workspace page and can end it; sessions expire on their own. The Django admin at /platform/ remains for tenants, plans and users.
@@ -52,6 +54,7 @@ apps/accounts     User (email login, TOTP), Membership (one role per tenant), fi
                   OneTimeCode (email sign-in), Invitation, settings screens (profile, users & roles)
 apps/crm          Company, Contact, Lead (+stage history), Activity (calls, notes, tasks)
 apps/imports      Import wizard: ImportJob/ImportRow/SavedMapping, source templates, parsers, validate/commit/rollback
+apps/field        FieldSession, Visit, capture form, My day, Team page, close_sessions command
 apps/approvals    One Approval record for field visits and telecaller leads; approve / reject / ask-for-info rules
 apps/dashboard    Home dashboard
 templates/        base layout, partials, pages
