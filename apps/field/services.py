@@ -17,6 +17,23 @@ def active_session(user) -> FieldSession | None:
     return FieldSession.objects.filter(executive=user, ended_at__isnull=True).order_by("-started_at").first()
 
 
+def session_for(user, captured_at) -> FieldSession:
+    """
+    The session a late-synced visit belongs to: the one that was running when it was
+    captured, else a closed marker session for that moment so the visit is never lost
+    (section 4: visits save on the phone and sync when the network returns).
+    """
+    from django.db.models import Q
+
+    covering = FieldSession.objects.filter(executive=user, started_at__lte=captured_at).filter(Q(ended_at__isnull=True) | Q(ended_at__gte=captured_at)).order_by("-started_at").first()
+    if covering:
+        return covering
+    s = FieldSession(executive=user, started_at=captured_at, ended_at=captured_at, end_source=FieldSession.EndSource.AUTO, device="offline-sync")
+    s.created_by = user
+    s.save()
+    return s
+
+
 def close_stale_sessions(tenant_tz: str = "Asia/Kolkata", now=None) -> int:
     """Sessions still open after AUTO_CLOSE_HOUR local time, or from a previous day, close as 'auto'."""
     now = now or timezone.now()

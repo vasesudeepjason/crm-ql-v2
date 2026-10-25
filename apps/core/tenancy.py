@@ -69,7 +69,7 @@ def rls_bypass():
 class TenantMiddleware:
     """Attach `request.tenant` and `request.membership`, and scope the DB connection."""
 
-    EXEMPT_PREFIXES = ("/accounts/", "/platform/", "/static/", "/media/", "/healthz")
+    EXEMPT_PREFIXES = ("/accounts/", "/platform/", "/static/", "/media/", "/healthz", "/offline/", "/sw.js")
 
     def __init__(self, get_response):
         self.get_response = get_response

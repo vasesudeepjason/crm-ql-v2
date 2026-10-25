@@ -1,0 +1,17 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offline · QuantumLoop</title>
+<link rel="stylesheet" href="{% static 'css/quantum.css' %}">
+<style>body{min-height:100vh;display:grid;place-items:center;padding:24px}.box{max-width:420px;text-align:center}.box img{width:140px;margin-bottom:20px}.box h1{font:700 24px/1.2 var(--font);letter-spacing:-.02em}.box p{color:var(--ink-2);margin:10px 0 20px;line-height:1.5}</style>
+</head>
+<body>
+<div class="box">
+  <img src="{% static 'img/logo-navy.webp' %}" alt="Quantum">
+  <h1>You're offline</h1>
+  <p>This page isn't saved on your phone yet. Visits you record while offline are kept safely and sent as soon as you're back online.</p>
+  <a class="btn btn-primary" href="/field/">Try again</a>
+</div>
+</body>
+</html>

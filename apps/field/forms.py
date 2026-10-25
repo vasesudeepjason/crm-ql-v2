@@ -14,6 +14,7 @@ class VisitForm(forms.ModelForm):
     accuracy = forms.FloatField(required=False, widget=forms.HiddenInput)
     mock_location = forms.BooleanField(required=False, widget=forms.HiddenInput)
     offline_id = forms.CharField(required=False, widget=forms.HiddenInput)
+    captured_at = forms.DateTimeField(required=False, widget=forms.HiddenInput, input_formats=["%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S"])
 
     class Meta:
         model = Visit

@@ -39,5 +39,9 @@ window.QL = (function () {
   }
   addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.querySelector('.search input')?.focus(); } });
 
+  // PWA: register the service worker (root scope) and remember the install prompt for the field screens.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.QL_installPrompt = e; document.dispatchEvent(new CustomEvent('ql-installable')); });
+
   return { openDrawer, closeDrawer, openNav };
 })();

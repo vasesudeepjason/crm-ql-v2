@@ -34,6 +34,10 @@ def _f(v):
 @require_perm("visits.view")
 def my_day(request):
     services.close_stale_sessions(request.tenant.timezone)
+    if request.GET.get("saved"):
+        messages.success(request, "Visit submitted for approval.")
+    elif request.GET.get("queued"):
+        messages.info(request, "No network — the visit is saved on your phone and will be sent automatically when you're back online.")
     session = services.active_session(request.user)
     today = timezone.localdate()
     start = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
@@ -86,8 +90,9 @@ def ping(request):
 @login_required
 @require_perm("visits.create")
 def visit_new(request):
+    is_sync = request.headers.get("X-Offline-Sync") == "1"
     session = services.active_session(request.user)
-    if session is None:
+    if session is None and not is_sync:
         messages.warning(request, "Start your day before recording a visit.")
         return redirect("field:my_day")
     initial = {}
@@ -96,12 +101,21 @@ def visit_new(request):
         if lead:
             initial = {"lead": lead, "company": lead.company}
     form = VisitForm(request.POST or None, request.FILES or None, request=request, initial=initial)
+    if request.method == "POST" and is_sync and not form.is_valid():
+        return JsonResponse({"ok": False, "permanent": True, "errors": {k: [str(e) for e in v] for k, v in form.errors.items()}}, status=400)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
-        if d.get("offline_id") and Visit.objects.filter(executive=request.user, offline_id=d["offline_id"]).exists():
+        existing = Visit.objects.filter(executive=request.user, offline_id=d["offline_id"]).first() if d.get("offline_id") else None
+        if existing:
+            if is_sync:
+                return JsonResponse({"ok": True, "id": existing.id, "duplicate": True})
             messages.info(request, "That visit was already saved.")
             return redirect("field:my_day")
         v = form.save(commit=False)
+        if d.get("captured_at"):
+            v.captured_at = d["captured_at"]
+        if session is None:
+            session = services.session_for(request.user, v.captured_at)
         v.session, v.executive = session, request.user
         v.lat, v.lng, v.accuracy, v.mock_location = d.get("lat"), d.get("lng"), d.get("accuracy"), bool(d.get("mock_location"))
         v.offline_id = d.get("offline_id", "")
@@ -117,7 +131,9 @@ def visit_new(request):
         if v.lat is not None:
             session.ping(v.lat, v.lng)
         ap = services.submit_visit(v)
-        audit(request, "visit.submit", v, after={"outcome": v.outcome, "company": v.company_id, "accuracy": v.accuracy, "approval": ap.id})
+        audit(request, "visit.submit", v, after={"outcome": v.outcome, "company": v.company_id, "accuracy": v.accuracy, "approval": ap.id, "synced": is_sync})
+        if is_sync:
+            return JsonResponse({"ok": True, "id": v.id, "title": v.title})
         messages.success(request, f"Visit to {v.title} submitted for approval.")
         return redirect("field:my_day")
     return render(request, "field/visit_form.html", {"form": form, "session": session})

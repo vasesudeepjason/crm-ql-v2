@@ -7,8 +7,8 @@
 </section>
 <section class="grid">
   <form method="post" enctype="multipart/form-data" class="card sec s8" id="visitForm">{% csrf_token %}
-    {{ form.lat }}{{ form.lng }}{{ form.accuracy }}{{ form.mock_location }}{{ form.offline_id }}
-    {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+    {{ form.lat }}{{ form.lng }}{{ form.accuracy }}{{ form.mock_location }}{{ form.offline_id }}{{ form.captured_at }}
+    <div id="formErr">{% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}</div>
     <div class="geo-chip" id="geoChip"><svg class="ic"><use href="#i-pin"/></svg><span id="geoText">Getting your location…</span></div>
     <div class="form-2" style="margin-top:14px">
       <label>Company<span class="input select">{{ form.company }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
@@ -30,4 +30,4 @@
   <aside class="s4"><div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Tips</h2><ul class="steps" style="padding-left:18px"><li>Take the photo at the customer's premises, with the signboard if possible.</li><li>Wait for the location chip to turn green before submitting; low accuracy is flagged to your manager.</li><li>Set the follow-up date when they want you back.</li></ul></div></aside>
 </section>
 {% endblock %}
-{% block scripts %}<script src="/static/js/field.js"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/offline-db.js"></script><script src="/static/js/field.js"></script>{% endblock %}

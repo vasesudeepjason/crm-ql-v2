@@ -118,6 +118,25 @@ def coming_soon(request, module):
     return render(request, "dashboard/soon.html", {"name": name, "phase": phase})
 
 
+def offline(request):
+    """Shown by the service worker when a page isn't cached and there's no network."""
+    return render(request, "offline.html")
+
+
+def service_worker(request):
+    """Served from the root so its scope covers the whole app (static/ would limit it to /static/)."""
+    from django.contrib.staticfiles import finders
+    from django.http import FileResponse, Http404
+
+    path = finders.find("sw.js")
+    if not path:
+        raise Http404
+    resp = FileResponse(open(path, "rb"), content_type="application/javascript")
+    resp["Service-Worker-Allowed"] = "/"
+    resp["Cache-Control"] = "no-cache"
+    return resp
+
+
 def healthz(request):
     with connection.cursor() as cur:
         cur.execute("SELECT 1")
