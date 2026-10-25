@@ -103,12 +103,17 @@ def home(request):
     follow_ups = list(due.order_by("next_follow_up")[:6])
 
     pipeline = dict(leads.exclude(stage__in=[Lead.Stage.WON, Lead.Stage.LOST]).values_list("stage").annotate(n=Count("id")))
+    my_targets = None
+    if m.has_perm("calls.create") and m.role in ("telecaller", "sales"):
+        from apps.telecaller.services import today_progress
+
+        my_targets = today_progress(request.user)
 
     return render(request, "dashboard/home.html", {
         "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
         "pending": pending_list, "pending_total": pending.count(), "stale": stale,
         "follow_ups": follow_ups, "due_total": due.count(), "overdue": overdue, "pipeline": pipeline, "open_leads": sum(pipeline.values()),
-        "can_review": m.has_perm("leads.approve") or m.has_perm("visits.approve"),
+        "can_review": m.has_perm("leads.approve") or m.has_perm("visits.approve"), "my_targets": my_targets,
     })
 
 

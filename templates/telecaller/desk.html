@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Call desk{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Call desk</h1><p>{{ today|date:"l, j F" }} · {{ queue|length }} to call{% if pending_leads %} · {{ pending_leads }} lead{{ pending_leads|pluralize }} waiting for approval{% endif %}</p></div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'crm:leads' %}?stage=follow_up">Follow-ups</a>
+    {% if can_create %}<a class="btn btn-primary" href="{% url 'crm:lead_create' %}?from_call=1"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Add lead from call</a>{% endif %}
+  </div>
+</section>
+<section class="grid">
+  <div class="card kpi s3"><div class="lbl">Calls today</div><span class="when">{% if p.target_calls %}TARGET {{ p.target_calls }}{% else %}TODAY{% endif %}</span>
+    <div class="val">{{ p.calls }}{% if p.target_calls %}<span class="muted" style="font:500 16px var(--font)">/ {{ p.target_calls }}</span>{% endif %}</div>
+    {% if p.calls_pct is not None %}<div class="track" style="margin-bottom:12px"><div class="fill" style="width:{{ p.calls_pct }}%;background:{% if p.calls_pct >= 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>{% endif %}
+    <div class="rows"><div>Connected<b>{{ p.connected }}{% if p.connect_rate is not None %} · {{ p.connect_rate }}%{% endif %}</b></div><div>Talk time<b>{{ p.talk_minutes }} min</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Leads today</div><span class="when">{% if p.target_leads %}TARGET {{ p.target_leads }}{% else %}TODAY{% endif %}</span>
+    <div class="val">{{ p.leads }}{% if p.target_leads %}<span class="muted" style="font:500 16px var(--font)">/ {{ p.target_leads }}</span>{% endif %}</div>
+    {% if p.leads_pct is not None %}<div class="track" style="margin-bottom:12px"><div class="fill" style="width:{{ p.leads_pct }}%;background:{% if p.leads_pct >= 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>{% endif %}
+    <div class="rows"><div>Approved<b>{{ p.leads_approved }}</b></div><div>Pending<b>{{ p.leads_pending }}</b></div><div>Rejected<b>{{ p.leads_rejected }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Interested today</div><span class="when">OUTCOME</span><div class="val">{{ p.interested }}</div><div class="rows"><div>Of connected calls<b>{% if p.connected %}{% widthratio p.interested p.connected 100 %}%{% else %}—{% endif %}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Queue</div><span class="when">NOW</span><div class="val">{{ queue|length }}</div><div class="rows"><div>Overdue + due today<b>{{ queue|length }}</b></div></div></div>
+
+  <div class="card s8">
+    <div class="card-h"><div><h2>Next to call</h2><p>Overdue and due follow-ups first, then new leads nobody has called. Click a row to log the call.</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Lead</th><th class="hide-m">Company</th><th>Why</th><th class="hide-m">Stage</th><th class="r">Call</th></tr></thead>
+      <tbody>{% for l in queue %}
+      <tr hx-get="{% url 'telecaller:log_form' l.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer">
+        <td><div class="who"><span class="avatar sm">{{ l.name|initials }}</span><div class="name"><b>{{ l.name }}</b><span class="sub">{{ l.phone|default:"no phone" }}</span></div></div></td>
+        <td class="hide-m">{{ l.company.name|default:"—" }}</td>
+        <td>{% if l.reason == 'overdue' %}<span class="pill pill-danger">Overdue</span>{% elif l.reason == 'due today' %}<span class="pill pill-warning">Due today</span>{% elif 'new' in l.reason %}<span class="pill pill-info">New</span>{% else %}<span class="muted" style="font-size:12.5px">{{ l.reason }}</span>{% endif %}</td>
+        <td class="hide-m">{% include "crm/_stage_pill.html" with stage=l.stage label=l.get_stage_display %}</td>
+        <td class="r">{% if l.phone %}<a class="btn btn-sm btn-dark" href="tel:{{ l.phone_normalized|default:l.phone }}" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-phone"/></svg>Call</a>{% endif %}</td>
+      </tr>
+      {% empty %}<tr><td colspan="5" class="muted" style="padding:24px 20px">Nothing to call. Add a lead from your next call.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+
+  <div class="card s4">
+    <div class="card-h"><div><h2>Recent calls</h2><p>Your last 15</p></div></div>
+    <ul class="mini">{% for a in recent %}
+      <li{% if a.lead %} onclick="location.href='{% url 'crm:lead_detail' a.lead.pk %}'" style="cursor:pointer"{% endif %}><span class="avatar sm">{{ a.lead.name|default:"?"|initials }}</span><div class="t"><b>{{ a.lead.name|default:"(deleted lead)" }}</b><small>{{ a.get_outcome_display|default:"logged" }}{% if a.duration_seconds %} · {{ a.duration_seconds|floatformat:0|add:0 }}s{% endif %} · {{ a.created_at|date:"H:i" }}</small></div></li>
+    {% empty %}<li><div class="t muted">No calls yet today.</div></li>{% endfor %}</ul>
+  </div>
+</section>
+{% endblock %}

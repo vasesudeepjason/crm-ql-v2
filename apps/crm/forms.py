@@ -31,6 +31,8 @@ class LeadForm(forms.ModelForm):
     est_value = forms.DecimalField(required=False, min_value=0, decimal_places=2, max_digits=14, widget=forms.NumberInput(attrs={"placeholder": "e.g. 48000", "inputmode": "decimal"}))
     tags_text = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": "AMC, Priority"}))
     create_anyway = forms.BooleanField(required=False)
+    first_call_outcome = forms.ChoiceField(required=False, choices=[("", "— Not logging a call —"), *Activity.Outcome.choices])
+    first_call_notes = forms.CharField(required=False, max_length=500, widget=forms.TextInput(attrs={"placeholder": "What was said on the call"}))
 
     class Meta:
         model = Lead

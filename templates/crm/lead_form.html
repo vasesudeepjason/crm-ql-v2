@@ -23,6 +23,12 @@
       <label class="span2">Consent note<span class="input">{{ form.consent_note }}</span><small class="muted">Required under DPDP for data captured from third parties: say how it was collected and that follow-up was agreed.</small></label>
       <label class="chk-row"><input type="checkbox" class="chk" name="do_not_contact" {% if form.do_not_contact.value %}checked{% endif %}> Do not contact</label>
     </div>
+    {% if is_new and from_call %}
+    <div class="form-2" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2)">
+      <label>Log this call<span class="input select">{{ form.first_call_outcome }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>Call notes<span class="input">{{ form.first_call_notes }}</span></label>
+    </div>
+    {% endif %}
     <div id="dupBox" hx-get="{% url 'crm:check_duplicate' %}{% if lead %}?exclude={{ lead.pk }}{% endif %}" hx-trigger="input changed delay:500ms from:#id_phone, input changed delay:500ms from:#id_email, input changed delay:700ms from:#id_name, change from:#id_phone, change from:#id_email" hx-include="#id_phone,#id_email,#id_name" hx-swap="innerHTML">
       {% include "crm/_duplicates.html" with dups=dups live=False %}
     </div>

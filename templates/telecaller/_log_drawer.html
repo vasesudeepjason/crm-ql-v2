@@ -1,0 +1,23 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>Log call</small><h3>{{ lead.name }}</h3></div>
+  <div class="btns">{% if lead.phone %}<a class="btn btn-sm btn-dark" href="tel:{{ lead.phone_normalized|default:lead.phone }}"><svg class="ic"><use href="#i-phone"/></svg>{{ lead.phone }}</a>{% endif %}<button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  <div class="info2">
+    <div class="info"><small>Company</small><b>{{ lead.company.name|default:"—" }}</b><span>{{ lead.source|default:"" }}</span><a href="{% url 'crm:lead_detail' lead.pk %}">Open lead →</a></div>
+    <div class="info"><small>Stage</small><b>{{ lead.get_stage_display }}</b><span>{% if lead.next_follow_up %}follow-up {{ lead.next_follow_up|date:"j M" }}{% else %}no follow-up set{% endif %}{% if lead.est_value_paise %} · {{ lead.est_value_paise|short_rupees }}{% endif %}</span></div>
+  </div>
+  <form id="logForm" hx-post="{% url 'telecaller:log_call' lead.pk %}" hx-target="#logErr" hx-swap="innerHTML" class="form-2" style="margin-top:18px" x-data="{outcome:'',stage:''}">{% csrf_token %}
+    <label class="span2">Outcome *<span class="input select"><select name="outcome" x-model="outcome" autofocus>{% for code, name in form.fields.outcome.choices %}<option value="{{ code }}">{{ name|default:"— Pick —" }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Duration<span class="input">{{ form.duration_minutes }}</span></label>
+    <label>Next follow-up<span class="input">{{ form.next_follow_up }}</span></label>
+    <label class="span2">Notes<span class="input" style="height:auto">{{ form.notes }}</span></label>
+    <label class="span2">Move stage <small class="muted">(optional — outcomes also move it)</small><span class="input select"><select name="stage" x-model="stage"><option value="">Keep {{ lead.get_stage_display }}</option>{% for code, name in stages %}{% if code != lead.stage %}<option value="{{ code }}">{{ name }}</option>{% endif %}{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label class="span2" x-show="stage==='lost'" x-cloak>Reason lost<span class="input"><input name="lost_reason" placeholder="Why?"></span></label>
+    <div id="logErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Save call</button><span class="muted" style="font-size:12.5px">No answer / busy auto-sets a follow-up for tomorrow.</span></div>
+  </form>
+  {% if last %}<h4>Last calls</h4><ul class="tl">{% for a in last %}<li><b>{{ a.get_outcome_display|default:"Call" }}{% if a.duration_seconds %} · {{ a.duration_seconds|floatformat:0|add:0 }}s{% endif %}</b>{% if a.notes %}<div class="muted" style="font-size:13px;margin-top:2px">{{ a.notes|truncatechars:120 }}</div>{% endif %}<small>{{ a.created_at|date:"j M, H:i" }} · {{ a.created_by.first_name }}</small></li>{% endfor %}</ul>{% endif %}
+</div>
+<script>QL.openDrawer()</script>

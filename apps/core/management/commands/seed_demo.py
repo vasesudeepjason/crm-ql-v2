@@ -22,6 +22,7 @@ from apps.approvals.models import Approval
 from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
 from apps.field.models import FieldSession, Visit
+from apps.telecaller.models import CallTarget
 from apps.tenants.models import Plan, Tenant
 
 PASSWORD = "quantum-demo-2026"
@@ -45,7 +46,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         random.seed(42)
         with rls_bypass():
-            Tenant.objects.filter(slug__in=["quantumloop-hq", "other-co"]).delete()
+            demo = Tenant.objects.filter(slug__in=["quantumloop-hq", "other-co"])
+            Visit.all_objects.filter(tenant__in=demo).delete()  # Visit.session is PROTECT; clear visits before the cascade
+            demo.delete()
             User.objects.filter(email__endswith="@quantumloop.in").delete()
             User.objects.filter(email__endswith="@other.co").delete()
             plans = {p["code"]: Plan.objects.update_or_create(code=p["code"], defaults=p)[0] for p in [
@@ -107,8 +110,12 @@ class Command(BaseCommand):
                     a = Activity(lead=lead, company=company, type="call", outcome=random.choice(list(Activity.Outcome.values)), duration_seconds=random.randint(30, 600), notes="")
                     a.created_by = owner if owner in (sneha, kavya) else sneha
                     a.save()
-                    Activity.all_objects.filter(pk=a.pk).update(created_at=created + timedelta(hours=random.randint(1, 72)))
+                    Activity.all_objects.filter(pk=a.pk).update(created_at=min(created + timedelta(hours=random.randint(1, 72)), now - timedelta(minutes=random.randint(5, 600))))
 
+            for tc, calls, leads_t in ((sneha, 40, 4), (kavya, 35, 3)):
+                t = CallTarget(user=tc, calls_per_day=calls, leads_per_day=leads_t, set_by=vikram)
+                t.created_by = vikram
+                t.save()
             # Today's calls so the dashboard has "today" numbers
             for _ in range(37):
                 a = Activity(lead=random.choice(leads), type="call", outcome=random.choice(list(Activity.Outcome.values)), duration_seconds=random.randint(30, 400))

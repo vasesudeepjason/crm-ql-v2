@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Telecaller team{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Telecalling</h1><p>{{ totals.calls|intcomma }} calls · {{ totals.leads }} leads submitted · {{ totals.approved }} approved in the last {{ days }} days{% if pending %} · <a href="{% url 'approvals:queue' %}?kind=lead" style="color:var(--red-700)">{{ pending }} waiting for approval</a>{% endif %}</p></div>
+  <div class="actions">
+    <form method="get" class="seg sm"><button type="submit" name="days" value="1" class="{% if days == 1 %}on{% endif %}">Today</button><button type="submit" name="days" value="7" class="{% if days == 7 %}on{% endif %}">7 days</button><button type="submit" name="days" value="30" class="{% if days == 30 %}on{% endif %}">30 days</button></form>
+    <a class="btn btn-primary" href="{% url 'approvals:queue' %}?kind=lead"><svg class="ic"><use href="#i-ok"/></svg>Review leads</a>
+  </div>
+</section>
+<section class="grid"><div class="card s12">
+  <div class="card-h"><div><h2>Telecallers</h2><p>Today's progress against targets, and the last {{ days }} day{{ days|pluralize }}. Attainment counts Monday–Saturday.</p></div></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Telecaller</th><th>Today</th><th class="r">Calls</th><th class="r hide-m">Connected</th><th class="r hide-m">Talk</th><th class="r">Leads</th><th class="r hide-m">Approved</th><th class="r hide-m">Rejected</th><th class="r hide-m">Attainment</th><th class="r">Targets / day</th></tr></thead>
+    <tbody>{% for r in rows %}
+    <tr x-data="{edit:false}">
+      <td><div class="who"><span class="avatar sm">{{ r.user.name|initials }}</span><div class="name"><b>{{ r.user.name }}</b><span class="sub">{{ r.user.email }}</span></div></div></td>
+      <td><div style="min-width:150px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>{{ r.today.calls }}{% if r.target %}/{{ r.target.calls_per_day }}{% endif %} calls</span><span>{{ r.today.leads }}{% if r.target %}/{{ r.target.leads_per_day }}{% endif %} leads</span></div>{% if r.target %}<div class="track" style="height:6px;margin-top:4px"><div class="fill" style="width:{% widthratio r.today.calls r.target.calls_per_day 100 %}%;max-width:100%;background:var(--brand-500)"></div></div>{% endif %}</div></td>
+      <td class="r num">{{ r.period.calls }}</td>
+      <td class="r hide-m">{{ r.period.connected }}{% if r.period.connect_rate is not None %} <span class="muted">({{ r.period.connect_rate }}%)</span>{% endif %}</td>
+      <td class="r hide-m">{{ r.period.talk_minutes }} min</td>
+      <td class="r">{{ r.period.leads }}</td>
+      <td class="r hide-m" style="color:var(--green-700)">{{ r.period.leads_approved }}</td>
+      <td class="r hide-m" style="color:var(--red-700)">{{ r.period.leads_rejected }}</td>
+      <td class="r hide-m">{% if r.calls_att is not None %}<span class="pill {% if r.calls_att >= 100 %}pill-success{% elif r.calls_att >= 70 %}pill-warning{% else %}pill-danger{% endif %}">{{ r.calls_att }}% calls</span> <span class="pill {% if r.leads_att >= 100 %}pill-success{% elif r.leads_att >= 70 %}pill-warning{% else %}pill-danger{% endif %}">{{ r.leads_att }}% leads</span>{% else %}<span class="muted">no target</span>{% endif %}</td>
+      <td class="r">
+        <span x-show="!edit"><button class="btn btn-sm btn-outline" type="button" @click="edit=true">{% if r.target %}{{ r.target.calls_per_day }} / {{ r.target.leads_per_day }}{% else %}Set{% endif %}</button></span>
+        <form x-show="edit" x-cloak method="post" action="{% url 'telecaller:set_target' r.user.id %}" class="role-form" style="justify-content:flex-end">{% csrf_token %}
+          <label class="input" style="height:32px;width:90px"><input name="calls_per_day" type="number" min="0" max="500" value="{{ r.target.calls_per_day|default:40 }}" aria-label="Calls per day"></label>
+          <label class="input" style="height:32px;width:80px"><input name="leads_per_day" type="number" min="0" max="100" value="{{ r.target.leads_per_day|default:4 }}" aria-label="Leads per day"></label>
+          <button class="btn btn-sm btn-dark">Save</button><button class="btn btn-sm btn-neutral" type="button" @click="edit=false">Cancel</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="10" class="muted" style="padding:24px 20px">No telecallers in your team yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

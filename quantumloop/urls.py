@@ -11,6 +11,7 @@ urlpatterns = [
     path("crm/", include("apps.crm.urls")),
     path("imports/", include("apps.imports.urls")),
     path("field/", include("apps.field.urls")),
+    path("telecaller/", include("apps.telecaller.urls")),
     path("", include("apps.core.urls")),
     path("", include("apps.dashboard.urls")),
 ]

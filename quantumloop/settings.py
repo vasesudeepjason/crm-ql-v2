@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.approvals",
     "apps.imports",
     "apps.field",
+    "apps.telecaller",
     "apps.dashboard",
 ]
 

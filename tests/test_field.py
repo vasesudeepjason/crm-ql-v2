@@ -146,7 +146,10 @@ def test_queue_filters_and_bulk_approve(two_tenants, field_user, login, client):
     assert r.status_code == 200 and r.content.count(b"Shop ") == 3
     r = client.get(reverse("approvals:queue"), {"kind": "lead"})
     assert b"Shop " not in r.content
-    r = client.get(reverse("approvals:queue"), {"from": (timezone.localdate() + timedelta(days=1)).isoformat()})
+    import zoneinfo
+
+    ist_tomorrow = timezone.now().astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")).date() + timedelta(days=1)  # requests run in the tenant zone
+    r = client.get(reverse("approvals:queue"), {"from": ist_tomorrow.isoformat()})
     assert b"Shop " not in r.content
     ids = list(Approval.all_objects.filter(kind="visit").values_list("id", flat=True))
     r = client.post(reverse("approvals:bulk_approve"), {"ids": ids + [two_tenants["appr_other"].id]})  # last one is outside the team

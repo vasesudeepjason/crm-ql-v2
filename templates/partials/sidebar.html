@@ -20,7 +20,12 @@
       <div class="sub">{% if perms_set|can:"visits.create" %}<a class="{% active 'field:my_day' 'field:visit_new' %}" href="{% url 'field:my_day' %}">My day</a>{% endif %}{% if perms_set|can:"visits.approve" %}<a class="{% active 'field:team' %}" href="{% url 'field:team' %}">Team</a><a href="{% url 'approvals:queue' %}?kind=visit">Review queue</a>{% endif %}<a class="{% active 'field:visits' %}" href="{% url 'field:visits' %}">Visits</a></div>
     </div>
     {% endif %}
-    {% if perms_set|can:"calls.view" %}<a class="ni" href="{% url 'dashboard:soon' 'telecaller' %}" title="Telecaller"><svg class="ic"><use href="#i-phone"/></svg><span class="tx">Telecaller</span></a>{% endif %}
+    {% if perms_set|can:"calls.view" %}
+    <div class="ng {% if request.resolver_match.namespace == 'telecaller' %}open{% endif %}">
+      <button class="ni" title="Telecaller"><svg class="ic"><use href="#i-phone"/></svg><span class="tx">Telecaller</span><svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'telecaller:desk' %}" href="{% url 'telecaller:desk' %}">Call desk</a>{% if perms_set|can:"leads.assign" %}<a class="{% active 'telecaller:team' %}" href="{% url 'telecaller:team' %}">Team &amp; targets</a><a href="{% url 'approvals:queue' %}?kind=lead">Review leads</a>{% endif %}</div>
+    </div>
+    {% endif %}
     {% if perms_set|can:"contracts.view" %}<a class="ni" href="{% url 'dashboard:soon' 'contracts' %}" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span></a>{% endif %}
     {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}

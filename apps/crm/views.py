@@ -70,7 +70,10 @@ def _can_edit(request, lead) -> bool:
 @login_required
 @require_perm("leads.create")
 def lead_create(request):
-    form = LeadForm(request.POST or None, request=request)
+    initial = {}
+    if request.GET.get("from_call"):
+        initial = {"source": "Telecalling", "phone": request.GET.get("phone", ""), "consent_note": "Captured during an outbound call; agreed to follow-up"}
+    form = LeadForm(request.POST or None, request=request, initial=initial)
     dups = []
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
@@ -83,14 +86,18 @@ def lead_create(request):
             lead.status = Lead.Status.PENDING if needs_approval else Lead.Status.ACTIVE
             lead.save()
             LeadStageHistory.objects.create(lead=lead, from_stage="", to_stage=lead.stage, changed_by=request.user, note="created")
+            if d.get("first_call_outcome"):
+                call = Activity(lead=lead, company=lead.company, type=Activity.Type.CALL, outcome=d["first_call_outcome"], notes=d.get("first_call_notes", ""))
+                call.created_by = request.user
+                call.save()
             if needs_approval:
                 Approval.objects.create(kind=Approval.Kind.LEAD, content_type=ContentType.objects.get_for_model(Lead), object_id=lead.id, submitter=request.user,
                                         title=lead.name, company_name=lead.company.name if lead.company else "", value_paise=lead.est_value_paise,
-                                        summary={"outcome": lead.get_stage_display(), "note": d.get("consent_note", "")})
+                                        summary={"outcome": dict(Activity.Outcome.choices).get(d.get("first_call_outcome"), lead.get_stage_display()), "note": d.get("first_call_notes") or d.get("consent_note", "")})
             audit(request, "lead.create", lead, after={"name": lead.name, "stage": lead.stage, "status": lead.status, "duplicates_overridden": len(dups)})
             messages.success(request, f"Lead '{lead.name}' {'submitted for approval' if needs_approval else 'created'}.")
             return redirect("crm:lead_detail", pk=lead.pk)
-    return render(request, "crm/lead_form.html", {"form": form, "dups": dups, "sources": SOURCES, "is_new": True, "needs_approval": request.membership.role == "telecaller"})
+    return render(request, "crm/lead_form.html", {"form": form, "dups": dups, "sources": SOURCES, "is_new": True, "needs_approval": request.membership.role == "telecaller", "from_call": bool(request.GET.get("from_call") or request.POST.get("first_call_outcome"))})
 
 
 @login_required

@@ -13,6 +13,12 @@
 </section>
 
 {% if membership.role in 'owner,admin' and not user.totp_enabled %}<div class="banner"><svg class="ic"><use href="#i-lock"/></svg><span><b>Protect this workspace.</b> As {{ membership.role_name }} you should turn on two-step verification.</span><a class="btn btn-sm btn-dark" href="{% url 'accounts:totp_setup' %}">Set up</a></div>{% endif %}
+{% if my_targets %}<div class="card" style="padding:16px 20px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+  <div><b style="font-weight:600">Today's targets</b><div class="muted" style="font-size:12.5px">Approved leads count; pending ones show until decided.</div></div>
+  <div style="flex:1;min-width:180px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>Calls</span><b>{{ my_targets.calls }}{% if my_targets.target_calls %} / {{ my_targets.target_calls }}{% endif %}</b></div>{% if my_targets.calls_pct is not None %}<div class="track" style="margin-top:4px"><div class="fill" style="width:{{ my_targets.calls_pct }}%;background:{% if my_targets.calls_pct >= 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>{% endif %}</div>
+  <div style="flex:1;min-width:180px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>Leads</span><b>{{ my_targets.leads }}{% if my_targets.target_leads %} / {{ my_targets.target_leads }}{% endif %}</b></div>{% if my_targets.leads_pct is not None %}<div class="track" style="margin-top:4px"><div class="fill" style="width:{{ my_targets.leads_pct }}%;background:{% if my_targets.leads_pct >= 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>{% endif %}</div>
+  <a class="btn btn-sm btn-dark" href="{% url 'telecaller:desk' %}"><svg class="ic"><use href="#i-phone"/></svg>Call desk</a>
+</div>{% endif %}
 <section class="grid">
   {% with k=kpis.leads %}
   <div class="card kpi s3">

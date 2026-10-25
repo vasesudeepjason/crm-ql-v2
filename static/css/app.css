@@ -130,6 +130,8 @@ input[type=file]{font:400 13px var(--font);padding:9px 0}
 .tbl .name .sub.mono{font:400 11px var(--mono)}
 @media (max-width:1280px){.hide-l{display:none}}
 
+.track{height:8px;border-radius:99px;background:var(--field);overflow:hidden}.fill{height:100%;border-radius:99px}
+
 /* ---- Field sales ---- */
 .thumb{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:var(--field)}
 .geo-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--field);font-size:13px;color:var(--ink-2)}
