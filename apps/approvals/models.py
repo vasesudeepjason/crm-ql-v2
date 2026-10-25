@@ -114,6 +114,9 @@ class Approval(TenantModel):
         self.reason = (note or "").strip()
         self.reviewer = membership.user
         self.save()
+        from apps.notifications.services import approval_decided
+
+        approval_decided(self)
 
     def _decide(self, membership, status, reason):
         self.status = status
@@ -121,6 +124,9 @@ class Approval(TenantModel):
         self.reviewer = membership.user
         self.decided_at = timezone.now()
         self.save()
+        from apps.notifications.services import approval_decided
+
+        approval_decided(self)
 
     def _apply_to_record(self, approved: bool, by=None):
         rec = self.record

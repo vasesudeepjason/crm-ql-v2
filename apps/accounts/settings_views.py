@@ -28,7 +28,9 @@ from .roles import ROLE_CHOICES, ROLES
 @login_required
 def profile(request):
     needs_totp = request.membership.role in ("owner", "admin") and not request.user.totp_enabled
-    return render(request, "settings/profile.html", {"pw_form": PasswordChangeForm(request.user), "needs_totp": needs_totp, "section": "profile"})
+    from apps.notifications.models import NotificationPreference
+
+    return render(request, "settings/profile.html", {"pw_form": PasswordChangeForm(request.user), "needs_totp": needs_totp, "section": "profile", "prefs": NotificationPreference.for_user(request.user)})
 
 
 @login_required

@@ -17,4 +17,5 @@ def tenant_context(request):
         "membership": m,
         "perms_set": m.permissions() if m else frozenset(),
         "pending_badge": badge,
+        "unread_count": __import__("apps.notifications.models", fromlist=["Notification"]).Notification.objects.filter(user=request.user, read_at__isnull=True).count() if m is not None else 0,
     }

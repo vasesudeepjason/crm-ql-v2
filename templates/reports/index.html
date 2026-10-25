@@ -1,0 +1,80 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Reports</h1><p>{{ period_label }}{% if owner %} · one owner{% else %} · your team{% endif %}</p></div>
+  <form method="get" class="actions" id="filters">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="seg sm">{% for code, name in tabs %}<button type="submit" name="tab" value="{{ code }}" class="{% if tab == code %}on{% endif %}">{{ name }}</button>{% endfor %}</div>
+    <span class="input select" style="height:40px;border-radius:999px"><select name="period" onchange="this.form.submit()"><option value="7" {% if period == '7' %}selected{% endif %}>Last 7 days</option><option value="30" {% if period == '30' %}selected{% endif %}>Last 30 days</option><option value="90" {% if period == '90' %}selected{% endif %}>Last 90 days</option><option value="fy" {% if period == 'fy' %}selected{% endif %}>This financial year</option><option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom…</option></select><svg class="ic chev"><use href="#i-down"/></svg></span>
+    {% if period == 'custom' %}<span class="input" style="height:40px"><input type="date" name="from" value="{{ from|date:'Y-m-d' }}" onchange="this.form.submit()"></span><span class="input" style="height:40px"><input type="date" name="to" value="{{ to|date:'Y-m-d' }}" onchange="this.form.submit()"></span>{% endif %}
+    {% if owners|length > 1 %}<span class="input select" style="height:40px;border-radius:999px"><select name="owner" onchange="this.form.submit()"><option value="">Everyone</option>{% for u in owners %}<option value="{{ u.id }}" {% if owner == u.id|stringformat:"s" %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>{% endif %}
+    {% if perms_set|can:"data.export" %}
+    <span x-data="{open:false}" style="position:relative"><button type="button" class="btn btn-secondary" @click="open=!open"><svg class="ic"><use href="#i-export"/></svg>Export</button>
+      <div class="menu" x-show="open" x-cloak @click.outside="open=false" style="width:200px"><a class="menu-i" href="{% url 'reports:export' 'leads' %}?{{ qs }}">Leads (CSV)</a><a class="menu-i" href="{% url 'reports:export' 'companies' %}?{{ qs }}">Companies (CSV)</a><a class="menu-i" href="{% url 'reports:export' 'calls' %}?{{ qs }}">Calls (CSV)</a><a class="menu-i" href="{% url 'reports:export' 'visits' %}?{{ qs }}">Visits (CSV)</a><a class="menu-i" href="{% url 'reports:export' 'approvals' %}?{{ qs }}">Approvals (CSV)</a></div></span>
+    {% endif %}
+  </form>
+</section>
+
+{% if tab == 'pipeline' %}
+<section class="grid">
+  <div class="card kpi s3"><div class="lbl">Open leads</div><span class="when">NOW</span><div class="val">{{ p.open_n|intcomma }}</div><div class="rows"><div>Pipeline value<b>{{ p.open_v|short_rupees }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Overdue follow-ups</div><span class="when">NOW</span><div class="val" style="color:{% if p.overdue %}var(--red-700){% else %}inherit{% endif %}">{{ p.overdue }}</div><div class="rows"><div>No follow-up set<b>{{ p.no_follow_up }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Stale leads</div><span class="when">14+ DAYS</span><div class="val">{{ p.stale }}</div><div class="rows"><div>No update in two weeks<b>{% if p.open_n %}{% widthratio p.stale p.open_n 100 %}%{% else %}—{% endif %}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Owners</div><span class="when">ACTIVE</span><div class="val">{{ p.by_owner|length }}</div><div class="rows"><div>Sources<b>{{ p.by_source|length }}</b></div></div></div>
+  <div class="card s6 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">By stage</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Open leads and their estimated value</p>
+    <div class="bars">{% for s in p.stages %}<div class="bar-row"><span class="bar-l">{{ s.label }}</span><span class="bar-t"><i style="width:{{ s.pct }}%"></i></span><b>{{ s.n }}</b><small>{{ s.v|short_rupees }}</small></div>{% endfor %}</div>
+  </div>
+  <div class="card s6 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">By owner</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Who holds the pipeline</p>
+    <table class="tbl" style="min-width:0"><thead><tr><th>Owner</th><th class="r">Open</th><th class="r">Value</th></tr></thead><tbody>{% for r in p.by_owner %}<tr><td>{{ r.owner__name|default:"Unassigned" }}</td><td class="r">{{ r.n }}</td><td class="r">{{ r.v|short_rupees }}</td></tr>{% empty %}<tr><td colspan="3" class="muted">No open leads.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <div class="card s12 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">By source</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Where open leads came from</p>
+    <table class="tbl" style="min-width:0"><thead><tr><th>Source</th><th class="r">Open</th><th class="r">Value</th></tr></thead><tbody>{% for r in p.by_source %}<tr><td>{{ r.source|default:"(none)" }}</td><td class="r">{{ r.n }}</td><td class="r">{{ r.v|short_rupees }}</td></tr>{% endfor %}</tbody></table>
+  </div>
+</section>
+
+{% elif tab == 'conversion' %}
+<section class="grid">
+  <div class="card kpi s3"><div class="lbl">Leads created</div><span class="when">PERIOD</span><div class="val">{{ c.n|intcomma }}</div><div class="rows"><div>Won<b>{{ c.won_n }}</b></div><div>Lost<b>{{ c.lost_n }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Win rate</div><span class="when">OF DECIDED</span><div class="val">{% if c.win_rate is not None %}{{ c.win_rate }}%{% else %}—{% endif %}</div><div class="rows"><div>Decided<b>{{ c.won_n|add:c.lost_n }}</b></div></div></div>
+  <div class="card kpi s3"><div class="lbl">Days to win</div><span class="when">AVERAGE</span><div class="val">{% if c.avg_days_to_win is not None %}{{ c.avg_days_to_win }}{% else %}—{% endif %}</div><div class="rows"><div>From creation to Won<b>cohort</b></div></div></div>
+  <div class="card kpi hi s3"><div class="lbl">Won revenue</div><span class="when">IN PERIOD</span><div class="val">{{ c.won_in_period_v|short_rupees }}</div><div class="rows"><div>Deals won<b>{{ c.won_in_period_n }}</b></div></div></div>
+  <div class="card s6 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">Funnel</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Leads created in the period and how far they got</p>
+    <div class="bars">{% for s in c.steps %}<div class="bar-row"><span class="bar-l">{{ s.label }}</span><span class="bar-t"><i style="width:{% widthratio s.n max_step 100 %}%;{% if s.code == 'won' %}background:var(--green){% endif %}"></i></span><b>{{ s.n }}</b><small>{{ s.pct }}%</small></div>{% endfor %}</div>
+  </div>
+  <div class="card s6 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">Lost reasons</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Why leads from this period were lost</p>
+    <table class="tbl" style="min-width:0"><thead><tr><th>Reason</th><th class="r">Leads</th></tr></thead><tbody>{% for r in c.lost_reasons %}<tr><td>{{ r.lost_reason }}</td><td class="r">{{ r.n }}</td></tr>{% empty %}<tr><td colspan="2" class="muted">No lost leads with a reason.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <div class="card s12 sec">
+    <h2 style="font:600 16px var(--font);margin-bottom:4px">By source</h2><p class="muted" style="font-size:13px;margin-bottom:14px">Which sources convert</p>
+    <table class="tbl" style="min-width:0"><thead><tr><th>Source</th><th class="r">Leads</th><th class="r">Won</th><th class="r">Win rate</th><th class="r">Won value</th></tr></thead><tbody>{% for r in c.by_source %}<tr><td>{{ r.source|default:"(none)" }}</td><td class="r">{{ r.n }}</td><td class="r">{{ r.won }}</td><td class="r">{{ r.rate }}%</td><td class="r">{{ r.v|short_rupees }}</td></tr>{% endfor %}</tbody></table>
+  </div>
+</section>
+
+{% elif tab == 'team' %}
+<section class="grid"><div class="card s12">
+  <div class="card-h"><div><h2>Team performance</h2><p>{{ period_label }} · approved records only count toward wins and visits</p></div></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Person</th><th class="r">Leads</th><th class="r">Won</th><th class="r">Won value</th><th class="r hide-m">Calls</th><th class="r hide-m">Talk</th><th class="r hide-m">Visits</th><th class="r hide-m">Submitted</th><th class="r hide-m">Approved</th><th class="r hide-m">Rejected</th><th class="r hide-m">Reviewed</th><th class="r">Open</th><th class="r">Overdue</th></tr></thead>
+    <tbody>{% for r in rows %}<tr>
+      <td><div class="who"><span class="avatar sm">{{ r.user.name|initials }}</span><div class="name"><b>{{ r.user.name }}</b><span class="sub">{{ r.user.email }}</span></div></div></td>
+      <td class="r">{{ r.created }}</td><td class="r">{{ r.won_n }}</td><td class="r">{{ r.won_v|short_rupees }}</td><td class="r hide-m">{{ r.calls }}</td><td class="r hide-m">{{ r.talk_min }} min</td><td class="r hide-m">{{ r.visits }}{% if r.visits %} <span class="muted">({{ r.visits_ok }} ok)</span>{% endif %}</td><td class="r hide-m">{{ r.subs }}</td><td class="r hide-m" style="color:var(--green-700)">{{ r.subs_ok }}</td><td class="r hide-m" style="color:var(--red-700)">{{ r.subs_rej }}</td><td class="r hide-m">{{ r.reviews }}</td><td class="r">{{ r.open }}</td><td class="r" style="color:{% if r.overdue %}var(--red-700){% else %}inherit{% endif %}">{{ r.overdue }}</td>
+    </tr>{% empty %}<tr><td colspan="13" class="muted" style="padding:24px 20px">Nobody in scope.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+
+{% else %}
+<section class="grid"><div class="card s12 sec">
+  <h2 style="font:600 16px var(--font);margin-bottom:4px">Daily activity</h2><p class="muted" style="font-size:13px;margin-bottom:14px">{{ period_label }} · leads created, calls logged, visits recorded, deals won{% if not trend %} · pick a period of 90 days or less{% endif %}</p>
+  {% if trend %}
+  <div class="trend"><div class="trend-legend"><span><i style="background:var(--brand-500)"></i>Leads</span><span><i style="background:var(--brand-200)"></i>Calls</span><span><i style="background:var(--yellow)"></i>Visits</span><span><i style="background:var(--green)"></i>Won</span></div>
+    <div class="trend-bars">{% for d in trend %}<div class="trend-day" title="{{ d.day|date:'j M' }} · {{ d.leads }} leads · {{ d.calls }} calls · {{ d.visits }} visits · {{ d.won }} won"><i style="height:{% widthratio d.calls trend_max 100 %}%;background:var(--brand-200)"></i><i style="height:{% widthratio d.leads trend_max 100 %}%;background:var(--brand-500)"></i><i style="height:{% widthratio d.visits trend_max 100 %}%;background:var(--yellow)"></i><i style="height:{% widthratio d.won trend_max 100 %}%;background:var(--green)"></i>{% if forloop.first or forloop.counter|divisibleby:7 %}<small>{{ d.day|date:"j M" }}</small>{% endif %}</div>{% endfor %}</div></div>
+  {% endif %}
+</div></section>
+{% endif %}
+{% endblock %}

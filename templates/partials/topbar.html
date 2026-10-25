@@ -8,7 +8,7 @@
   </div>
   <div class="icon-group">
     <button class="icon-btn" aria-label="Help"><svg class="ic"><use href="#i-help"/></svg></button>
-    <button class="icon-btn raised" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg>{% if pending_badge %}<span class="dot"></span>{% endif %}</button>
+    <a class="icon-btn raised" aria-label="Notifications" href="{% url 'notifications:index' %}" title="{{ unread_count }} unread"><svg class="ic"><use href="#i-bell"/></svg>{% if unread_count %}<span class="dot"></span>{% endif %}</a>
   </div>
   <div x-data="{open:false}" style="position:relative">
     <button class="user" @click="open=!open" :aria-expanded="open"><span class="avatar">{{ user.name|initials }}</span><span class="nm"><b>{{ user.name }}</b><small>{{ membership.role_name }}</small></span><svg class="ic chev" style="color:var(--muted);width:16px"><use href="#i-down"/></svg></button>

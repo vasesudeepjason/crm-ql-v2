@@ -37,6 +37,9 @@ def two_tenants(db):
         cb = Company.objects.create(name="B Customer", owner=owner_b)
         lb = Lead.objects.create(name="Lead B", company=cb, owner=owner_b)
 
+    from django.core import mail
+
+    mail.outbox.clear()  # approval creation above emailed the managers
     return dict(a=a, b=b, owner_a=owner_a, mgr_a=mgr_a, m_mgr=m_mgr, tc_a=tc_a, other_tc=other_tc, owner_b=owner_b, lead_a=la, lead_b=lb, appr=appr, appr_other=appr_other)
 
 

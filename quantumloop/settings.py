@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django_htmx",
+    "django_rq",
     "apps.core",
     "apps.tenants",
     "apps.accounts",
@@ -34,6 +35,8 @@ INSTALLED_APPS = [
     "apps.imports",
     "apps.field",
     "apps.telecaller",
+    "apps.reports",
+    "apps.notifications",
     "apps.dashboard",
 ]
 
@@ -148,6 +151,8 @@ CACHES = {
 OTP_CODE_TTL_SECONDS = 600
 INVITE_TTL_DAYS = 7
 
+RQ_ENABLED = os.environ.get("RQ_ENABLED", "0") == "1"  # needs REDIS_URL and `manage.py rqworker default`
+RQ_SHOW_ADMIN_LINK = True
 RQ_QUEUES = {
     "default": {"URL": os.environ.get("REDIS_URL", "redis://localhost:6379/0"), "DEFAULT_TIMEOUT": 600},
 }

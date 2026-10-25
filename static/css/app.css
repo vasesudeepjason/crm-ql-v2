@@ -143,3 +143,17 @@ input[type=file]{font:400 13px var(--font);padding:9px 0}
 .geo-form{display:inline}
 .bulk-bar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--brand-50);border-top:1px solid var(--line-2);font-size:13px}
 input[type=file]{max-width:100%}
+
+/* ---- Reports ---- */
+.bars{display:grid;gap:8px}
+.bar-row{display:grid;grid-template-columns:130px minmax(0,1fr) 44px 64px;gap:10px;align-items:center;font-size:13px}
+.bar-l{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-t{height:14px;background:var(--field);border-radius:99px;overflow:hidden}
+.bar-t i{display:block;height:100%;background:var(--brand-500);border-radius:99px;min-width:2px}
+.bar-row b{text-align:right;font-variant-numeric:tabular-nums}.bar-row small{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.trend-legend{display:flex;gap:16px;font-size:12.5px;color:var(--ink-2);margin-bottom:10px}.trend-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.trend-bars{display:flex;gap:4px;align-items:flex-end;height:220px;padding-bottom:22px;position:relative;overflow-x:auto}
+.trend-day{flex:1;min-width:14px;height:100%;display:flex;gap:1px;align-items:flex-end;position:relative}
+.trend-day i{flex:1;border-radius:3px 3px 0 0;min-height:1px}
+.trend-day small{position:absolute;bottom:-20px;left:0;font-size:10.5px;color:var(--muted);white-space:nowrap}
+@media (max-width:640px){.bar-row{grid-template-columns:90px minmax(0,1fr) 36px 56px;font-size:12px}}

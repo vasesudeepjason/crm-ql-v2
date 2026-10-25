@@ -7,7 +7,7 @@
     <p>Sales, approvals and follow-ups across your team · {{ now|date:"D, j M Y" }}</p>
   </div>
   <div class="actions">
-    <button class="btn btn-secondary"><svg class="ic"><use href="#i-export"/></svg><span>Export</span></button>
+    {% if perms_set|can:"reports.view" %}<a class="btn btn-secondary" href="{% url 'reports:index' %}"><svg class="ic"><use href="#i-bars"/></svg><span>Reports</span></a>{% endif %}
     {% if perms_set|can:"leads.create" %}<a class="btn btn-primary" href="{% url 'crm:lead_create' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New lead</a>{% endif %}
   </div>
 </section>
