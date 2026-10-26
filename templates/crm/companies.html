@@ -10,7 +10,7 @@
     <div class="tbl-tools"><form class="input grey" style="width:280px" method="get"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search name, city, GSTIN"></form></div>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th>Company</th><th class="hide-m">City</th><th class="hide-m">GSTIN</th><th>Phone</th><th class="hide-m">Owner</th><th class="r">Leads</th></tr></thead>
+        <thead><tr><th>Company</th><th class="hide-m">City</th><th class="hide-m">GSTIN</th><th>Phone</th><th class="hide-m">Owner</th><th class="r">Leads</th>{% if perms_set|can:"contracts.view" %}<th class="r">Contracts</th>{% endif %}</tr></thead>
         <tbody>{% for c in page %}
         <tr>
           <td><div class="who"><span class="avatar sm">{{ c.name|initials }}</span><div class="name"><b>{{ c.name }}</b>{% if c.tags %}<span class="sub">{{ c.tags|join:" · " }}</span>{% endif %}</div></div></td>
@@ -19,7 +19,8 @@
           <td>{{ c.phone|default:"—" }}</td>
           <td class="hide-m">{{ c.owner.name|default:"—" }}</td>
           <td class="r num">{{ c.lead_count }}</td>
-        </tr>{% empty %}<tr><td colspan="6" class="muted" style="padding:28px 20px">No companies match.</td></tr>{% endfor %}</tbody>
+          {% if perms_set|can:"contracts.view" %}<td class="r num">{% if c.contract_count %}<a href="{% url 'contracts:index' %}?q={{ c.name|urlencode }}">{{ c.contract_count }}</a>{% else %}—{% endif %}</td>{% endif %}
+        </tr>{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">No companies match.</td></tr>{% endfor %}</tbody>
       </table>
     </div>
     <div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a href="?q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>

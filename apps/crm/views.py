@@ -45,7 +45,7 @@ def lead_list(request):
 @login_required
 @require_perm("companies.view")
 def company_list(request):
-    qs = scoped(request, Company.objects.select_related("owner").annotate(lead_count=Count("leads")).order_by("name"), "companies.view")
+    qs = scoped(request, Company.objects.select_related("owner").annotate(lead_count=Count("leads", distinct=True), contract_count=Count("contracts", filter=Q(contracts__status="active"), distinct=True)).order_by("name"), "companies.view")
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(city__icontains=q) | Q(gstin__icontains=q))
@@ -153,6 +153,8 @@ def lead_detail(request, pk):
         "stage_form": StageForm(initial={"stage": lead.stage, "next_follow_up": lead.next_follow_up}), "activity_form": ActivityForm(initial={"type": "call"}),
         "open_tasks": [t for t in tasks if not t.is_done],
         "dups": find_duplicates(phone=lead.phone, email=lead.email, exclude_id=lead.id, limit=3),
+        "contracts": list(lead.contracts.select_related("product")[:5]) if has_perm(request, "contracts.view") else [],
+        "offer_contract": lead.stage == Lead.Stage.WON and lead.company_id and has_perm(request, "contracts.create") and not lead.contracts.exists(),
     }
     return render(request, "crm/lead_detail.html", ctx)
 

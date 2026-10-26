@@ -107,6 +107,8 @@ def task_form(request, pk=None):
         t = form.save(commit=False)
         if t.lead_id and not t.company_id:
             t.company_id = t.lead.company_id
+        if t.contract_id and not t.company_id:
+            t.company_id = t.contract.company_id
         if t.status == Task.Status.DONE and not t.done_at:
             t.done_at = timezone.now()
         elif t.status != Task.Status.DONE:
@@ -119,7 +121,7 @@ def task_form(request, pk=None):
             notify_assigned(t, request.user)
         return _refresh()
     initial = {"assignee": request.user.pk, "due_date": timezone.localdate()}
-    for k in ("project", "lead", "company"):
+    for k in ("project", "lead", "company", "contract"):
         if request.GET.get(k, "").isdigit():
             initial[k] = int(request.GET[k])
     form = TaskForm(instance=task, users=users, projects=projects, initial=initial if task is None else None)

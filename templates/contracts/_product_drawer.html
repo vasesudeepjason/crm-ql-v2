@@ -1,0 +1,20 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>{% if p %}Catalogue item{% else %}New catalogue item{% endif %}</small><h3>{% if p %}{{ p.name|truncatechars:40 }}{% else %}What do you sell?{% endif %}</h3></div>
+  <div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  <form hx-post="{% if p %}{% url 'contracts:product_edit' p.pk %}{% else %}{% url 'contracts:product_new' %}{% endif %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    <label class="span2">Name *<span class="input">{{ form.name }}</span></label>
+    <label>Type<span class="input select">{{ form.kind }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>HSN / SAC code<span class="input">{{ form.hsn_sac }}</span></label>
+    <label>GST rate<span class="input select">{{ form.gst_rate }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Usual billing cycle<span class="input select">{{ form.default_cycle }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label class="span2">{{ form.price.label }}<span class="input">{{ form.price }}</span></label>
+    <label class="span2">Description<span class="input">{{ form.description }}</span></label>
+    <label class="chk-row span2"><input type="checkbox" class="switch" name="is_active" {% if form.is_active.value or not p %}checked{% endif %}> Available for new contracts</label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>{% if p %}Save{% else %}Add to catalogue{% endif %}</button></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

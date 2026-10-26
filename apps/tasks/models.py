@@ -58,6 +58,7 @@ class Task(TenantModel):
     project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
     lead = models.ForeignKey("crm.Lead", null=True, blank=True, on_delete=models.CASCADE, related_name="tasks")
     company = models.ForeignKey("crm.Company", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
+    contract = models.ForeignKey("contracts.Contract", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
     assignee = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
     due_date = models.DateField(null=True, blank=True)
     priority = models.CharField(max_length=8, choices=Priority.choices, default=Priority.NORMAL)

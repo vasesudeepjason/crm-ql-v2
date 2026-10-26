@@ -1,0 +1,21 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>{% if c.status == 'lapsed' %}Win back{% else %}Mark renewed{% endif %}</small><h3>{{ c.company.name }}</h3></div>
+  <div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  <div class="info2">
+    <div class="info"><small>Current term</small><b>{{ c.start_date|date:"j M Y" }} → {{ c.end_date|date:"j M Y" }}</b><span>{{ c.display_title }} · {{ c.number }}</span></div>
+    <div class="info"><small>Current amount</small><b>{{ c.amount_paise|rupees }}</b><span>per {{ c.cycle_noun }} · {{ c.annual_value_paise|short_rupees }} a year</span></div>
+  </div>
+  <form hx-post="{% url 'contracts:renew' c.pk %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2" style="margin-top:18px">{% csrf_token %}
+    <label>New term starts<span class="input">{{ form.start_date }}</span></label>
+    <label>Ends<span class="input">{{ form.end_date }}</span></label>
+    <label>{{ form.amount.label }}<span class="input">{{ form.amount }}</span></label>
+    <label class="chk-row" style="height:46px"><input type="checkbox" class="switch" name="auto_renew" {% if form.auto_renew.value %}checked{% endif %}> Auto-renew next time</label>
+    <label class="span2">Note<span class="input">{{ form.notes }}</span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Create the new term</button><span class="muted" style="font-size:12.5px">A new contract is created and linked; this one is marked renewed.</span></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

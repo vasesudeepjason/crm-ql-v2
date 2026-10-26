@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}{% if is_new %}New contract{% else %}Edit {{ c.number }}{% endif %}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>{% if is_new %}New contract{% else %}Edit {{ c.number }}{% endif %}</h1><p>One contract per purchase. The end date drives the renewal tracker and reminders.</p></div>
+  <div class="actions"><a class="btn btn-outline" href="{% if c %}{% url 'contracts:detail' c.pk %}{% else %}{% url 'contracts:index' %}{% endif %}">Cancel</a></div>
+</section>
+<form method="post" class="grid" x-data='{price:{{ products_json|safe|default:"{}" }}, pick(e){const p=this.price[e.target.value]; if(!p) return; const a=document.querySelector("[name=amount]"); if(a && !a.value) a.value=p.price; const cy=document.querySelector("[name=billing_cycle]"); if(cy) cy.value=p.cycle;}}'>{% csrf_token %}{{ form.lead }}
+  <div class="card s8 sec">
+    {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+    <div class="form-2">
+      <label>Company *<span class="input select {% if form.company.errors %}error{% endif %}"><select name="company" required hx-get="{% url 'contracts:contacts_for' 0 %}" hx-trigger="change" hx-target="#contactSel" hx-swap="innerHTML" hx-on:htmx:config-request="event.detail.path=event.detail.path.replace('/0/','/'+this.value+'/')">{% for v, l in form.fields.company.choices %}<option value="{{ v }}" {% if v|stringformat:"s" == form.company.value|stringformat:"s" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>{% if form.company.errors %}<div class="field-err">{{ form.company.errors.0 }}</div>{% endif %}</label>
+      <label>Product *<span class="input select {% if form.product.errors %}error{% endif %}"><select name="product" required @change="pick">{% for v, l in form.fields.product.choices %}<option value="{{ v }}" {% if v|stringformat:"s" == form.product.value|stringformat:"s" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span>{% if form.product.errors %}<div class="field-err">{{ form.product.errors.0 }}</div>{% endif %}<small class="muted" style="font-size:12px">Missing something? <a href="{% url 'contracts:products' %}">Open the catalogue</a>.</small></label>
+      <label class="span2">Title<span class="input">{{ form.title }}</span></label>
+      <label>Start *<span class="input {% if form.start_date.errors %}error{% endif %}">{{ form.start_date }}</span></label>
+      <label>End *<span class="input {% if form.end_date.errors %}error{% endif %}">{{ form.end_date }}</span>{% if form.end_date.errors %}<div class="field-err">{{ form.end_date.errors.0 }}</div>{% endif %}</label>
+      <label>Billing cycle<span class="input select">{{ form.billing_cycle }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>{{ form.amount.label }} *<span class="input {% if form.amount.errors %}error{% endif %}">{{ form.amount }}</span>{% if form.amount.errors %}<div class="field-err">{{ form.amount.errors.0 }}</div>{% endif %}</label>
+      <label>Renewal owner *<span class="input select">{{ form.owner }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label class="chk-row" style="height:46px"><input type="checkbox" class="switch" name="auto_renew" {% if form.auto_renew.value %}checked{% endif %}> Auto-renew on expiry</label>
+      <label>Client contact<span class="input select"><select name="contact" id="contactSel" onchange="const e=this.selectedOptions[0]?.dataset.email;const f=document.querySelector('[name=contact_email]');if(e&&f&&!f.value)f.value=e">{% for v, l in form.fields.contact.choices %}<option value="{{ v }}" {% if v|stringformat:"s" == form.contact.value|stringformat:"s" %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span></label>
+      <label>Client email for reminders<span class="input {% if form.contact_email.errors %}error{% endif %}">{{ form.contact_email }}</span></label>
+      <label class="span2">Notes<span class="input" style="height:auto">{{ form.notes }}</span></label>
+    </div>
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">How renewals run</h2>
+      <ul class="tl" style="font-size:13px"><li><b>90 · 60 · 30 · 7 days</b><small>The owner is reminded in-app and by email.</small></li><li><b>30 · 7 days</b><small>The client contact gets a plain email, if an address is set.</small></li><li><b>Decide</b><small>Mark it renewed (a new term, then an invoice) or lapsed with a reason. Lapsed contracts stay listed for win-back.</small></li><li><b>Auto-renew</b><small>Rolls into a new term of the same length the day after expiry.</small></li></ul>
+    </div>
+    <button class="btn btn-primary" type="submit" style="width:100%;height:46px"><svg class="ic"><use href="#i-check"/></svg>{% if is_new %}Create contract{% else %}Save changes{% endif %}</button>
+  </aside>
+</form>
+{% endblock %}

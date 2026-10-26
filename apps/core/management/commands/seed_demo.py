@@ -22,6 +22,7 @@ from apps.approvals.models import Approval
 from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
 from apps.field.models import FieldSession, Visit
+from apps.contracts.models import Contract, Product
 from apps.tasks.models import Project, Task
 from apps.telecaller.models import CallTarget
 from apps.tenants.models import Plan, Tenant
@@ -155,6 +156,52 @@ class Command(BaseCommand):
                 t = Task(title=title, project=proj, assignee=who, due_date=today + timedelta(days=offset), priority=prio, status=st, company=proj.company if proj else None)
                 if st == "done":
                     t.done_at = now - timedelta(days=max(0, -offset))
+                t.created_by = vikram
+                t.save()
+
+            # Catalogue and contracts
+            cat = {}
+            for name, kind, code, gst, price, cycle, desc in [
+                ("AMC Gold", "service", "998713", 18, 4800000, "yearly", "Annual maintenance, 4 visits, parts included"),
+                ("AMC Silver", "service", "998713", 18, 2400000, "yearly", "Annual maintenance, 2 visits"),
+                ("CRM subscription", "service", "998314", 18, 350000, "monthly", "Per workspace, up to 10 users"),
+                ("Installation service", "service", "995461", 18, 1500000, "one_time", "On-site installation and training"),
+                ("Spare parts kit", "goods", "84799090", 18, 850000, "one_time", "Standard replacement kit"),
+            ]:
+                p = Product(name=name, kind=kind, hsn_sac=code, gst_rate=gst, default_price_paise=price, default_cycle=cycle, description=desc)
+                p.created_by = aisha
+                p.save()
+                cat[name] = p
+            owners_c = [aisha, vikram, ravi, mohan]
+            ends = [-12, -3, 2, 5, 6, 11, 18, 24, 27, 33, 41, 48, 55, 59, 66, 74, 80, 88, 120, 150, 200, 260, 300, 340]
+            for i, off in enumerate(ends):
+                co = companies[i % len(companies)]
+                prod = cat[random.choice(["AMC Gold", "AMC Silver", "AMC Gold", "CRM subscription"])]
+                end = today + timedelta(days=off)
+                start = end - timedelta(days=364 if prod.default_cycle != "monthly" else 364)
+                contact = co.contacts.first()
+                c = Contract(company=co, product=prod, start_date=start, end_date=end, billing_cycle=prod.default_cycle, amount_paise=prod.default_price_paise + random.choice([0, 0, 200000, -100000]),
+                             auto_renew=(i % 7 == 0), owner=owners_c[i % 4], contact=contact, contact_email=f"accounts@{co.name.split()[0].lower()}.example.in" if i % 3 else "", notes="")
+                c.created_by = vikram
+                c.save()
+                Contract.all_objects.filter(pk=c.pk).update(created_at=now - timedelta(days=364 - off if off < 364 else 10))
+                if off <= 7:
+                    c.reminders = {"owner": [90, 60, 30, 7] if off <= 7 else [90, 60, 30], "client": [30, 7] if c.contact_email else []}
+                    c.save(update_fields=["reminders"])
+            # a renewed chain and two lapsed ones
+            first = Contract.objects.filter(end_date__gt=today + timedelta(days=100)).first()
+            prev = Contract(company=first.company, product=first.product, start_date=first.start_date - timedelta(days=365), end_date=first.start_date - timedelta(days=1), billing_cycle=first.billing_cycle, amount_paise=first.amount_paise - 300000, owner=first.owner, status="renewed", decided_at=now - timedelta(days=200), decided_by=vikram)
+            prev.created_by = vikram
+            prev.save()
+            Contract.objects.filter(pk=first.pk).update(renewal_of=prev)
+            for j, (reason, days_ago) in enumerate([("Moved to a cheaper vendor", 20), ("Site closed down", 75)]):
+                co = companies[(len(ends) + j) % len(companies)]
+                lp = Contract(company=co, product=cat["AMC Silver"], start_date=today - timedelta(days=364 + days_ago), end_date=today - timedelta(days=days_ago), billing_cycle="yearly", amount_paise=2400000, owner=ravi, status="lapsed", lapsed_reason=reason, decided_at=now - timedelta(days=days_ago - 1), decided_by=ravi)
+                lp.created_by = vikram
+                lp.save()
+            # tasks on contracts
+            for c in Contract.objects.filter(status="active", end_date__lte=today + timedelta(days=30))[:3]:
+                t = Task(title=f"Renewal call · {c.company.name}", contract=c, company=c.company, assignee=c.owner, due_date=min(c.end_date, today + timedelta(days=2)), priority="high")
                 t.created_by = vikram
                 t.save()
 

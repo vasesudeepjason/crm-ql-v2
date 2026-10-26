@@ -8,12 +8,13 @@ from .models import Project, Task
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ["title", "description", "assignee", "due_date", "priority", "status", "project", "company", "lead"]
+        fields = ["title", "description", "assignee", "due_date", "priority", "status", "project", "company", "lead", "contract"]
         widgets = {
             "title": forms.TextInput(attrs={"placeholder": "What needs doing", "autofocus": True, "maxlength": 200}),
             "description": forms.Textarea(attrs={"rows": 3, "placeholder": "Details, links, context (optional)"}),
             "due_date": forms.DateInput(attrs={"type": "date"}),
             "lead": forms.HiddenInput(),
+            "contract": forms.HiddenInput(),
         }
 
     def __init__(self, *args, users, projects, **kwargs):
@@ -26,6 +27,10 @@ class TaskForm(forms.ModelForm):
         self.fields["company"].empty_label = "No company"
         self.fields["lead"].queryset = Lead.objects.all()
         self.fields["lead"].required = False
+        from apps.contracts.models import Contract
+
+        self.fields["contract"].queryset = Contract.objects.all()
+        self.fields["contract"].required = False
 
 
 class QuickTaskForm(forms.Form):

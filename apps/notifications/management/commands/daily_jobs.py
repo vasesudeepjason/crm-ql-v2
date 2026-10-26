@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand
 from apps.core.tenancy import tenant_context
 from apps.field.services import close_stale_sessions
 from apps.notifications.services import follow_up_digest, stale_approvals_digest
+from apps.contracts.services import roll_auto_renewals, send_renewal_reminders
 from apps.tasks.services import tasks_due_digest
 from apps.tenants.models import Tenant
 
@@ -29,5 +30,7 @@ class Command(BaseCommand):
             f = follow_up_digest(t.id)
             s = stale_approvals_digest(t.id)
             k = tasks_due_digest(t.id)
-            self.stdout.write(f"{t.name}: sessions closed {closed}, follow-up digests {f}, task digests {k}, stale-approval digests {s}")
+            rolled = roll_auto_renewals(t.id)
+            r = send_renewal_reminders(t.id)
+            self.stdout.write(f"{t.name}: sessions closed {closed}, follow-up digests {f}, task digests {k}, stale-approval digests {s}, auto-renewed {rolled}, renewal reminders owner {r['owner']} / client {r['client']}")
         self.stdout.write(self.style.SUCCESS("Daily jobs done."))

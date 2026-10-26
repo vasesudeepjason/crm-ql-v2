@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Contracts{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Contracts</h1><p>{{ total|intcomma }} contracts · {{ book|short_rupees }} a year on active terms{% if risk.n %} · <span style="color:var(--red-700)">{{ risk.risk|short_rupees }} expiring within 30 days</span>{% endif %}</p></div>
+  <div class="actions">
+    {% if perms_set|can:"data.export" %}<a class="btn btn-secondary" href="{% url 'reports:export' 'contracts' %}?status={{ status }}"><svg class="ic"><use href="#i-export"/></svg>Export</a>{% endif %}
+    <a class="btn btn-outline" href="{% url 'contracts:renewals' %}">Renewals</a>
+    {% if can_create %}<a class="btn btn-primary" href="{% url 'contracts:new' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New contract</a>{% endif %}
+  </div>
+</section>
+<section class="grid">
+  <div class="card s12">
+    <div class="tbl-tools">
+      <div class="seg sm">
+        <a class="{% if status == 'active' %}on{% endif %}" href="?status=active&owner={{ owner }}&q={{ q|urlencode }}">Active <span class="n">{{ counts.active|default:0 }}</span></a>
+        <a class="{% if status == 'renewed' %}on{% endif %}" href="?status=renewed&owner={{ owner }}&q={{ q|urlencode }}">Renewed <span class="n">{{ counts.renewed|default:0 }}</span></a>
+        <a class="{% if status == 'lapsed' %}on{% endif %}" href="?status=lapsed&owner={{ owner }}&q={{ q|urlencode }}">Lapsed <span class="n">{{ counts.lapsed|default:0 }}</span></a>
+        {% if counts.cancelled %}<a class="{% if status == 'cancelled' %}on{% endif %}" href="?status=cancelled&owner={{ owner }}">Cancelled <span class="n">{{ counts.cancelled }}</span></a>{% endif %}
+        <a class="{% if status == 'all' %}on{% endif %}" href="?status=all&owner={{ owner }}&q={{ q|urlencode }}">All</a>
+      </div>
+      {% if status == 'active' %}<div class="seg sm"><a class="{% if not due %}on{% endif %}" href="?status=active&owner={{ owner }}">Any date</a><a class="{% if due == 'expired' %}on{% endif %}" href="?status=active&due=expired&owner={{ owner }}">Expired</a><a class="{% if due == '30' %}on{% endif %}" href="?status=active&due=30&owner={{ owner }}">30 days</a><a class="{% if due == '90' %}on{% endif %}" href="?status=active&due=90&owner={{ owner }}">90 days</a></div>{% endif %}
+      <form method="get" style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="due" value="{{ due }}">
+        {% if owners|length > 1 %}<label class="input select" style="height:36px;border-radius:999px;width:160px"><select name="owner" onchange="this.form.submit()"><option value="">All owners</option>{% for u in owners %}<option value="{{ u.pk }}" {% if owner == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>{% endif %}
+        <label class="input grey" style="width:240px;height:36px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Company, product, number"></label></form>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Company</th><th class="hide-m">Product</th><th>Ends</th><th>Status</th><th class="hide-m">Owner</th><th class="r">Per cycle</th><th class="r hide-m">Per year</th></tr></thead>
+        <tbody>{% for c in page %}
+        <tr onclick="location.href='{% url 'contracts:detail' c.pk %}'" style="cursor:pointer">
+          <td><div class="who"><span class="avatar sm">{{ c.company.name|initials }}</span><div class="name"><b>{{ c.company.name }}</b><span class="sub">{{ c.number }}{% if c.title %} · {{ c.title }}{% endif %}</span></div></div></td>
+          <td class="hide-m">{{ c.product.name }}<div class="muted" style="font-size:12px">{{ c.get_billing_cycle_display }}{% if c.auto_renew %} · auto-renew{% endif %}</div></td>
+          <td>{{ c.end_date|date:"j M Y" }}{% if c.status == 'active' %}<div class="muted" style="font-size:12px;{% if c.days_left < 0 %}color:var(--red-700){% endif %}">{% if c.days_left < 0 %}{{ c.days_left|cut:"-" }} days ago{% elif c.days_left == 0 %}today{% else %}in {{ c.days_left }} days{% endif %}</div>{% endif %}</td>
+          <td>{% include "contracts/_status_pill.html" %}</td>
+          <td class="hide-m">{{ c.owner.name|default:"—" }}</td>
+          <td class="r num">{{ c.amount_paise|rupees }}</td>
+          <td class="r num hide-m">{{ c.annual_value_paise|short_rupees }}</td>
+        </tr>{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">No contracts here.{% if can_create and status == 'active' %} <a href="{% url 'contracts:new' %}">Create the first one</a> or mark a lead Won.{% endif %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?status={{ status }}&due={{ due }}&owner={{ owner }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a href="?status={{ status }}&due={{ due }}&owner={{ owner }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>
+  </div>
+</section>
+{% endblock %}

@@ -6,10 +6,10 @@
 <div class="dr-b">
   {% if task %}<div class="info2" style="margin-bottom:16px">
     <div class="info"><small>Status</small><b>{{ task.get_status_display }}{% if task.is_overdue %} · <span style="color:var(--red-700)">overdue</span>{% endif %}</b><span>{% if task.done_at %}done {{ task.done_at|date:"j M, H:i" }}{% else %}created {{ task.created_at|date:"j M" }} by {{ task.created_by.first_name|default:"system" }}{% endif %}</span></div>
-    <div class="info"><small>Linked to</small><b>{% if task.project %}<a href="{% url 'tasks:project' task.project.pk %}">{{ task.project.name }}</a>{% elif task.lead %}{{ task.lead.name }}{% elif task.company %}{{ task.company.name }}{% else %}—{% endif %}</b><span>{% if task.lead %}<a href="{% url 'crm:lead_detail' task.lead.pk %}">Open lead →</a>{% elif task.company %}{{ task.company.city|default:"" }}{% endif %}</span></div>
+    <div class="info"><small>Linked to</small><b>{% if task.project %}<a href="{% url 'tasks:project' task.project.pk %}">{{ task.project.name }}</a>{% elif task.contract %}<a href="{% url 'contracts:detail' task.contract.pk %}">{{ task.contract.number }}</a>{% elif task.lead %}{{ task.lead.name }}{% elif task.company %}{{ task.company.name }}{% else %}—{% endif %}</b><span>{% if task.lead %}<a href="{% url 'crm:lead_detail' task.lead.pk %}">Open lead →</a>{% elif task.company %}{{ task.company.city|default:"" }}{% endif %}</span></div>
   </div>{% endif %}
   <form hx-post="{% if task %}{% url 'tasks:edit' task.pk %}{% else %}{% url 'tasks:new' %}{% endif %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
-    {{ form.lead }}
+    {{ form.lead }}{{ form.contract }}
     <label class="span2">Title *<span class="input">{{ form.title }}</span></label>
     <label class="span2">Details<span class="input" style="height:auto">{{ form.description }}</span></label>
     <label>Assign to<span class="input select">{{ form.assignee }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>

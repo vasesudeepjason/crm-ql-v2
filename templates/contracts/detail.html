@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}{{ c.number }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h1>{{ c.company.name }}</h1>{% include "contracts/_status_pill.html" %}{% if c.auto_renew and c.status == 'active' %}<span class="pill pill-info">Auto-renew</span>{% endif %}</div>
+    <p>{{ c.display_title }} · <span class="mono">{{ c.number }}</span> · {{ c.start_date|date:"j M Y" }} → {{ c.end_date|date:"j M Y" }} · {{ c.get_billing_cycle_display|lower }} · owner {{ c.owner.name|default:"—" }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'contracts:renewals' %}">Tracker</a>
+    {% if can_task %}<button class="btn btn-outline" hx-get="{% url 'tasks:new' %}?contract={{ c.pk }}&company={{ c.company_id }}" hx-target="#drawer" hx-swap="innerHTML">Add task</button>{% endif %}
+    {% if can_edit %}{% if c.status == 'active' %}<a class="btn btn-secondary" href="{% url 'contracts:edit' c.pk %}">Edit</a><button class="btn btn-outline" hx-get="{% url 'contracts:lapse' c.pk %}" hx-target="#drawer" hx-swap="innerHTML">Lapsed</button>{% endif %}
+    {% if c.status == 'active' or c.status == 'lapsed' %}<button class="btn btn-primary" hx-get="{% url 'contracts:renew' c.pk %}" hx-target="#drawer" hx-swap="innerHTML"><svg class="ic"><use href="#i-refresh"/></svg>{% if c.status == 'lapsed' %}Won back{% else %}Renewed{% endif %}</button>{% endif %}{% endif %}
+  </div>
+</section>
+{% if c.status == 'active' and c.days_left <= 30 %}<div class="banner"><svg class="ic"><use href="#i-refresh"/></svg><span><b>{% if c.days_left < 0 %}Expired {{ c.days_left|cut:"-" }} days ago.{% elif c.days_left == 0 %}Expires today.{% else %}Expires in {{ c.days_left }} days.{% endif %}</b> {{ c.annual_value_paise|rupees }} a year rides on this renewal.{% if c.reminders.owner %} Reminded at {{ c.reminders.owner|join:", " }} days{% if c.reminders.client %}; client at {{ c.reminders.client|join:", " }}{% endif %}.{% endif %}</span></div>
+{% elif c.status == 'lapsed' %}<div class="banner" style="background:var(--red-100)"><svg class="ic"><use href="#i-x"/></svg><span><b>Lapsed</b> on {{ c.decided_at|date:"j M Y" }} by {{ c.decided_by.name|default:"system" }}{% if c.lapsed_reason %} · "{{ c.lapsed_reason }}"{% endif %}. Still visible here for win-back.</span></div>
+{% elif c.status == 'renewed' and successor %}<div class="banner" style="background:var(--brand-100)"><svg class="ic"><use href="#i-check"/></svg><span><b>Renewed</b> as <a href="{% url 'contracts:detail' successor.pk %}">{{ successor.number }}</a> · {{ successor.start_date|date:"j M Y" }} → {{ successor.end_date|date:"j M Y" }}</span></div>{% endif %}
+
+<section class="grid">
+  <div class="s8 stack">
+    <div class="card sec">
+      <dl class="kv wide">
+        <dt>Product</dt><dd>{{ c.product.name }}{% if c.product.hsn_sac %} <span class="muted mono" style="font-size:12px">{{ c.product.get_kind_display|slice:"-4:-1" }} {{ c.product.hsn_sac }}</span>{% endif %}</dd>
+        <dt>Amount</dt><dd>{{ c.amount_paise|rupees }} per {{ c.cycle_noun }} + {{ c.product.gst_rate|floatformat:"-2" }}% GST ({{ c.gst_paise|rupees }}) = <b>{{ c.total_paise|rupees }}</b></dd>
+        <dt>Per year</dt><dd>{{ c.annual_value_paise|rupees }} before GST</dd>
+        <dt>Term</dt><dd>{{ c.start_date|date:"j M Y" }} → {{ c.end_date|date:"j M Y" }} · {{ c.term_days }} days</dd>
+        <dt>Client contact</dt><dd>{% if c.contact %}{{ c.contact.name }}{% if c.contact.designation %} · {{ c.contact.designation }}{% endif %}{% if c.contact.phone %} · <a href="tel:{{ c.contact.phone_normalized|default:c.contact.phone }}">{{ c.contact.phone }}</a>{% endif %}<br>{% endif %}{% if c.contact_email %}<a href="mailto:{{ c.contact_email }}">{{ c.contact_email }}</a> <span class="muted" style="font-size:12px">· gets reminders at 30 and 7 days</span>{% elif not c.contact %}<span class="muted">none · client reminders off</span>{% endif %}</dd>
+        <dt>Company</dt><dd><a href="{% url 'crm:companies' %}?q={{ c.company.name|urlencode }}">{{ c.company.name }}</a>{% if c.company.gstin %} · <span class="mono" style="font-size:12px">{{ c.company.gstin }}</span>{% endif %}{% if c.company.city %} · {{ c.company.city }}{% endif %}</dd>
+        {% if c.lead %}<dt>From lead</dt><dd><a href="{% url 'crm:lead_detail' c.lead.pk %}">{{ c.lead.name }}</a>{% if c.lead.won_at %} · won {{ c.lead.won_at|date:"j M Y" }}{% endif %}</dd>{% endif %}
+        {% if c.notes %}<dt>Notes</dt><dd style="white-space:pre-line">{{ c.notes }}</dd>{% endif %}
+        <dt>Created</dt><dd>{{ c.created_at|date:"j M Y" }} by {{ c.created_by.name|default:"system" }}</dd>
+      </dl>
+    </div>
+    {% if chain or successor %}
+    <div class="card"><div class="card-h"><div><h2>Renewal history</h2><p>Each term is its own contract</p></div></div>
+      <ul class="tl" style="padding:8px 20px 20px">
+        {% if successor %}<li class="now"><b><a href="{% url 'contracts:detail' successor.pk %}">{{ successor.number }}</a> · {{ successor.start_date|date:"j M Y" }} → {{ successor.end_date|date:"j M Y" }}</b><small>{{ successor.amount_paise|rupees }} per {{ successor.cycle_noun }} · {{ successor.get_status_display|lower }}</small></li>{% endif %}
+        <li class="{% if not successor %}now{% endif %}"><b>{{ c.number }} · {{ c.start_date|date:"j M Y" }} → {{ c.end_date|date:"j M Y" }}</b><small>this contract · {{ c.amount_paise|rupees }}</small></li>
+        {% for p in chain %}<li><b><a href="{% url 'contracts:detail' p.pk %}">{{ p.number }}</a> · {{ p.start_date|date:"j M Y" }} → {{ p.end_date|date:"j M Y" }}</b><small>{{ p.amount_paise|rupees }} · {{ p.get_status_display|lower }}{% if p.lapsed_reason %} · {{ p.lapsed_reason }}{% endif %}</small></li>{% endfor %}
+      </ul></div>
+    {% endif %}
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Tasks</h2>
+      <ul class="mini" style="padding:0">{% for t in tasks %}<li hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><span class="tick {% if t.is_done %}on{% endif %} ghost" style="width:22px;height:22px"><svg class="ic" style="width:12px"><use href="#i-check"/></svg></span><div class="t"><b style="white-space:normal;font-weight:500{% if t.is_done %};text-decoration:line-through;color:var(--muted){% endif %}">{{ t.title }}</b><small>{% if t.due_date %}{% if t.is_overdue %}<span style="color:var(--red-700)">overdue · </span>{% endif %}{{ t.due_date|date:"j M" }}{% else %}no date{% endif %} · {{ t.assignee.first_name|default:"unassigned" }}</small></div></li>{% empty %}<li><div class="t muted" style="font-size:13px">No tasks yet. {% if can_task %}Add one for the renewal call.{% endif %}</div></li>{% endfor %}</ul>
+    </div>
+    {% if others %}<div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Other contracts · {{ c.company.name }}</h2>
+      <ul class="mini" style="padding:0">{% for o in others %}<li onclick="location.href='{% url 'contracts:detail' o.pk %}'" style="cursor:pointer"><div class="t"><b style="white-space:normal;font-weight:500">{{ o.display_title }}</b><small>{{ o.number }} · ends {{ o.end_date|date:"j M Y" }} · {{ o.get_status_display|lower }}</small></div><span class="v">{{ o.annual_value_paise|short_rupees }}</span></li>{% endfor %}</ul></div>{% endif %}
+    {% if can_edit and c.status == 'active' %}<form method="post" action="{% url 'contracts:cancel' c.pk %}" onsubmit="return confirm('Cancel this contract? It will not appear on the renewal tracker.')" class="muted" style="font-size:12.5px;padding:0 4px">{% csrf_token %}Entered by mistake? <button class="link" type="submit">Cancel this contract</button></form>{% endif %}
+  </aside>
+</section>
+{% endblock %}

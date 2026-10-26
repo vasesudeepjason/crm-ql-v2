@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Renewals{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Renewal tracker</h1><p>{{ board.total_n }} contract{{ board.total_n|pluralize }} end within 90 days · {{ board.total_risk|short_rupees }} a year at risk{% if rate is not None %} · {{ rate }}% renewed in the last 90 days{% endif %}</p></div>
+  <div class="actions">
+    {% if owners|length > 1 %}<form method="get"><label class="input select" style="height:40px;border-radius:999px;width:170px"><select name="owner" onchange="this.form.submit()"><option value="">All owners</option>{% for u in owners %}<option value="{{ u.pk }}" {% if owner == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label></form>{% endif %}
+    <a class="btn btn-outline" href="{% url 'contracts:index' %}">All contracts</a>
+  </div>
+</section>
+<section class="grid">
+  {% for key, label, tone in order %}{% with b=board|get_item:key %}
+  <div class="card kpi s3 {% if key == '7' %}hi{% endif %}" style="padding-bottom:14px">
+    <div class="lbl">{{ label }}</div><span class="when">{% if key == 'expired' %}OVERDUE{% else %}AT RISK{% endif %}</span>
+    <div class="val">{{ b.n }}</div>
+    <div class="rows"><div>Revenue a year<b>{{ b.risk|short_rupees }}</b></div></div>
+  </div>
+  {% endwith %}{% endfor %}
+
+  {% for key, label, tone in order %}{% with b=board|get_item:key %}{% if b.n %}
+  <div class="card s12">
+    <div class="card-h"><div><h2 {% if tone == 'red' %}style="color:var(--red-700)"{% endif %}>{{ label }}</h2><p>{{ b.n }} contract{{ b.n|pluralize }} · {{ b.risk|short_rupees }} a year</p></div></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Company</th><th class="hide-m">Product</th><th>Ends</th><th class="hide-m">Owner</th><th class="hide-m">Reminded</th><th class="r">Per year</th><th class="r">Decide</th></tr></thead>
+        <tbody>{% for c in b.items %}
+        <tr>
+          <td><a href="{% url 'contracts:detail' c.pk %}" style="text-decoration:none;color:inherit"><div class="who"><span class="avatar sm">{{ c.company.name|initials }}</span><div class="name"><b>{{ c.company.name }}</b><span class="sub">{{ c.number }}{% if c.contact_email %} · {{ c.contact_email }}{% endif %}</span></div></div></a></td>
+          <td class="hide-m">{{ c.display_title }}<div class="muted" style="font-size:12px">{{ c.get_billing_cycle_display }}{% if c.auto_renew %} · auto-renew{% endif %}</div></td>
+          <td>{{ c.end_date|date:"j M" }}<div class="muted" style="font-size:12px;{% if c.days_left < 0 %}color:var(--red-700){% endif %}">{% if c.days_left < 0 %}{{ c.days_left|cut:"-" }}d ago{% elif c.days_left == 0 %}today{% else %}{{ c.days_left }}d{% endif %}</div></td>
+          <td class="hide-m">{{ c.owner.name|default:"—" }}</td>
+          <td class="hide-m muted" style="font-size:12px">{% if c.reminders.owner %}owner {{ c.reminders.owner|join:", " }}d{% endif %}{% if c.reminders.client %}<br>client {{ c.reminders.client|join:", " }}d{% endif %}{% if not c.reminders.owner and not c.reminders.client %}—{% endif %}</td>
+          <td class="r num">{{ c.annual_value_paise|short_rupees }}</td>
+          <td class="r"><div style="display:inline-flex;gap:6px"><button class="btn btn-sm btn-dark" hx-get="{% url 'contracts:renew' c.pk %}" hx-target="#drawer" hx-swap="innerHTML">Renewed</button><button class="btn btn-sm btn-outline" hx-get="{% url 'contracts:lapse' c.pk %}" hx-target="#drawer" hx-swap="innerHTML">Lapsed</button></div></td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}{% endwith %}{% endfor %}
+  {% if not board.total_n %}<div class="card s12 empty"><b>Nothing ends in the next 90 days.</b><span>Contracts appear here 90 days before they expire; owners are reminded at 90, 60, 30 and 7 days, clients at 30 and 7.</span></div>{% endif %}
+
+  <div class="card s6">
+    <div class="card-h"><div><h2>Lapsed · win-back</h2><p>Did not renew in the last 6 months. Still worth a call.</p></div></div>
+    <ul class="mini">{% for c in lapsed %}<li onclick="location.href='{% url 'contracts:detail' c.pk %}'" style="cursor:pointer"><span class="avatar sm" style="background:var(--red-100);color:var(--red-700)">{{ c.company.name|initials }}</span><div class="t"><b>{{ c.company.name }} · {{ c.display_title }}</b><small>{{ c.lapsed_reason|default:"no reason recorded" }} · ended {{ c.end_date|date:"j M" }}</small></div><span class="v">{{ c.annual_value_paise|short_rupees }}</span></li>{% empty %}<li><div class="t muted">No lapsed contracts. Keep it that way.</div></li>{% endfor %}</ul>
+  </div>
+  <div class="card s6">
+    <div class="card-h"><div><h2>Coming up</h2><p>Ending in 91 to 180 days</p></div></div>
+    <ul class="mini">{% for c in coming %}<li onclick="location.href='{% url 'contracts:detail' c.pk %}'" style="cursor:pointer"><span class="avatar sm">{{ c.company.name|initials }}</span><div class="t"><b>{{ c.company.name }} · {{ c.display_title }}</b><small>ends {{ c.end_date|date:"j M Y" }} · {{ c.owner.first_name|default:"no owner" }}</small></div><span class="v">{{ c.annual_value_paise|short_rupees }}</span></li>{% empty %}<li><div class="t muted">Nothing between 3 and 6 months out.</div></li>{% endfor %}</ul>
+  </div>
+</section>
+{% endblock %}

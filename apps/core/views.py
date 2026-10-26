@@ -13,7 +13,7 @@ from .models import AuditLog
 from .permissions import require_perm
 
 DAYS = [("7", "Last 7 days"), ("30", "Last 30 days"), ("90", "Last 90 days"), ("all", "All time")]
-GROUPS = [("", "Everything"), ("approval", "Approvals"), ("auth", "Sign-ins & security"), ("role", "Roles"), ("user", "Users"), ("invite", "Invitations"), ("import", "Imports"), ("export", "Exports"), ("support", "Support sessions")]
+GROUPS = [("", "Everything"), ("approval", "Approvals"), ("auth", "Sign-ins & security"), ("role", "Roles"), ("user", "Users"), ("invite", "Invitations"), ("import", "Imports"), ("export", "Exports"), ("contract", "Contracts"), ("product", "Catalogue"), ("task", "Tasks"), ("project", "Projects"), ("support", "Support sessions")]
 
 
 @login_required

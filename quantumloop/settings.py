@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "apps.reports",
     "apps.notifications",
     "apps.tasks",
+    "apps.contracts",
     "apps.dashboard",
 ]
 

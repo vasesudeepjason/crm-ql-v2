@@ -18,6 +18,7 @@
   </div>
 </section>
 
+{% if offer_contract %}<div class="banner" style="background:var(--green-100)"><svg class="ic"><use href="#i-check"/></svg><span><b>Won.</b> Record what was sold so the renewal countdown starts.</span><a class="btn btn-sm btn-dark" href="{% url 'contracts:new' %}?lead={{ lead.pk }}">Create contract</a></div>{% endif %}
 {% if approval %}<div class="banner"><svg class="ic"><use href="#i-ok"/></svg><span>Submitted by {{ approval.submitter.name }} · {{ approval.get_status_display|lower }} for {{ approval.submitted_at|waiting }}{% if approval.reason %} · "{{ approval.reason }}"{% endif %}</span>{% if can_review %}<a class="btn btn-sm btn-dark" href="{% url 'approvals:queue' %}">Open queue</a>{% endif %}</div>{% endif %}
 
 <section class="grid">
@@ -91,6 +92,7 @@
     {% if open_tasks %}
     <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Open tasks</h2><ul class="mini" style="padding:0">{% for t in open_tasks %}<li hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><div class="t"><b style="white-space:normal">{{ t.title|truncatechars:60 }}</b><small>{% if t.due_date %}{% if t.is_overdue %}<span style="color:var(--red-700)">overdue · </span>{% endif %}due {{ t.due_date|date:"j M" }}{% else %}no date{% endif %} · {{ t.assignee.first_name|default:"unassigned" }}</small></div></li>{% endfor %}</ul></div>
     {% endif %}
+    {% if contracts %}<div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Contracts</h2><ul class="mini" style="padding:0">{% for c in contracts %}<li onclick="location.href='{% url 'contracts:detail' c.pk %}'" style="cursor:pointer"><div class="t"><b style="white-space:normal">{{ c.display_title }}</b><small>{{ c.number }} · ends {{ c.end_date|date:"j M Y" }} · {{ c.get_status_display|lower }}</small></div><span class="v">{{ c.amount_paise|short_rupees }}</span></li>{% endfor %}</ul></div>{% endif %}
     {% if dups %}<div class="card sec">{% include "crm/_duplicates.html" with dups=dups live=False %}</div>{% endif %}
   </aside>
 </section>

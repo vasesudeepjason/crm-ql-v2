@@ -1,0 +1,14 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>Mark lapsed</small><h3>{{ c.company.name }}</h3></div>
+  <div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  <p class="muted" style="font-size:13.5px;margin-bottom:14px">{{ c.display_title }} · {{ c.number }} · {{ c.annual_value_paise|rupees }} a year. The contract stays on the tracker under win-back.</p>
+  <form hx-post="{% url 'contracts:lapse' c.pk %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    <label class="span2">Reason *<span class="input">{{ form.reason }}</span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2"><button class="btn btn-danger" type="submit"><svg class="ic"><use href="#i-x"/></svg>Mark lapsed</button></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

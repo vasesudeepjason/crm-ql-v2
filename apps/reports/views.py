@@ -81,6 +81,14 @@ def export(request, what):
         qs = Visit.objects.filter(executive_id__in=users, captured_at__gte=start, captured_at__lt=end).select_related("executive", "company", "lead").order_by("-captured_at")
         rows = ((timezone.localtime(v.captured_at).strftime("%Y-%m-%d %H:%M"), v.executive.name, v.title, v.contact_name, v.get_outcome_display(), v.get_status_display(), v.lat or "", v.lng or "", v.accuracy or "", v.duration_minutes or "", v.next_follow_up or "", v.notes) for v in qs)
         resp = _csv_response("visits", ["When", "Executive", "Visited", "Met", "Outcome", "Status", "Lat", "Lng", "Accuracy (m)", "Minutes", "Next follow-up", "Notes"], rows)
+    elif what == "contracts":
+        from apps.contracts.services import scoped_contracts
+
+        qs = scoped_contracts(request).select_related("contact").order_by("end_date")
+        if request.GET.get("status") and request.GET["status"] != "all":
+            qs = qs.filter(status=request.GET["status"])
+        rows = ((c.number, c.company.name, c.company.gstin, c.product.name, c.product.hsn_sac, str(c.product.gst_rate), c.title, c.start_date, c.end_date, c.get_billing_cycle_display(), c.amount_paise / 100, c.annual_value_paise / 100, "yes" if c.auto_renew else "no", c.owner.name if c.owner else "", c.contact_email, c.get_status_display(), c.lapsed_reason) for c in qs)
+        resp = _csv_response("contracts", ["Number", "Company", "GSTIN", "Product", "HSN/SAC", "GST %", "Title", "Start", "End", "Cycle", "Amount (₹)", "Per year (₹)", "Auto-renew", "Owner", "Client email", "Status", "Lapsed reason"], rows)
     elif what == "approvals":
         qs = Approval.objects.filter(submitter_id__in=users, submitted_at__gte=start, submitted_at__lt=end).select_related("submitter", "reviewer").order_by("-submitted_at")
         rows = ((a.id, a.get_kind_display(), a.title, a.company_name, a.submitter.name, a.get_status_display(), a.reviewer.name if a.reviewer else "", timezone.localtime(a.submitted_at).strftime("%Y-%m-%d %H:%M"), a.decided_at and timezone.localtime(a.decided_at).strftime("%Y-%m-%d %H:%M") or "", a.reason) for a in qs)

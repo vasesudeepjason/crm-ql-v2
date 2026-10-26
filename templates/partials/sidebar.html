@@ -26,7 +26,12 @@
       <div class="sub"><a class="{% active 'telecaller:desk' %}" href="{% url 'telecaller:desk' %}">Call desk</a>{% if perms_set|can:"leads.assign" %}<a class="{% active 'telecaller:team' %}" href="{% url 'telecaller:team' %}">Team &amp; targets</a><a href="{% url 'approvals:queue' %}?kind=lead">Review leads</a>{% endif %}</div>
     </div>
     {% endif %}
-    {% if perms_set|can:"contracts.view" %}<a class="ni" href="{% url 'dashboard:soon' 'contracts' %}" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span></a>{% endif %}
+    {% if perms_set|can:"contracts.view" %}
+    <div class="ng {% if request.resolver_match.namespace == 'contracts' %}open{% endif %}">
+      <button class="ni" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span>{% if renewals_due %}<em class="count hot" style="font-style:normal">{{ renewals_due }}</em>{% endif %}<svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'contracts:index' 'contracts:detail' 'contracts:new' 'contracts:edit' %}" href="{% url 'contracts:index' %}">All contracts</a><a class="{% active 'contracts:renewals' %}" href="{% url 'contracts:renewals' %}">Renewal tracker</a><a class="{% active 'contracts:products' %}" href="{% url 'contracts:products' %}">Catalogue</a></div>
+    </div>
+    {% endif %}
     {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
     {% if perms_set|can:"tasks.view" %}

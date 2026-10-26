@@ -15,6 +15,7 @@ urlpatterns = [
     path("reports/", include("apps.reports.urls")),
     path("notifications/", include("apps.notifications.urls")),
     path("tasks/", include("apps.tasks.urls")),
+    path("contracts/", include("apps.contracts.urls")),
     path("platform/rq/", include("django_rq.urls")),
     path("", include("apps.core.urls")),
     path("", include("apps.dashboard.urls")),

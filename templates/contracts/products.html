@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Product &amp; service catalogue</h1><p>What you sell, with HSN/SAC code and GST rate. Contracts and invoices pick from here.</p></div>
+  <div class="actions">
+    <div class="seg sm"><a class="{% if show == 'active' %}on{% endif %}" href="?show=active">Active</a><a class="{% if show == 'all' %}on{% endif %}" href="?show=all">All</a></div>
+    <a class="btn btn-outline" href="{% url 'contracts:index' %}">Contracts</a>
+    {% if can_manage %}<button class="btn btn-primary" hx-get="{% url 'contracts:product_new' %}" hx-target="#drawer" hx-swap="innerHTML"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New item</button>{% endif %}
+  </div>
+</section>
+<section class="grid"><div class="card s12">
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Item</th><th class="hide-m">Type</th><th>HSN / SAC</th><th class="r">GST</th><th class="r">Default price</th><th class="r hide-m">Active contracts</th></tr></thead>
+      <tbody>{% for p in rows %}
+      <tr {% if can_manage %}hx-get="{% url 'contracts:product_edit' p.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"{% endif %}>
+        <td><div class="name"><b>{{ p.name }}{% if not p.is_active %} <span class="pill pill-neutral" style="height:20px;font-size:11px">Inactive</span>{% endif %}</b>{% if p.description %}<span class="sub">{{ p.description }}</span>{% endif %}</div></td>
+        <td class="hide-m">{{ p.get_kind_display }}<div class="muted" style="font-size:12px">{{ p.get_default_cycle_display }}</div></td>
+        <td class="mono" style="font-size:12.5px">{{ p.hsn_sac|default:"—" }}</td>
+        <td class="r num">{{ p.gst_rate|floatformat:"-2" }}%</td>
+        <td class="r num">{{ p.default_price_paise|rupees }}</td>
+        <td class="r num hide-m">{{ p.n_active }}</td>
+      </tr>{% empty %}<tr><td colspan="6" class="muted" style="padding:28px 20px">Nothing in the catalogue yet.{% if can_manage %} Add your AMC plans, subscriptions and services.{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div></section>
+{% endblock %}

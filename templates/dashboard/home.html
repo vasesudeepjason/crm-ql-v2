@@ -71,6 +71,16 @@
     {% endif %}
   </div>
 
+  {% if renewals %}
+  <div class="card s12">
+    <div class="card-h"><div><h2>Renewals due</h2><p>Contracts ending within 30 days · {{ renewal_risk|short_rupees }} a year at risk</p></div><a class="btn btn-sm btn-outline" href="{% url 'contracts:renewals' %}">Tracker</a></div>
+    <div class="tbl-wrap" style="padding-top:8px"><table class="tbl">
+      <thead><tr><th>Company</th><th class="hide-m">Product</th><th>Ends</th><th class="hide-m">Owner</th><th class="r">Per year</th></tr></thead>
+      <tbody>{% for c in renewals %}<tr onclick="location.href='{% url 'contracts:detail' c.pk %}'" style="cursor:pointer"><td><div class="who"><span class="avatar sm">{{ c.company.name|initials }}</span><div class="name"><b>{{ c.company.name }}</b><span class="sub">{{ c.number }}</span></div></div></td><td class="hide-m">{{ c.display_title }}</td><td>{{ c.end_date|date:"j M" }} <span class="muted" style="font-size:12px;{% if c.days_left < 0 %}color:var(--red-700){% endif %}">{% if c.days_left < 0 %}· {{ c.days_left|cut:"-" }}d ago{% elif c.days_left == 0 %}· today{% else %}· {{ c.days_left }}d{% endif %}</span></td><td class="hide-m">{{ c.owner.name|default:"—" }}</td><td class="r num">{{ c.annual_value_paise|short_rupees }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  {% endif %}
+
   <div class="card s12">
     <div class="card-h">
       <div><h2>Awaiting approval</h2><p>Field visits and telecaller leads submitted by your team{% if stale %} · <span style="color:var(--red-700)">{{ stale }} waiting more than 2 working days</span>{% endif %}</p></div>

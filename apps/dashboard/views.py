@@ -15,6 +15,7 @@ from apps.approvals.models import Approval
 from apps.crm.models import Activity, Lead
 from apps.crm.scoping import scoped
 from apps.tasks.models import Task
+from apps.contracts import services as contract_services
 
 PHASES = {
     "field": ("Field sales", "Phase 1"), "telecaller": ("Telecaller", "Phase 1"), "contracts": ("Contracts & renewals", "Phase 2"),
@@ -111,8 +112,14 @@ def home(request):
         my_targets = today_progress(request.user)
 
     my_tasks = list(Task.objects.filter(assignee=request.user, due_date__lte=today).exclude(status=Task.Status.DONE).select_related("project").order_by("due_date")[:4]) if m.has_perm("tasks.view") else []
+    renewals = []
+    renewal_risk = 0
+    if m.has_perm("contracts.view"):
+        base = contract_services.scoped_contracts(request)
+        renewals = list(base.filter(status="active", end_date__lte=today + timedelta(days=30)).order_by("end_date")[:5])
+        renewal_risk = contract_services.at_risk_summary(base, today)["risk"]
     return render(request, "dashboard/home.html", {
-        "my_tasks": my_tasks, "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
+        "renewals": renewals, "renewal_risk": renewal_risk, "my_tasks": my_tasks, "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
         "pending": pending_list, "pending_total": pending.count(), "stale": stale,
         "follow_ups": follow_ups, "due_total": due.count(), "overdue": overdue, "pipeline": pipeline, "open_leads": sum(pipeline.values()),
         "can_review": m.has_perm("leads.approve") or m.has_perm("visits.approve"), "my_targets": my_targets,
