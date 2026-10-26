@@ -13,3 +13,4 @@ qrcode>=8.0
 cryptography>=43
 openpyxl>=3.1
 Pillow>=10.4
+reportlab>=4.2

@@ -1,0 +1,11 @@
+{% load ql %}
+<div class="dr-h"><div><small>Issue invoice</small><h3>{{ inv.bill_to_name }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <div class="info2"><div class="info"><small>Total</small><b>{{ inv.total_paise|rupees }}</b><span>{{ inv.subtotal_paise|rupees }} + {{ inv.tax_paise|rupees }} {{ inv.get_tax_mode_display }}</span></div><div class="info"><small>Number</small><b class="mono">{{ next_number }}</b><span>next in series · FY {{ inv.fy_label }}</span></div></div>
+  {% if problems %}<div class="field-err" style="margin-top:16px">{% for p in problems %}• {{ p }}<br>{% endfor %}</div><p class="muted" style="font-size:12.5px;margin-top:8px">Fix these on the draft{% if perms_set|can:"settings.manage" %} or in <a href="{% url 'tenants:workspace' %}#invoicing">invoice settings</a>{% endif %}, then issue.</p>
+  {% else %}
+  <p style="font-size:13.5px;margin:16px 0">Once issued the invoice is numbered and locked: lines, dates and parties cannot change. Payments can be recorded and it can be emailed as a PDF.</p>
+  <form method="post" action="{% url 'invoices:issue' inv.pk %}">{% csrf_token %}<button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Issue {{ inv.total_paise|rupees }}</button></form>
+  {% endif %}
+</div>
+<script>QL.openDrawer()</script>

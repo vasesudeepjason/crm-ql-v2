@@ -89,6 +89,24 @@ def export(request, what):
             qs = qs.filter(status=request.GET["status"])
         rows = ((c.number, c.company.name, c.company.gstin, c.product.name, c.product.hsn_sac, str(c.product.gst_rate), c.title, c.start_date, c.end_date, c.get_billing_cycle_display(), c.amount_paise / 100, c.annual_value_paise / 100, "yes" if c.auto_renew else "no", c.owner.name if c.owner else "", c.contact_email, c.get_status_display(), c.lapsed_reason) for c in qs)
         resp = _csv_response("contracts", ["Number", "Company", "GSTIN", "Product", "HSN/SAC", "GST %", "Title", "Start", "End", "Cycle", "Amount (₹)", "Per year (₹)", "Auto-renew", "Owner", "Client email", "Status", "Lapsed reason"], rows)
+    elif what in ("invoices", "payments", "ageing"):
+        from apps.invoices import services as inv_services
+        from apps.invoices.gst import STATE_CODES
+        from apps.invoices.models import Payment
+
+        base = inv_services.scoped_invoices(request)
+        if what == "invoices":
+            qs = base.order_by("-issue_date")
+            rows = ((i.number or "DRAFT", i.issue_date, i.due_date, i.get_status_display(), i.bill_to_name, i.bill_to_gstin, STATE_CODES.get(i.place_of_supply, ""), i.get_tax_mode_display(), i.subtotal_paise / 100, i.cgst_paise / 100, i.sgst_paise / 100, i.igst_paise / 100, i.round_off_paise / 100, i.total_paise / 100, i.received_paise / 100, i.balance_paise / 100, i.owner.name if i.owner else "", i.contract.number if i.contract_id else "") for i in qs)
+            resp = _csv_response("invoices", ["Number", "Date", "Due", "Status", "Customer", "GSTIN", "Place of supply", "Tax", "Taxable (₹)", "CGST (₹)", "SGST (₹)", "IGST (₹)", "Round off (₹)", "Total (₹)", "Received (₹)", "Balance (₹)", "Owner", "Contract"], rows)
+        elif what == "payments":
+            qs = Payment.objects.filter(invoice__in=base).select_related("invoice", "created_by").order_by("-paid_on")
+            rows = ((p.paid_on, p.invoice.number, p.invoice.bill_to_name, p.get_mode_display(), p.reference, p.amount_paise / 100, p.created_by.name if p.created_by else "", p.notes) for p in qs)
+            resp = _csv_response("payments", ["Date", "Invoice", "Customer", "Mode", "Reference", "Amount (₹)", "Recorded by", "Notes"], rows)
+        else:
+            data = inv_services.ageing(base)
+            rows = ((r["company"].name, r["n"], r["current"] / 100, r["1-30"] / 100, r["31-60"] / 100, r["61-90"] / 100, r["90+"] / 100, r["total"] / 100, r["oldest"]) for r in data["rows"])
+            resp = _csv_response("ageing", ["Customer", "Open invoices", "Not due (₹)", "1-30 (₹)", "31-60 (₹)", "61-90 (₹)", "90+ (₹)", "Total due (₹)", "Oldest days late"], rows)
     elif what == "approvals":
         qs = Approval.objects.filter(submitter_id__in=users, submitted_at__gte=start, submitted_at__lt=end).select_related("submitter", "reviewer").order_by("-submitted_at")
         rows = ((a.id, a.get_kind_display(), a.title, a.company_name, a.submitter.name, a.get_status_display(), a.reviewer.name if a.reviewer else "", timezone.localtime(a.submitted_at).strftime("%Y-%m-%d %H:%M"), a.decided_at and timezone.localtime(a.decided_at).strftime("%Y-%m-%d %H:%M") or "", a.reason) for a in qs)

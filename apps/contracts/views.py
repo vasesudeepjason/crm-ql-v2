@@ -105,8 +105,9 @@ def detail(request, pk):
         cur = cur.renewal_of
     successor = c.renewed_by
     tasks = list(c.tasks.select_related("assignee").order_by("status", "due_date")[:20]) if hasattr(c, "tasks") else []
+    invoices = list(c.invoices.order_by("-issue_date")[:10]) if has_perm(request, "invoices.view") else []
     others = Contract.objects.filter(company=c.company).exclude(pk=c.pk).exclude(pk__in=[x.pk for x in chain]).select_related("product")[:10]
-    ctx = {"c": c, "chain": chain, "successor": successor, "tasks": tasks, "others": others, "can_edit": services.can_edit(request, c), "can_task": has_perm(request, "tasks.create"), "today": timezone.localdate()}
+    ctx = {"c": c, "chain": chain, "successor": successor, "tasks": tasks, "others": others, "can_edit": services.can_edit(request, c), "can_task": has_perm(request, "tasks.create"), "today": timezone.localdate(), "invoices": invoices, "can_invoice": has_perm(request, "invoices.create") and c.status in ("active", "renewed")}
     return render(request, "contracts/detail.html", ctx)
 
 
@@ -168,7 +169,7 @@ def renew(request, pk):
         d = form_.cleaned_data
         new = services.renew(c, request.user, d["start_date"], d["end_date"], form_.fields["amount"].to_paise(d["amount"]), d["auto_renew"], d.get("notes", ""))
         audit(request, "contract.renew", c, after={"new": new.number, "amount": new.amount_paise, "end": str(new.end_date), "won_back": c.status == Contract.Status.LAPSED})
-        messages.success(request, f"Renewed as {new.number}. Raise the invoice when ready.")
+        messages.success(request, f"Renewed as {new.number}. Raise the invoice for the new term from the banner.")
         r = HttpResponse(status=204)
         r["HX-Redirect"] = f"/contracts/{new.pk}/"
         return r

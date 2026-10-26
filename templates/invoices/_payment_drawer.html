@@ -1,0 +1,15 @@
+{% load ql %}
+<div class="dr-h"><div><small>Record payment</small><h3>{{ inv.number }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <div class="info2"><div class="info"><small>Balance due</small><b>{{ inv.balance_paise|rupees }}</b><span>of {{ inv.total_paise|rupees }}{% if inv.received_paise %} · {{ inv.received_paise|rupees }} received{% endif %}</span></div><div class="info"><small>Customer</small><b>{{ inv.bill_to_name }}</b><span>due {{ inv.due_date|date:"j M Y" }}</span></div></div>
+  <form hx-post="{% url 'invoices:payment_add' inv.pk %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2" style="margin-top:18px">{% csrf_token %}
+    <label>{{ form.amount.label }} *<span class="input">{{ form.amount }}</span></label>
+    <label>Mode<span class="input select">{{ form.mode }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Received on<span class="input">{{ form.paid_on }}</span></label>
+    <label>Reference<span class="input">{{ form.reference }}</span></label>
+    <label class="span2">Notes<span class="input">{{ form.notes }}</span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Record</button><span class="muted" style="font-size:12.5px">Part payments are fine; the invoice closes when the balance reaches zero.</span></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

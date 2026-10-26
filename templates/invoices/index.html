@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Invoices{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Invoices</h1><p>{{ summary.outstanding|short_rupees }} outstanding on {{ summary.open_n }} invoice{{ summary.open_n|pluralize }}{% if summary.overdue_n %} · <span style="color:var(--red-700)">{{ summary.overdue|short_rupees }} overdue</span>{% endif %} · {{ billed_fy|short_rupees }} billed this FY</p></div>
+  <div class="actions">
+    {% if perms_set|can:"data.export" %}<span x-data="{open:false}" style="position:relative"><button type="button" class="btn btn-secondary" @click="open=!open"><svg class="ic"><use href="#i-export"/></svg>Export</button>
+      <div class="menu" x-show="open" x-cloak @click.outside="open=false"><div class="menu-h"><b>Accounting exports</b><small>Issued invoices, current FY</small></div><a class="menu-i" href="{% url 'invoices:export' 'zoho' %}">Zoho Books (CSV)</a><a class="menu-i" href="{% url 'invoices:export' 'tally' %}">Tally sales vouchers (XML)</a><a class="menu-i" href="{% url 'reports:export' 'invoices' %}">All invoices (CSV)</a><a class="menu-i" href="{% url 'reports:export' 'payments' %}">Payments (CSV)</a></div></span>{% endif %}
+    <a class="btn btn-outline" href="{% url 'invoices:ageing' %}">Ageing</a>
+    {% if can_create %}<a class="btn btn-primary" href="{% url 'invoices:new' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New invoice</a>{% endif %}
+  </div>
+</section>
+{% if not cfg_ok %}<div class="banner"><svg class="ic"><use href="#i-set"/></svg><span><b>Finish your invoice settings.</b> Supplier address and state are needed before an invoice can be issued.</span>{% if can_settings %}<a class="btn btn-sm btn-dark" href="{% url 'tenants:workspace' %}#invoicing">Open settings</a>{% endif %}</div>{% endif %}
+<section class="grid">
+  <div class="card s12">
+    <div class="tbl-tools">
+      <div class="seg sm">
+        <a class="{% if status == 'open' %}on{% endif %}" href="?status=open&owner={{ owner }}">Open <span class="n">{{ counts.open }}</span></a>
+        <a class="{% if status == 'overdue' %}on{% endif %}" href="?status=overdue&owner={{ owner }}">Overdue <span class="n">{{ counts.overdue }}</span></a>
+        <a class="{% if status == 'draft' %}on{% endif %}" href="?status=draft&owner={{ owner }}">Drafts <span class="n">{{ counts.draft }}</span></a>
+        <a class="{% if status == 'paid' %}on{% endif %}" href="?status=paid&owner={{ owner }}">Paid <span class="n">{{ counts.paid }}</span></a>
+        {% if counts.cancelled %}<a class="{% if status == 'cancelled' %}on{% endif %}" href="?status=cancelled">Cancelled <span class="n">{{ counts.cancelled }}</span></a>{% endif %}
+        <a class="{% if status == 'all' %}on{% endif %}" href="?status=all&owner={{ owner }}">All <span class="n">{{ counts.all }}</span></a>
+      </div>
+      <form method="get" style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap"><input type="hidden" name="status" value="{{ status }}">
+        {% if owners|length > 1 %}<label class="input select" style="height:36px;border-radius:999px;width:160px"><select name="owner" onchange="this.form.submit()"><option value="">All owners</option>{% for u in owners %}<option value="{{ u.pk }}" {% if owner == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>{% endif %}
+        <label class="input grey" style="width:240px;height:36px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Number, company, GSTIN"></label></form>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Invoice</th><th>Company</th><th class="hide-m">Issued</th><th>Due</th><th>Status</th><th class="r">Total</th><th class="r hide-m">Balance</th></tr></thead>
+        <tbody>{% for inv in page %}
+        <tr onclick="location.href='{% url 'invoices:detail' inv.pk %}'" style="cursor:pointer">
+          <td><b class="mono" style="font-size:12.5px">{{ inv.number|default:"Draft" }}</b>{% if inv.contract_id %}<div class="muted" style="font-size:12px">{{ inv.contract.number }}</div>{% endif %}</td>
+          <td><div class="who"><span class="avatar sm">{{ inv.bill_to_name|initials }}</span><div class="name"><b>{{ inv.bill_to_name }}</b>{% if inv.bill_to_gstin %}<span class="sub mono">{{ inv.bill_to_gstin }}</span>{% endif %}</div></div></td>
+          <td class="hide-m">{{ inv.issue_date|date:"j M Y" }}</td>
+          <td>{{ inv.due_date|date:"j M" }}{% if inv.is_overdue %}<div style="font-size:12px;color:var(--red-700)">{{ inv.days_overdue }}d late</div>{% endif %}</td>
+          <td>{% include "invoices/_status_pill.html" %}</td>
+          <td class="r num">{{ inv.total_paise|rupees }}</td>
+          <td class="r num hide-m">{% if inv.is_open %}{{ inv.balance_paise|rupees }}{% else %}—{% endif %}</td>
+        </tr>{% empty %}<tr><td colspan="7" class="muted" style="padding:28px 20px">No invoices here.{% if can_create and status == 'open' %} Raise one from a contract, or <a href="{% url 'invoices:new' %}">start blank</a>.{% endif %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <div class="tbl-foot"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?status={{ status }}&owner={{ owner }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">← Prev</a>{% endif %} {% if page.has_next %}<a href="?status={{ status }}&owner={{ owner }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">Next →</a>{% endif %}</span></div>
+  </div>
+</section>
+{% endblock %}

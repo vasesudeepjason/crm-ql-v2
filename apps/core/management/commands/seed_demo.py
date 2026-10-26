@@ -23,6 +23,7 @@ from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
 from apps.field.models import FieldSession, Visit
 from apps.contracts.models import Contract, Product
+from apps.invoices.models import Invoice, InvoiceLine, InvoiceSettings, Payment
 from apps.tasks.models import Project, Task
 from apps.telecaller.models import CallTarget
 from apps.tenants.models import Plan, Tenant
@@ -50,6 +51,8 @@ class Command(BaseCommand):
         with rls_bypass():
             demo = Tenant.objects.filter(slug__in=["quantumloop-hq", "other-co"])
             Visit.all_objects.filter(tenant__in=demo).delete()  # Visit.session is PROTECT; clear visits before the cascade
+            for M in (Payment, Invoice, Contract):  # PROTECT chains: payment→invoice→company, contract→company/product
+                M.all_objects.filter(tenant__in=demo).delete()
             demo.delete()
             User.objects.filter(email__endswith="@quantumloop.in").delete()
             User.objects.filter(email__endswith="@other.co").delete()
@@ -204,6 +207,39 @@ class Command(BaseCommand):
                 t = Task(title=f"Renewal call · {c.company.name}", contract=c, company=c.company, assignee=c.owner, due_date=min(c.end_date, today + timedelta(days=2)), priority="high")
                 t.created_by = vikram
                 t.save()
+
+            # Invoice settings + invoices against the contracts
+            InvoiceSettings.objects.update_or_create(tenant=hq, defaults=dict(legal_name="QuantumLoop Technologies Pvt Ltd", address="4th Floor, Cyber Pearl, HITEC City\nHyderabad 500081, Telangana", state_code="36", pan="AABCQ1234L", email="accounts@quantumloop.in", phone="+91 40 4012 3456", website="quantumloop.in",
+                                                                               bank_account_name="QuantumLoop Technologies Pvt Ltd", bank_name="HDFC Bank, Madhapur", bank_account_no="50200012345678", bank_ifsc="HDFC0001234", upi_id="quantumloop@hdfcbank", series_prefix="QL", due_days=15))
+            hq.gstin = hq.gstin or "36AABCQ1234L1ZK"
+            hq.save(update_fields=["gstin"])
+            inv_plan = [  # (contract index by end offset order, days ago issued, paid fraction)
+                (18, 120, 1.0), (19, 95, 1.0), (20, 70, 0.5), (21, 48, 0.0), (22, 33, 1.0), (23, 20, 0.0), (0, 10, 0.0), (1, 5, 0.0),
+            ]
+            actives = list(Contract.objects.filter(status__in=["active", "renewed"]).order_by("-end_date"))
+            for idx, ago, frac in inv_plan:
+                c = actives[idx % len(actives)]
+                issue_on = today - timedelta(days=ago)
+                st_code = {"Telangana": "36", "Andhra Pradesh": "37"}.get(c.company.state, "36")
+                inv = Invoice(company=c.company, contract=c, owner=c.owner, bill_to_name=c.company.name, bill_to_address=f"{c.company.city}, {c.company.state}", bill_to_gstin=c.company.gstin, bill_to_state=st_code, bill_to_email=c.contact_email,
+                              place_of_supply=st_code, supplier_state="36", issue_date=issue_on, due_date=issue_on + timedelta(days=15), period_start=c.start_date, period_end=c.end_date, status="issued", terms="Payment due within 15 days.\nInterest at 18% p.a. on overdue amounts.")
+                inv.created_by = aisha
+                inv.save()
+                InvoiceLine(invoice=inv, product=c.product, description=f"{c.display_title} · {c.start_date:%d %b %Y} to {c.end_date:%d %b %Y}", hsn_sac=c.product.hsn_sac, rate_paise=c.amount_paise, gst_rate=c.product.gst_rate).save()
+                inv.assign_number("QL")
+                inv.issued_at = now - timedelta(days=ago)
+                inv.save()
+                inv.recompute()
+                if frac:
+                    p = Payment(invoice=inv, amount_paise=int(inv.total_paise * frac), mode=random.choice(["upi", "bank", "cheque"]), reference=f"UTR{random.randint(100000, 999999)}", paid_on=issue_on + timedelta(days=random.randint(2, 14)))
+                    p.created_by = aisha
+                    p.save()
+                    inv.recompute()
+            d = Invoice(company=companies[3], owner=vikram, bill_to_name=companies[3].name, bill_to_address=f"{companies[3].city}, {companies[3].state}", bill_to_gstin=companies[3].gstin, bill_to_state="36", place_of_supply="36", supplier_state="36", issue_date=today, due_date=today + timedelta(days=15), status="draft")
+            d.created_by = vikram
+            d.save()
+            InvoiceLine(invoice=d, product=cat["Installation service"], description="Installation service", hsn_sac="995461", rate_paise=1500000, gst_rate=18).save()
+            d.recompute()
 
             # Pending approvals: telecaller leads + field visits
             ct_lead = ContentType.objects.get_for_model(Lead)

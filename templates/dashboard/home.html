@@ -71,6 +71,15 @@
     {% endif %}
   </div>
 
+  {% if inv_summary and inv_summary.open_n %}
+  <div class="card s12">
+    <div class="card-h"><div><h2>Receivables</h2><p>{{ inv_summary.outstanding|short_rupees }} outstanding on {{ inv_summary.open_n }} invoice{{ inv_summary.open_n|pluralize }}{% if inv_summary.overdue_n %} · <span style="color:var(--red-700)">{{ inv_summary.overdue|short_rupees }} overdue</span>{% endif %}</p></div><a class="btn btn-sm btn-outline" href="{% url 'invoices:ageing' %}">Ageing</a></div>
+    {% if overdue_invoices %}<div class="tbl-wrap" style="padding-top:8px"><table class="tbl">
+      <thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th class="hide-m">Owner</th><th class="r">Balance</th></tr></thead>
+      <tbody>{% for inv in overdue_invoices %}<tr onclick="location.href='{% url 'invoices:detail' inv.pk %}'" style="cursor:pointer"><td class="mono" style="font-size:12.5px">{{ inv.number }}</td><td>{{ inv.bill_to_name }}</td><td>{{ inv.due_date|date:"j M" }} <span style="font-size:12px;color:var(--red-700)">· {{ inv.days_overdue }}d late</span></td><td class="hide-m">{{ inv.owner.name|default:"—" }}</td><td class="r num">{{ inv.balance_paise|rupees }}</td></tr>{% endfor %}</tbody>
+    </table></div>{% else %}<p class="muted" style="padding:0 20px 18px;font-size:13px">Nothing overdue.</p>{% endif %}
+  </div>
+  {% endif %}
   {% if renewals %}
   <div class="card s12">
     <div class="card-h"><div><h2>Renewals due</h2><p>Contracts ending within 30 days · {{ renewal_risk|short_rupees }} a year at risk</p></div><a class="btn btn-sm btn-outline" href="{% url 'contracts:renewals' %}">Tracker</a></div>

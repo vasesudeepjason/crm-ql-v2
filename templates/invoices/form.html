@@ -1,0 +1,86 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Draft invoice{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Draft invoice</h1><p>{{ inv.company.name }}{% if inv.contract %} · {{ inv.contract.number }}{% endif %} · supplier state {{ supplier_state_name }}</p></div>
+  <div class="actions"><form method="post" action="{% url 'invoices:delete_draft' inv.pk %}" onsubmit="return confirm('Delete this draft?')">{% csrf_token %}<button class="btn btn-outline">Delete draft</button></form><a class="btn btn-outline" href="{% url 'invoices:detail' inv.pk %}">Preview</a></div>
+</section>
+<form method="post" class="grid" x-data='invoiceForm({{ lines_json|safe }}, {{ products_json|safe }}, "{{ cfg.state_code }}")'>{% csrf_token %}
+  <div class="card s8 stack" style="padding:0;background:transparent;box-shadow:none">
+    <div class="card sec">
+      {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <div class="form-2">
+        <label>Invoice date<span class="input">{{ form.issue_date }}</span></label>
+        <label>Due date<span class="input {% if form.due_date.errors %}error{% endif %}">{{ form.due_date }}</span>{% if form.due_date.errors %}<div class="field-err">{{ form.due_date.errors.0 }}</div>{% endif %}</label>
+        <label class="span2">Bill to *<span class="input">{{ form.bill_to_name }}</span></label>
+        <label class="span2">Billing address<span class="input" style="height:auto">{{ form.bill_to_address }}</span></label>
+        <label>Buyer GSTIN<span class="input {% if form.bill_to_gstin.errors %}error{% endif %}">{{ form.bill_to_gstin }}</span>{% if form.bill_to_gstin.errors %}<div class="field-err">{{ form.bill_to_gstin.errors.0 }}</div>{% endif %}</label>
+        <label>Buyer state<span class="input select">{{ form.bill_to_state }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Place of supply *<span class="input select"><select name="place_of_supply" x-model="pos">{% for v, l in states %}<option value="{{ v }}" {% if v == form.place_of_supply.value %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></span><small class="muted" style="font-size:12px" x-text="pos && supplier && pos!==supplier ? 'Different state → IGST' : 'Same state → CGST + SGST'"></small></label>
+        <label>Client email<span class="input">{{ form.bill_to_email }}</span></label>
+        <label>Service period from<span class="input">{{ form.period_start }}</span></label>
+        <label>to<span class="input">{{ form.period_end }}</span></label>
+        <details class="span2"><summary class="muted" style="font-size:13px;cursor:pointer">Ship to (only if different)</summary><div class="form-2" style="margin-top:10px"><label>Ship to<span class="input">{{ form.ship_to_name }}</span></label><label>Shipping address<span class="input" style="height:auto">{{ form.ship_to_address }}</span></label></div></details>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div><h2>Lines</h2><p>Pick from the catalogue or type freely. Rates are before GST.</p></div><button type="button" class="btn btn-sm btn-outline" @click="add()"><svg class="ic"><use href="#i-plus"/></svg>Add line</button></div>
+      {% if line_err %}<div class="field-err" style="margin:0 20px 10px">{{ line_err }}</div>{% endif %}
+      <div class="tbl-wrap"><table class="tbl lines">
+        <thead><tr><th style="width:34%">Item</th><th class="hide-m">HSN/SAC</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">GST</th><th class="r hide-m">Amount</th><th></th></tr></thead>
+        <tbody>
+          <template x-for="(l, i) in lines" :key="i">
+            <tr>
+              <td><select name="line_product" x-model="l.product" @change="pick(l)"><option value="">— custom —</option>{% for p in products %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select><input name="line_desc" x-model="l.desc" placeholder="Description" required></td>
+              <td class="hide-m"><input name="line_hsn" x-model="l.hsn" placeholder="998713" style="width:90px"></td>
+              <td class="r"><input name="line_qty" type="number" step="0.01" min="0.01" x-model.number="l.qty" style="width:70px;text-align:right"></td>
+              <td class="r"><input name="line_rate" type="number" step="0.01" min="0" x-model.number="l.rate" placeholder="0.00" style="width:110px;text-align:right"></td>
+              <td class="r"><select name="line_gst" x-model.number="l.gst" style="width:76px"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></td>
+              <td class="r num hide-m" x-text="fmt(amount(l))"></td>
+              <td class="r"><button type="button" class="icon-btn" aria-label="Remove line" @click="lines.splice(i,1)"><svg class="ic"><use href="#i-x"/></svg></button></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+      <div class="totals">
+        <div><span>Taxable</span><b x-text="fmt(subtotal())"></b></div>
+        <template x-if="inter"><div><span>IGST</span><b x-text="fmt(tax())"></b></template>
+        <template x-if="!inter"><div><span>CGST</span><b x-text="fmt(Math.floor(tax()*100/2)/100)"></b></div></template>
+        <template x-if="!inter"><div><span>SGST</span><b x-text="fmt(tax() - Math.floor(tax()*100/2)/100)"></b></div></template>
+        <div class="grand"><span>Total</span><b x-text="fmt(Math.round(subtotal()+tax()))"></b></div>
+      </div>
+    </div>
+
+    <div class="card sec">
+      <div class="form-2">
+        <label class="span2">Notes on the invoice<span class="input">{{ form.notes }}</span></label>
+        <label class="span2">Terms and conditions <small class="muted">(one per line)</small><span class="input" style="height:auto">{{ form.terms }}</span></label>
+      </div>
+    </div>
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec" style="display:grid;gap:10px">
+      <button class="btn btn-primary" name="then" value="issue" type="submit" style="height:46px"><svg class="ic"><use href="#i-check"/></svg>Save and issue…</button>
+      <button class="btn btn-dark" type="submit" style="height:46px">Save draft</button>
+      <p class="muted" style="font-size:12.5px">Issuing assigns the next number in the {{ cfg.series_prefix }} series for this financial year and locks the invoice. Cancel and re-issue if something is wrong afterwards.</p>
+    </div>
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Supplier</h2><p style="font-size:13px;color:var(--ink-2);white-space:pre-line">{{ cfg.legal_name|default:tenant.name }}
+{{ cfg.address|default:"No address set" }}
+{% if tenant.gstin %}GSTIN {{ tenant.gstin }}{% else %}No GSTIN · plain invoice{% endif %}</p>{% if perms_set|can:"settings.manage" %}<a href="{% url 'tenants:workspace' %}#invoicing" style="font-size:12.5px">Edit invoice settings →</a>{% endif %}</div>
+  </aside>
+</form>
+{% endblock %}
+{% block scripts %}<script>
+function invoiceForm(lines, products, supplier){
+  return {lines, products, supplier, pos: document.querySelector('[name=place_of_supply]')?.value || '',
+    get inter(){ return !!(this.pos && this.supplier && this.pos !== this.supplier); },
+    add(){ this.lines.push({product:'', desc:'', hsn:'', qty:1, rate:'', gst:18}); },
+    pick(l){ const p=this.products[l.product]; if(!p) return; l.desc=p.desc; l.hsn=p.hsn; l.rate=p.rate; l.gst=p.gst; },
+    amount(l){ return Math.round((Number(l.qty)||0)*(Number(l.rate)||0)*100)/100; },
+    subtotal(){ return this.lines.reduce((s,l)=>s+this.amount(l),0); },
+    tax(){ return this.lines.reduce((s,l)=>s+Math.round(this.amount(l)*(Number(l.gst)||0))/100,0); },
+    fmt(v){ return '₹' + Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  };
+}
+</script>{% endblock %}

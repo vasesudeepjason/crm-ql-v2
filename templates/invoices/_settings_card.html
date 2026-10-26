@@ -1,0 +1,24 @@
+{% load ql %}
+<div class="card sec" id="invoicing">
+  <div class="card-h" style="padding:0 0 16px"><div><h2>Invoice settings</h2><p>Printed on every invoice. Supplier state decides CGST+SGST versus IGST.</p></div>{% if inv_cfg.is_complete %}<span class="pill pill-success">Ready</span>{% else %}<span class="pill pill-warning">Address and state needed</span>{% endif %}</div>
+  <form method="post" action="{% url 'invoices:settings' %}" enctype="multipart/form-data" class="form-2" style="max-width:760px">{% csrf_token %}
+    <label>Legal name<span class="input">{{ inv_form.legal_name }}</span><small class="muted" style="font-size:12px">Blank uses the workspace name</small></label>
+    <label>Supplier state *<span class="input select">{{ inv_form.state_code }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label class="span2">Address on invoices *<span class="input" style="height:auto">{{ inv_form.address }}</span></label>
+    <label>PAN<span class="input">{{ inv_form.pan }}</span></label>
+    <label>Email (reply-to)<span class="input">{{ inv_form.email }}</span></label>
+    <label>Phone<span class="input">{{ inv_form.phone }}</span></label>
+    <label>Website<span class="input">{{ inv_form.website }}</span></label>
+    <label>Logo <small class="muted">(PNG/JPG)</small><span class="input" style="height:auto;padding:8px 12px">{{ inv_form.logo }}</span>{% if inv_cfg.logo %}<img src="{{ inv_cfg.logo.url }}" alt="" style="height:28px;margin-top:6px">{% endif %}</label>
+    <label>Number series prefix<span class="input">{{ inv_form.series_prefix }}</span><small class="muted" style="font-size:12px">e.g. {{ inv_cfg.series_prefix }}/26-27/0001 · restarts each April</small></label>
+    <label>Default credit days<span class="input">{{ inv_form.due_days }}</span></label>
+    <label>Account name<span class="input">{{ inv_form.bank_account_name }}</span></label>
+    <label>Bank<span class="input">{{ inv_form.bank_name }}</span></label>
+    <label>Account number<span class="input">{{ inv_form.bank_account_no }}</span></label>
+    <label>IFSC<span class="input">{{ inv_form.bank_ifsc }}</span></label>
+    <label>UPI ID<span class="input">{{ inv_form.upi_id }}</span></label>
+    <label class="span2">Default note<span class="input">{{ inv_form.default_notes }}</span></label>
+    <label class="span2">Default terms <small class="muted">(one per line)</small><span class="input" style="height:auto">{{ inv_form.default_terms }}</span></label>
+    <div class="span2"><button class="btn btn-dark" type="submit">Save invoice settings</button></div>
+  </form>
+</div>

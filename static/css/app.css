@@ -191,3 +191,14 @@ input[type=file]{max-width:100%}
 .members ul{list-style:none;padding:0;margin:0;display:contents}.members label{display:flex;align-items:center;gap:8px;font:500 13px var(--font);color:var(--ink)}
 .empty{padding:28px 20px;display:grid;gap:4px;color:var(--ink-2);font-size:13.5px}.empty b{color:var(--ink)}
 @media (max-width:640px){.tboard{grid-auto-columns:82vw}.quick input[name=title]{flex-basis:100%}.quick input[type=date],.quick select{flex:1;min-width:0}.members{grid-template-columns:1fr}}
+
+/* ---- Invoices ---- */
+.totals{display:grid;gap:6px;justify-content:end;padding:14px 20px 18px;font-size:13.5px}
+.totals div{display:grid;grid-template-columns:200px 140px;gap:12px}.totals span{color:var(--ink-2)}.totals b{text-align:right;font-variant-numeric:tabular-nums}
+.totals .grand{border-top:1px solid var(--line);padding-top:8px;margin-top:4px;font-size:15px}.totals .grand span{color:var(--ink);font-weight:600}
+.tbl.lines td{vertical-align:top}.tbl.lines input,.tbl.lines select{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font:500 13px var(--font);color:var(--ink);background:#fff;max-width:100%}
+.tbl.lines td:first-child{min-width:260px;white-space:normal}.tbl.lines td:first-child select{display:block;width:100%;margin-bottom:6px}.tbl.lines td:first-child input{display:block;width:100%}
+.invoice-paper .ip-head{display:flex;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:1px solid var(--line-2);margin-bottom:16px;flex-wrap:wrap}
+.invoice-paper .ip-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}.ip-parties small{display:block;font:600 11px var(--font);letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.ip-parties b{display:block}
+.invoice-paper .tbl-wrap{margin:0 -20px}.invoice-paper .totals{padding-right:0}
+@media (max-width:640px){.invoice-paper .ip-parties{grid-template-columns:1fr}.totals div{grid-template-columns:1fr auto}.tbl.lines td:first-child{min-width:200px}}

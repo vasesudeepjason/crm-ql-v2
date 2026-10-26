@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Outstanding & ageing{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Outstanding &amp; ageing</h1><p>{{ data.grand|short_rupees }} outstanding across {{ data.rows|length }} customer{{ data.rows|length|pluralize }}{% if data.overdue %} · <span style="color:var(--red-700)">{{ data.overdue|short_rupees }} past due</span>{% endif %} · {{ received_month|short_rupees }} received this month</p></div>
+  <div class="actions">{% if can_export %}<a class="btn btn-secondary" href="{% url 'reports:export' 'ageing' %}"><svg class="ic"><use href="#i-export"/></svg>Export</a>{% endif %}<a class="btn btn-outline" href="{% url 'invoices:index' %}?status=overdue">Overdue invoices</a></div>
+</section>
+<section class="grid">
+  {% for key, label in buckets %}
+  <div class="card kpi s3 {% if key == '90+' %}hi{% endif %}" style="padding-bottom:14px"><div class="lbl">{{ label }}</div><span class="when">{% if key == 'current' %}DUE{% else %}OVERDUE{% endif %}</span><div class="val">{{ data.totals|get_item:key|short_rupees }}</div></div>
+  {% endfor %}
+  <div class="card s12">
+    <div class="card-h"><div><h2>By customer</h2><p>Balance due by how long it has been outstanding. Oldest first.</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Customer</th><th class="r hide-m">Invoices</th>{% for key, label in buckets %}<th class="r {% if key == 'current' or key == '31-60' %}hide-m{% endif %}">{{ label }}</th>{% endfor %}<th class="r">Total due</th></tr></thead>
+      <tbody>{% for r in data.rows %}
+      <tr onclick="location.href='{% url 'invoices:index' %}?status=open&q={{ r.company.name|urlencode }}'" style="cursor:pointer">
+        <td><div class="who"><span class="avatar sm" style="{% if r.oldest > 60 %}background:var(--red-100);color:var(--red-700){% endif %}">{{ r.company.name|initials }}</span><div class="name"><b>{{ r.company.name }}</b><span class="sub">{% if r.oldest %}oldest {{ r.oldest }} days late{% else %}nothing overdue{% endif %}</span></div></div></td>
+        <td class="r num hide-m">{{ r.n }}</td>
+        {% for key, label in buckets %}<td class="r num {% if key == 'current' or key == '31-60' %}hide-m{% endif %} {% if key != 'current' and r|get_item:key %}" style="color:var(--red-700){% endif %}">{% with v=r|get_item:key %}{% if v %}{{ v|rupees }}{% else %}<span class="muted">—</span>{% endif %}{% endwith %}</td>{% endfor %}
+        <td class="r num"><b>{{ r.total|rupees }}</b></td>
+      </tr>{% empty %}<tr><td colspan="8" class="muted" style="padding:28px 20px">Nothing outstanding. Every issued invoice is paid.</td></tr>{% endfor %}</tbody>
+      {% if data.rows %}<tfoot><tr style="font-weight:600"><td>Total</td><td class="hide-m"></td>{% for key, label in buckets %}<td class="r num {% if key == 'current' or key == '31-60' %}hide-m{% endif %}">{{ data.totals|get_item:key|rupees }}</td>{% endfor %}<td class="r num">{{ data.grand|rupees }}</td></tr></tfoot>{% endif %}
+    </table></div>
+  </div>
+  <div class="card s12">
+    <div class="card-h"><div><h2>Recent payments</h2><p>Last 15 received</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Date</th><th>Customer</th><th class="hide-m">Invoice</th><th>Mode</th><th class="hide-m">Reference</th><th class="hide-m">By</th><th class="r">Amount</th></tr></thead>
+      <tbody>{% for p in payments %}<tr onclick="location.href='{% url 'invoices:detail' p.invoice.pk %}'" style="cursor:pointer"><td>{{ p.paid_on|date:"j M Y" }}</td><td>{{ p.invoice.bill_to_name }}</td><td class="hide-m mono" style="font-size:12.5px">{{ p.invoice.number }}</td><td>{{ p.get_mode_display }}</td><td class="hide-m muted">{{ p.reference|default:"—" }}</td><td class="hide-m">{{ p.created_by.first_name|default:"—" }}</td><td class="r num">{{ p.amount_paise|rupees }}</td></tr>{% empty %}<tr><td colspan="7" class="muted" style="padding:20px">No payments recorded yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</section>
+{% endblock %}

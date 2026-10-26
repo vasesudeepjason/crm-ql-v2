@@ -32,7 +32,12 @@
       <div class="sub"><a class="{% active 'contracts:index' 'contracts:detail' 'contracts:new' 'contracts:edit' %}" href="{% url 'contracts:index' %}">All contracts</a><a class="{% active 'contracts:renewals' %}" href="{% url 'contracts:renewals' %}">Renewal tracker</a><a class="{% active 'contracts:products' %}" href="{% url 'contracts:products' %}">Catalogue</a></div>
     </div>
     {% endif %}
-    {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}
+    {% if perms_set|can:"invoices.view" %}
+    <div class="ng {% if request.resolver_match.namespace == 'invoices' %}open{% endif %}">
+      <button class="ni" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span>{% if overdue_invoices %}<em class="count hot" style="font-style:normal">{{ overdue_invoices }}</em>{% endif %}<svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'invoices:index' 'invoices:detail' 'invoices:edit' 'invoices:new' %}" href="{% url 'invoices:index' %}">All invoices</a><a class="{% active 'invoices:ageing' %}" href="{% url 'invoices:ageing' %}">Outstanding &amp; ageing</a>{% if perms_set|can:"settings.manage" %}<a href="{% url 'tenants:workspace' %}#invoicing">Invoice settings</a>{% endif %}</div>
+    </div>
+    {% endif %}
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
     {% if perms_set|can:"tasks.view" %}
     <div class="ng {% if request.resolver_match.namespace == 'tasks' %}open{% endif %}">

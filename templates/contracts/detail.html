@@ -9,6 +9,7 @@
   <div class="actions">
     <a class="btn btn-outline" href="{% url 'contracts:renewals' %}">Tracker</a>
     {% if can_task %}<button class="btn btn-outline" hx-get="{% url 'tasks:new' %}?contract={{ c.pk }}&company={{ c.company_id }}" hx-target="#drawer" hx-swap="innerHTML">Add task</button>{% endif %}
+    {% if can_invoice %}<a class="btn btn-secondary" href="{% url 'invoices:new' %}?contract={{ c.pk }}"><svg class="ic"><use href="#i-inv"/></svg>Raise invoice</a>{% endif %}
     {% if can_edit %}{% if c.status == 'active' %}<a class="btn btn-secondary" href="{% url 'contracts:edit' c.pk %}">Edit</a><button class="btn btn-outline" hx-get="{% url 'contracts:lapse' c.pk %}" hx-target="#drawer" hx-swap="innerHTML">Lapsed</button>{% endif %}
     {% if c.status == 'active' or c.status == 'lapsed' %}<button class="btn btn-primary" hx-get="{% url 'contracts:renew' c.pk %}" hx-target="#drawer" hx-swap="innerHTML"><svg class="ic"><use href="#i-refresh"/></svg>{% if c.status == 'lapsed' %}Won back{% else %}Renewed{% endif %}</button>{% endif %}{% endif %}
   </div>
@@ -17,6 +18,7 @@
 {% elif c.status == 'lapsed' %}<div class="banner" style="background:var(--red-100)"><svg class="ic"><use href="#i-x"/></svg><span><b>Lapsed</b> on {{ c.decided_at|date:"j M Y" }} by {{ c.decided_by.name|default:"system" }}{% if c.lapsed_reason %} · "{{ c.lapsed_reason }}"{% endif %}. Still visible here for win-back.</span></div>
 {% elif c.status == 'renewed' and successor %}<div class="banner" style="background:var(--brand-100)"><svg class="ic"><use href="#i-check"/></svg><span><b>Renewed</b> as <a href="{% url 'contracts:detail' successor.pk %}">{{ successor.number }}</a> · {{ successor.start_date|date:"j M Y" }} → {{ successor.end_date|date:"j M Y" }}</span></div>{% endif %}
 
+{% if can_invoice and not invoices and c.status == 'active' %}<div class="banner" style="background:var(--brand-100)"><svg class="ic"><use href="#i-inv"/></svg><span><b>No invoice yet for this term.</b> Raise it from the contract so the amount, period and GST come across.</span><a class="btn btn-sm btn-dark" href="{% url 'invoices:new' %}?contract={{ c.pk }}">Raise invoice</a></div>{% endif %}
 <section class="grid">
   <div class="s8 stack">
     <div class="card sec">
@@ -42,6 +44,7 @@
     {% endif %}
   </div>
   <aside class="s4 stack">
+    {% if invoices %}<div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Invoices</h2><ul class="mini" style="padding:0">{% for inv in invoices %}<li onclick="location.href='{% url 'invoices:detail' inv.pk %}'" style="cursor:pointer"><div class="t"><b style="font-weight:500">{{ inv.number|default:"Draft" }}</b><small>{{ inv.issue_date|date:"j M Y" }} · {% include "invoices/_status_pill.html" %}</small></div><span class="v">{{ inv.total_paise|rupees }}</span></li>{% endfor %}</ul></div>{% endif %}
     <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Tasks</h2>
       <ul class="mini" style="padding:0">{% for t in tasks %}<li hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><span class="tick {% if t.is_done %}on{% endif %} ghost" style="width:22px;height:22px"><svg class="ic" style="width:12px"><use href="#i-check"/></svg></span><div class="t"><b style="white-space:normal;font-weight:500{% if t.is_done %};text-decoration:line-through;color:var(--muted){% endif %}">{{ t.title }}</b><small>{% if t.due_date %}{% if t.is_overdue %}<span style="color:var(--red-700)">overdue · </span>{% endif %}{{ t.due_date|date:"j M" }}{% else %}no date{% endif %} · {{ t.assignee.first_name|default:"unassigned" }}</small></div></li>{% empty %}<li><div class="t muted" style="font-size:13px">No tasks yet. {% if can_task %}Add one for the renewal call.{% endif %}</div></li>{% endfor %}</ul>
     </div>

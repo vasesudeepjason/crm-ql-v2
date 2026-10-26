@@ -12,6 +12,8 @@
   </form>
 </div>
 
+{% include "invoices/_settings_card.html" %}
+
 <div class="card sec">
   <div class="card-h" style="padding:0 0 16px"><div><h2>Support access</h2><p>QuantumLoop staff can only enter this workspace through a time-limited session. You see every one here and can end it.</p></div>{% if active_sessions %}<span class="pill pill-warning">{{ active_sessions|length }} active now</span>{% else %}<span class="pill pill-success">No one inside</span>{% endif %}</div>
   {% if sessions %}

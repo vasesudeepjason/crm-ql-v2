@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}{{ inv }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h1>{{ inv.number|default:"Draft invoice" }}</h1>{% include "invoices/_status_pill.html" %}{% if inv.sent_at %}<span class="pill pill-info">Emailed {{ inv.sent_at|date:"j M" }}</span>{% endif %}</div>
+    <p>{{ inv.bill_to_name }} · issued {{ inv.issue_date|date:"j M Y" }} · due {{ inv.due_date|date:"j M Y" }}{% if inv.contract %} · <a href="{% url 'contracts:detail' inv.contract.pk %}">{{ inv.contract.number }}</a>{% endif %} · owner {{ inv.owner.name|default:"—" }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'invoices:index' %}">All invoices</a>
+    {% if inv.status == 'draft' %}{% if can_edit %}<a class="btn btn-secondary" href="{% url 'invoices:edit' inv.pk %}">Edit</a><button class="btn btn-primary" hx-get="{% url 'invoices:issue' inv.pk %}" hx-target="#drawer" hx-swap="innerHTML"><svg class="ic"><use href="#i-check"/></svg>Issue</button>{% endif %}
+    {% else %}<a class="btn btn-secondary" href="{% url 'invoices:pdf' inv.pk %}" target="_blank"><svg class="ic"><use href="#i-file"/></svg>PDF</a>{% if inv.status != 'cancelled' %}<button class="btn btn-outline" hx-get="{% url 'invoices:send' inv.pk %}" hx-target="#drawer" hx-swap="innerHTML">Email</button>{% endif %}
+    {% if inv.is_open and can_pay %}<button class="btn btn-primary" hx-get="{% url 'invoices:payment_add' inv.pk %}" hx-target="#drawer" hx-swap="innerHTML"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Record payment</button>{% endif %}{% endif %}
+  </div>
+</section>
+{% if inv.status == 'cancelled' %}<div class="banner" style="background:var(--red-100)"><svg class="ic"><use href="#i-x"/></svg><span><b>Cancelled.</b> {{ inv.cancel_reason|default:"No reason recorded." }} The number stays in the series.</span></div>
+{% elif inv.is_overdue %}<div class="banner"><svg class="ic"><use href="#i-inv"/></svg><span><b>Overdue by {{ inv.days_overdue }} days.</b> {{ inv.balance_paise|rupees }} still due.</span></div>
+{% elif inv.status == 'paid' %}<div class="banner" style="background:var(--green-100)"><svg class="ic"><use href="#i-check"/></svg><span><b>Paid in full</b> on {{ inv.paid_at|date:"j M Y" }}.</span></div>{% endif %}
+
+<section class="grid">
+  <div class="s8 stack">
+    <div class="card sec invoice-paper">
+      <div class="ip-head">
+        <div><b>{{ cfg.legal_name|default:tenant.name }}</b><div class="muted" style="white-space:pre-line;font-size:12.5px">{{ cfg.address|default:tenant.address }}</div>{% if tenant.gstin %}<div class="mono" style="font-size:12px">GSTIN {{ tenant.gstin }}</div>{% endif %}</div>
+        <div style="text-align:right"><div style="font:700 13px var(--font);letter-spacing:.06em">{% if tenant.gstin %}TAX INVOICE{% else %}INVOICE{% endif %}</div><div class="mono" style="font-size:13px">{{ inv.number|default:"DRAFT" }}</div><div class="muted" style="font-size:12.5px">{{ inv.issue_date|date:"j M Y" }} · due {{ inv.due_date|date:"j M Y" }}</div><div class="muted" style="font-size:12.5px">Place of supply: {{ state_name|default:"—" }} ({{ inv.get_tax_mode_display }})</div></div>
+      </div>
+      <div class="ip-parties">
+        <div><small>BILL TO</small><b>{{ inv.bill_to_name }}</b><div class="muted" style="font-size:12.5px;white-space:pre-line">{{ inv.bill_to_address }}</div>{% if inv.bill_to_gstin %}<div class="mono" style="font-size:12px">GSTIN {{ inv.bill_to_gstin }}</div>{% endif %}{% if inv.bill_to_email %}<div class="muted" style="font-size:12px">{{ inv.bill_to_email }}</div>{% endif %}</div>
+        {% if inv.period_start %}<div><small>PERIOD</small><b>{{ inv.period_start|date:"j M Y" }} – {{ inv.period_end|date:"j M Y" }}</b>{% if inv.contract %}<div class="muted" style="font-size:12.5px">{{ inv.contract.display_title }}</div>{% endif %}</div>{% endif %}
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>#</th><th>Item</th><th class="hide-m">HSN/SAC</th><th class="r">Qty</th><th class="r hide-m">Rate</th><th class="r hide-m">GST</th><th class="r">Amount</th></tr></thead>
+        <tbody>{% for l in lines %}<tr><td class="muted">{{ forloop.counter }}</td><td style="white-space:normal"><b>{{ l.description }}</b></td><td class="hide-m mono" style="font-size:12px">{{ l.hsn_sac|default:"—" }}</td><td class="r num">{{ l.quantity|floatformat:"-2" }}</td><td class="r num hide-m">{{ l.rate_paise|rupees }}</td><td class="r num hide-m">{{ l.gst_rate|floatformat:"-2" }}%</td><td class="r num">{{ l.amount_paise|rupees }}</td></tr>{% empty %}<tr><td colspan="7" class="muted" style="padding:20px">No lines yet.</td></tr>{% endfor %}</tbody>
+      </table></div>
+      <div class="totals">
+        <div><span>Taxable</span><b>{{ inv.subtotal_paise|rupees }}</b></div>
+        {% for label, amount in tax_rows %}<div><span>{{ label }}</span><b>{{ amount|rupees }}</b></div>{% endfor %}
+        {% if inv.round_off_paise %}<div><span>Round off</span><b>{{ inv.round_off_paise|rupees }}</b></div>{% endif %}
+        <div class="grand"><span>Total</span><b>{{ inv.total_paise|rupees }}</b></div>
+        {% if inv.received_paise %}<div><span>Received</span><b>{{ inv.received_paise|rupees }}</b></div><div class="grand"><span>Balance due</span><b>{{ inv.balance_paise|rupees }}</b></div>{% endif %}
+      </div>
+      {% if inv.notes or inv.terms %}<div class="muted" style="font-size:12.5px;margin-top:14px;white-space:pre-line">{% if inv.notes %}<b>Notes:</b> {{ inv.notes }}{% endif %}{% if inv.terms %}
+<b>Terms:</b> {{ inv.terms }}{% endif %}</div>{% endif %}
+    </div>
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Payments</h2>
+      <ul class="mini" style="padding:0">{% for p in payments %}<li><div class="t"><b style="font-weight:500">{{ p.amount_paise|rupees }} · {{ p.get_mode_display }}</b><small>{{ p.paid_on|date:"j M Y" }}{% if p.reference %} · {{ p.reference }}{% endif %} · {{ p.created_by.first_name|default:"system" }}</small></div>{% if can_edit and can_pay %}<form method="post" action="{% url 'invoices:payment_delete' inv.pk p.pk %}" onsubmit="return confirm('Remove this payment?')">{% csrf_token %}<button class="icon-btn" aria-label="Remove"><svg class="ic"><use href="#i-x"/></svg></button></form>{% endif %}</li>{% empty %}<li><div class="t muted" style="font-size:13px">{% if inv.is_open %}Nothing received yet.{% elif inv.status == 'draft' %}Issue the invoice first.{% else %}—{% endif %}</div></li>{% endfor %}</ul>
+      {% if inv.is_open and can_pay %}<button class="btn btn-sm btn-dark" style="margin-top:8px" hx-get="{% url 'invoices:payment_add' inv.pk %}" hx-target="#drawer" hx-swap="innerHTML">Record payment</button>{% endif %}
+    </div>
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Details</h2>
+      <dl class="kv kv-lead"><dt>Company</dt><dd><a href="{% url 'crm:companies' %}?q={{ inv.company.name|urlencode }}">{{ inv.company.name }}</a></dd><dt>Supplier state</dt><dd>{{ supplier_state_name|default:"not set" }}</dd><dt>Tax</dt><dd>{{ inv.get_tax_mode_display }}</dd><dt>Created</dt><dd>{{ inv.created_at|date:"j M Y" }} by {{ inv.created_by.name|default:"system" }}</dd>{% if inv.issued_at %}<dt>Issued</dt><dd>{{ inv.issued_at|date:"j M Y, H:i" }}</dd>{% endif %}{% if inv.sent_at %}<dt>Emailed</dt><dd>{{ inv.sent_at|date:"j M Y, H:i" }} to {{ inv.bill_to_email }}</dd>{% endif %}</dl>
+    </div>
+    {% if can_edit and inv.status != 'cancelled' and inv.status != 'draft' and not inv.received_paise %}<form method="post" action="{% url 'invoices:cancel' inv.pk %}" onsubmit="return confirm('Cancel this invoice? Its number stays used in the series.')" class="muted" style="font-size:12.5px;padding:0 4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">{% csrf_token %}<label class="input" style="width:220px;height:34px"><input name="reason" placeholder="Reason for cancelling"></label><button class="link" type="submit">Cancel invoice</button></form>{% endif %}
+  </aside>
+</section>
+{% endblock %}

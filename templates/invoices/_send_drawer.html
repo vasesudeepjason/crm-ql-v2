@@ -1,0 +1,12 @@
+{% load ql %}
+<div class="dr-h"><div><small>Email invoice</small><h3>{{ inv.number }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <p class="muted" style="font-size:13px;margin-bottom:14px">The PDF is attached. Reply-to is {{ cfg.email|default:"not set — add one in invoice settings" }}.</p>
+  <form hx-post="{% url 'invoices:send' inv.pk %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    <label class="span2">To *<span class="input"><input type="email" name="to" value="{{ to }}" required placeholder="accounts@client.in"></span></label>
+    <label class="span2">Message (optional, goes above the standard text)<span class="input" style="height:auto"><textarea name="message" rows="3" placeholder="Hi Priya, as discussed…"></textarea></span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Send {{ inv.total_paise|rupees }} invoice</button></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

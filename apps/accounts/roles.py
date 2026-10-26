@@ -38,7 +38,7 @@ ROLES: dict[str, dict] = {
     "admin": {"name": "Admin", "perms": {p: ALL for p in PERMISSIONS if p != "billing.manage"}},
     "manager": {
         "name": "Manager",
-        "perms": {**{p: TEAM for p in _SALES_READ | _SALES_WRITE}, "leads.approve": TEAM, "visits.approve": TEAM, "leads.assign": TEAM, "reports.view": TEAM, "contracts.view": TEAM, "contracts.create": TEAM, "contracts.edit": TEAM, "invoices.view": TEAM},
+        "perms": {**{p: TEAM for p in _SALES_READ | _SALES_WRITE}, "leads.approve": TEAM, "visits.approve": TEAM, "leads.assign": TEAM, "reports.view": TEAM, "contracts.view": TEAM, "contracts.create": TEAM, "contracts.edit": TEAM, "invoices.view": TEAM, "invoices.create": TEAM, "payments.view": TEAM},
     },
     "sales": {"name": "Sales Executive", "perms": {**{p: OWN for p in _SALES_READ | _SALES_WRITE}, "contracts.view": OWN, "contracts.create": OWN, "contracts.edit": OWN, "invoices.create": OWN, "invoices.view": OWN}},
     "telecaller": {"name": "Telecaller", "perms": {"leads.view": OWN, "leads.create": OWN, "calls.view": OWN, "calls.create": OWN, "tasks.view": OWN, "companies.view": OWN}},

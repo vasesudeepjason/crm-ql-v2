@@ -99,9 +99,13 @@ def workspace(request):
         audit(request, "workspace.update", t, before=before, after={"name": t.name, "timezone": t.timezone, "gstin": t.gstin, "address": t.address})
         messages.success(request, "Workspace details saved.")
         return redirect("tenants:workspace")
+    from apps.invoices.forms import InvoiceSettingsForm
+    from apps.invoices.models import InvoiceSettings
+
+    inv_cfg = InvoiceSettings.for_tenant(t)
     sessions = SupportSession.objects.filter(tenant=t).select_related("staff", "ended_by")[:20]
     counts = {"companies": Company.objects.count(), "contacts": Contact.objects.count(), "leads": Lead.objects.count(), "activities": Activity.objects.count(), "approvals": Approval.objects.count(), "users": Membership.objects.filter(tenant=t, is_active=True).count()}
-    return render(request, "settings/workspace.html", {"t": t, "timezones": TIMEZONES, "sessions": sessions, "active_sessions": [s for s in sessions if s.is_active], "counts": counts, "section": "workspace"})
+    return render(request, "settings/workspace.html", {"t": t, "timezones": TIMEZONES, "sessions": sessions, "active_sessions": [s for s in sessions if s.is_active], "counts": counts, "section": "workspace", "inv_cfg": inv_cfg, "inv_form": InvoiceSettingsForm(instance=inv_cfg)})
 
 
 @login_required
