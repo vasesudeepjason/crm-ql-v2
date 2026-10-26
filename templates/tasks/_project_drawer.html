@@ -1,0 +1,21 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>{% if p %}Edit project{% else %}New project{% endif %}</small><h3>{% if p %}{{ p.name|truncatechars:48 }}{% else %}Give it a name{% endif %}</h3></div>
+  <div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  <form hx-post="{% if p %}{% url 'tasks:project_edit' p.pk %}{% else %}{% url 'tasks:project_new' %}{% endif %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    <label class="span2">Name *<span class="input">{{ form.name }}</span></label>
+    <label class="span2">Description<span class="input" style="height:auto">{{ form.description }}</span></label>
+    <label>Owner<span class="input select">{{ form.owner }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Company<span class="input select">{{ form.company }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Start<span class="input">{{ form.start_date }}</span></label>
+    <label>Due<span class="input">{{ form.due_date }}</span></label>
+    <label>Status<span class="input select">{{ form.status }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Colour<span class="input select">{{ form.color }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <div class="span2"><div style="font:500 13px var(--font);color:var(--ink-2);margin-bottom:8px">Members</div><div class="members">{{ form.members }}</div></div>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>{% if p %}Save changes{% else %}Create project{% endif %}</button></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

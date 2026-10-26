@@ -60,6 +60,8 @@
           {% if a.notes %}<div class="quote" style="margin-top:6px;padding:10px 12px">{{ a.notes|linebreaksbr }}</div>{% endif %}
           <small>{{ a.created_at|date:"j M Y, H:i" }} · {{ a.created_by.name|default:"system" }}{% if a.type == 'task' and not a.done_at and can_edit %} · <button class="link" hx-post="{% url 'crm:task_done' lead.pk a.pk %}">mark done</button>{% endif %}</small>
         </li>{% endwith %}
+        {% elif e.kind == 'task' %}{% with t=e.obj %}
+        <li class="{% if forloop.first %}now{% endif %}"><b>Task{% if t.is_done %} · done{% elif t.due_date %} · due {{ t.due_date|date:"j M" }}{% endif %}{% if t.is_overdue %} · <span style="color:var(--red-700)">overdue</span>{% endif %}</b><div class="quote" style="margin-top:6px;padding:10px 12px">{{ t.title }}{% if t.description %}<div class="muted" style="font-size:12.5px;margin-top:4px">{{ t.description|truncatechars:160 }}</div>{% endif %}</div><small>{{ t.created_at|date:"j M Y, H:i" }} · {{ t.assignee.name|default:"unassigned" }}{% if not t.is_done and can_edit %} · <button class="link" hx-post="{% url 'crm:task_done' lead.pk t.pk %}">mark done</button>{% endif %} · <button class="link" hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML">open</button></small></li>{% endwith %}
         {% elif e.kind == 'stage' %}{% with h=e.obj %}
         <li><b>{% if h.from_stage %}Stage {{ h.from_stage }} → {{ h.to_stage }}{% else %}Created as {{ h.to_stage }}{% endif %}</b>{% if h.note and h.note != 'created' %}<div class="muted" style="font-size:13px;margin-top:2px">{{ h.note }}</div>{% endif %}<small>{{ h.created_at|date:"j M Y, H:i" }} · {{ h.changed_by.name|default:"system" }}</small></li>{% endwith %}
         {% else %}{% with ap=e.obj %}
@@ -87,7 +89,7 @@
       </dl>
     </div>
     {% if open_tasks %}
-    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Open tasks</h2><ul class="mini" style="padding:0">{% for t in open_tasks %}<li><div class="t"><b style="white-space:normal">{{ t.notes|truncatechars:60 }}</b><small>due {{ t.due_at|date:"j M, H:i" }}</small></div></li>{% endfor %}</ul></div>
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Open tasks</h2><ul class="mini" style="padding:0">{% for t in open_tasks %}<li hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><div class="t"><b style="white-space:normal">{{ t.title|truncatechars:60 }}</b><small>{% if t.due_date %}{% if t.is_overdue %}<span style="color:var(--red-700)">overdue · </span>{% endif %}due {{ t.due_date|date:"j M" }}{% else %}no date{% endif %} · {{ t.assignee.first_name|default:"unassigned" }}</small></div></li>{% endfor %}</ul></div>
     {% endif %}
     {% if dups %}<div class="card sec">{% include "crm/_duplicates.html" with dups=dups live=False %}</div>{% endif %}
   </aside>

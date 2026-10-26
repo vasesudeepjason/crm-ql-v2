@@ -65,6 +65,10 @@
       <li onclick="location.href='{% url 'crm:lead_detail' l.pk %}'" style="cursor:pointer"><span class="avatar sm">{{ l.name|initials }}</span><div class="t"><b>{{ l.name }}</b><small>{{ l.get_stage_display }} · {% if l.next_follow_up < now.date %}<span style="color:var(--red-700)">overdue {{ l.next_follow_up|date:"j M" }}</span>{% else %}today{% endif %} · {{ l.owner.first_name|default:"unassigned" }}</small></div><span class="v">{{ l.est_value_paise|short_rupees }}</span></li>
       {% empty %}<li><div class="t muted">Nothing due. Enjoy the quiet.</div></li>{% endfor %}
     </ul>
+    {% if my_tasks %}
+    <div class="card-h" style="padding-top:4px"><div><h2 style="font-size:14px">My tasks</h2><p>Due today or overdue</p></div><a class="btn btn-sm btn-outline" href="{% url 'tasks:my' %}">All</a></div>
+    <ul class="mini">{% for t in my_tasks %}<li onclick="location.href='{% url 'tasks:my' %}?open={{ t.pk }}'" style="cursor:pointer;padding:8px 0"><span class="tick ghost" style="width:22px;height:22px"><svg class="ic" style="width:12px"><use href="#i-check"/></svg></span><div class="t"><b style="font-weight:500">{{ t.title }}</b><small>{% if t.due_date < now.date %}<span style="color:var(--red-700)">overdue {{ t.due_date|date:"j M" }}</span>{% else %}today{% endif %}{% if t.project_id %} · {{ t.project.name }}{% endif %}</small></div></li>{% endfor %}</ul>
+    {% endif %}
   </div>
 
   <div class="card s12">

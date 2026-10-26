@@ -1,0 +1,28 @@
+{% load ql %}
+<div class="dr-h">
+  <div><small>{% if task %}Task{% else %}New task{% endif %}</small><h3>{% if task %}{{ task.title|truncatechars:48 }}{% else %}What needs doing?{% endif %}</h3></div>
+  <div class="btns">{% if task %}<form method="post" hx-post="{% url 'tasks:toggle' task.pk %}" hx-swap="none">{% csrf_token %}<button class="btn btn-sm {% if task.is_done %}btn-outline{% else %}btn-dark{% endif %}" type="submit"><svg class="ic"><use href="#i-check"/></svg>{% if task.is_done %}Reopen{% else %}Mark done{% endif %}</button></form>{% endif %}<button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div>
+</div>
+<div class="dr-b">
+  {% if task %}<div class="info2" style="margin-bottom:16px">
+    <div class="info"><small>Status</small><b>{{ task.get_status_display }}{% if task.is_overdue %} · <span style="color:var(--red-700)">overdue</span>{% endif %}</b><span>{% if task.done_at %}done {{ task.done_at|date:"j M, H:i" }}{% else %}created {{ task.created_at|date:"j M" }} by {{ task.created_by.first_name|default:"system" }}{% endif %}</span></div>
+    <div class="info"><small>Linked to</small><b>{% if task.project %}<a href="{% url 'tasks:project' task.project.pk %}">{{ task.project.name }}</a>{% elif task.lead %}{{ task.lead.name }}{% elif task.company %}{{ task.company.name }}{% else %}—{% endif %}</b><span>{% if task.lead %}<a href="{% url 'crm:lead_detail' task.lead.pk %}">Open lead →</a>{% elif task.company %}{{ task.company.city|default:"" }}{% endif %}</span></div>
+  </div>{% endif %}
+  <form hx-post="{% if task %}{% url 'tasks:edit' task.pk %}{% else %}{% url 'tasks:new' %}{% endif %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    {{ form.lead }}
+    <label class="span2">Title *<span class="input">{{ form.title }}</span></label>
+    <label class="span2">Details<span class="input" style="height:auto">{{ form.description }}</span></label>
+    <label>Assign to<span class="input select">{{ form.assignee }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Due<span class="input">{{ form.due_date }}</span></label>
+    <label>Priority<span class="input select">{{ form.priority }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Status<span class="input select">{{ form.status }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Project<span class="input select">{{ form.project }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Company<span class="input select">{{ form.company }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>{% if task %}Save changes{% else %}Create task{% endif %}</button>
+      {% if can_delete %}<button class="btn btn-outline" type="button" hx-post="{% url 'tasks:delete' task.pk %}" hx-confirm="Delete this task?" hx-swap="none">Delete</button>{% endif %}
+    </div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

@@ -33,6 +33,7 @@ def prefs(request):
     p = NotificationPreference.for_user(request.user)
     p.email_approvals = bool(request.POST.get("email_approvals"))
     p.email_reminders = bool(request.POST.get("email_reminders"))
+    p.email_tasks = bool(request.POST.get("email_tasks"))
     p.save()
     messages.success(request, "Email preferences saved.")
     return redirect("accounts:profile")

@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pdot big {{ p.color }}"></span><h1>{{ p.name }}</h1>{% if p.status == 'done' %}<span class="pill pill-success">Completed</span>{% elif p.status == 'on_hold' %}<span class="pill pill-neutral">On hold</span>{% elif p.is_overdue %}<span class="pill pill-danger">Overdue</span>{% else %}<span class="pill pill-brand">Active</span>{% endif %}</div>
+    <p>{% if p.company %}{{ p.company.name }} · {% endif %}owner {{ p.owner.name|default:"—" }}{% if p.start_date %} · {{ p.start_date|date:"j M" }}{% endif %}{% if p.due_date %} → {{ p.due_date|date:"j M Y" }}{% endif %} · {{ done }}/{{ n }} done{% if overdue %} · <span style="color:var(--red-700)">{{ overdue }} overdue</span>{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'tasks:projects' %}">All projects</a>
+    {% if can_edit %}<button class="btn btn-secondary" hx-get="{% url 'tasks:project_edit' p.pk %}" hx-target="#drawer" hx-swap="innerHTML">Edit</button>
+    <form method="post" action="{% url 'tasks:project_status' p.pk %}">{% csrf_token %}{% if p.status == 'done' %}<input type="hidden" name="status" value="active"><button class="btn btn-outline">Reopen</button>{% else %}<input type="hidden" name="status" value="done"><button class="btn btn-outline">Mark completed</button>{% endif %}</form>{% endif %}
+    {% if can_create %}<button class="btn btn-primary" hx-get="{% url 'tasks:new' %}?project={{ p.pk }}{% if p.company_id %}&company={{ p.company_id }}{% endif %}" hx-target="#drawer" hx-swap="innerHTML"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Add task</button>{% endif %}
+  </div>
+</section>
+<div class="pmeta">
+  <div class="track" style="flex:1;min-width:160px"><div class="fill" style="width:{{ pct }}%;background:{% if pct == 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>
+  <span class="muted" style="font-size:12.5px;white-space:nowrap">{{ pct }}%</span>
+  <span class="avatars">{% for m in p.members.all %}<span class="avatar sm" title="{{ m.name }}">{{ m.name|initials }}</span>{% empty %}<span class="muted" style="font-size:12.5px">No members yet</span>{% endfor %}</span>
+</div>
+{% if p.description %}<div class="quote" style="margin-bottom:14px">{{ p.description|linebreaksbr }}</div>{% endif %}
+<div class="board tboard" id="board" data-can-move="{{ can_move|yesno:'1,0' }}" data-csrf="{{ csrf_token }}">
+  {% for col in cols %}
+  <section class="col" data-stage="{{ col.code }}">
+    <header class="col-h"><span>{{ col.label }}</span><span class="n">{{ col.tasks|length }}</span></header>
+    <div class="col-b">
+      {% for t in col.tasks %}
+      <article class="kcard" draggable="{{ can_move|yesno:'true,false' }}" data-id="{{ t.pk }}" data-url="{% url 'tasks:move' t.pk %}">
+        <a class="kname" href="#" hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML">{{ t.title }}</a>
+        <div class="kfoot">
+          <span class="avatar sm" title="{{ t.assignee.name|default:'Unassigned' }}">{{ t.assignee.name|default:"?"|initials }}</span>
+          {% if t.due_date %}<span class="tag {% if t.is_overdue %}overdue{% endif %}">{{ t.due_date|date:"j M" }}</span>{% endif %}
+          {% if t.priority == 'high' %}<span class="tag hi">High</span>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+      {% if not col.tasks %}<div class="muted" style="font-size:12.5px;padding:10px 6px">{% if col.code == 'todo' %}Nothing queued.{% elif col.code == 'doing' %}Drag a task here when it starts.{% else %}Finished tasks land here.{% endif %}</div>{% endif %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/kanban.js"></script>{% endblock %}

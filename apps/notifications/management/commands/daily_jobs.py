@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand
 from apps.core.tenancy import tenant_context
 from apps.field.services import close_stale_sessions
 from apps.notifications.services import follow_up_digest, stale_approvals_digest
+from apps.tasks.services import tasks_due_digest
 from apps.tenants.models import Tenant
 
 
@@ -27,5 +28,6 @@ class Command(BaseCommand):
                 closed = close_stale_sessions(t.timezone)
             f = follow_up_digest(t.id)
             s = stale_approvals_digest(t.id)
-            self.stdout.write(f"{t.name}: sessions closed {closed}, follow-up digests {f}, stale-approval digests {s}")
+            k = tasks_due_digest(t.id)
+            self.stdout.write(f"{t.name}: sessions closed {closed}, follow-up digests {f}, task digests {k}, stale-approval digests {s}")
         self.stdout.write(self.style.SUCCESS("Daily jobs done."))

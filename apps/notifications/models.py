@@ -12,6 +12,8 @@ class Notification(TenantModel):
         APPROVAL_DECIDED = "approval_decided", "Approval decided"
         FOLLOW_UPS = "follow_ups", "Follow-ups due"
         STALE_APPROVALS = "stale_approvals", "Approvals waiting"
+        TASK_ASSIGNED = "task_assigned", "Task assigned"
+        TASKS_DUE = "tasks_due", "Tasks due"
         SYSTEM = "system", "System"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
@@ -44,7 +46,8 @@ class NotificationPreference(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification_prefs")
     email_approvals = models.BooleanField(default=True, help_text="Decisions on what I submitted, and new items for me to review")
-    email_reminders = models.BooleanField(default=True, help_text="Morning digest of follow-ups due and approvals waiting")
+    email_reminders = models.BooleanField(default=True, help_text="Morning digest of follow-ups, tasks due and approvals waiting")
+    email_tasks = models.BooleanField(default=True, help_text="When someone assigns me a task")
 
     def __str__(self):
         return f"prefs for {self.user}"

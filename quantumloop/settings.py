@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.telecaller",
     "apps.reports",
     "apps.notifications",
+    "apps.tasks",
     "apps.dashboard",
 ]
 

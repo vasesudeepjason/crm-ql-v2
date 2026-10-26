@@ -17,5 +17,6 @@ def tenant_context(request):
         "membership": m,
         "perms_set": m.permissions() if m else frozenset(),
         "pending_badge": badge,
+        "tasks_due": __import__("apps.tasks.models", fromlist=["Task"]).Task.objects.filter(assignee=request.user, due_date__lte=timezone.localdate()).exclude(status="done").count() if m is not None and m.has_perm("tasks.view") else 0,
         "unread_count": __import__("apps.notifications.models", fromlist=["Notification"]).Notification.objects.filter(user=request.user, read_at__isnull=True).count() if m is not None else 0,
     }

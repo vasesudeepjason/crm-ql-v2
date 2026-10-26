@@ -14,6 +14,7 @@ from django.utils import timezone
 from apps.approvals.models import Approval
 from apps.crm.models import Activity, Lead
 from apps.crm.scoping import scoped
+from apps.tasks.models import Task
 
 PHASES = {
     "field": ("Field sales", "Phase 1"), "telecaller": ("Telecaller", "Phase 1"), "contracts": ("Contracts & renewals", "Phase 2"),
@@ -109,8 +110,9 @@ def home(request):
 
         my_targets = today_progress(request.user)
 
+    my_tasks = list(Task.objects.filter(assignee=request.user, due_date__lte=today).exclude(status=Task.Status.DONE).select_related("project").order_by("due_date")[:4]) if m.has_perm("tasks.view") else []
     return render(request, "dashboard/home.html", {
-        "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
+        "my_tasks": my_tasks, "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
         "pending": pending_list, "pending_total": pending.count(), "stale": stale,
         "follow_ups": follow_ups, "due_total": due.count(), "overdue": overdue, "pipeline": pipeline, "open_leads": sum(pipeline.values()),
         "can_review": m.has_perm("leads.approve") or m.has_perm("visits.approve"), "my_targets": my_targets,

@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Tasks</h1><p>{{ open_count }} open{% if overdue_count %} · <span style="color:var(--red-700)">{{ overdue_count }} overdue</span>{% endif %}</p></div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'tasks:projects' %}">Projects</a>
+    {% if can_create %}<button class="btn btn-primary" hx-get="{% url 'tasks:new' %}" hx-target="#drawer" hx-swap="innerHTML"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New task</button>{% endif %}
+  </div>
+</section>
+
+<form method="get" class="filters">
+  <div class="seg sm">
+    <a class="{% if who == 'me' %}on{% endif %}" href="?who=me&status={{ status }}&project={{ project_id }}">Mine</a>
+    {% if can_filter_people %}<a class="{% if who != 'me' %}on{% endif %}" href="?who=all&status={{ status }}&project={{ project_id }}">Everyone</a>{% endif %}
+  </div>
+  <div class="seg sm">
+    <a class="{% if status == 'open' %}on{% endif %}" href="?who={{ who }}&status=open&project={{ project_id }}">Open</a>
+    <a class="{% if status == 'done' %}on{% endif %}" href="?who={{ who }}&status=done&project={{ project_id }}">Done</a>
+    <a class="{% if status == 'all' %}on{% endif %}" href="?who={{ who }}&status=all&project={{ project_id }}">All</a>
+  </div>
+  <input type="hidden" name="who" value="{{ who }}"><input type="hidden" name="status" value="{{ status }}">
+  {% if can_filter_people %}<label class="input select" style="height:36px;border-radius:999px;width:170px"><select name="who" onchange="this.form.submit()"><option value="me" {% if who == 'me' %}selected{% endif %}>Me</option><option value="all" {% if who == 'all' %}selected{% endif %}>Everyone</option><option value="unassigned" {% if who == 'unassigned' %}selected{% endif %}>Unassigned</option>{% for u in users %}<option value="{{ u.pk }}" {% if who == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>{% endif %}
+  <label class="input select" style="height:36px;border-radius:999px;width:200px"><select name="project" onchange="this.form.submit()"><option value="">All projects</option>{% for p in projects %}<option value="{{ p.pk }}" {% if project_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+  <label class="input grey" style="width:220px;height:36px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Search tasks"></label>
+</form>
+
+<section class="grid">
+  <div class="card s12">
+    {% if can_create %}
+    <form class="quick" hx-post="{% url 'tasks:quick_add' %}" hx-target="#quickErr" hx-swap="innerHTML">{% csrf_token %}
+      <span class="tick ghost"><svg class="ic"><use href="#i-plus"/></svg></span>
+      <input name="title" placeholder="Add a task and press Enter…" required maxlength="200" autocomplete="off">
+      <input name="due_date" type="date" value="{{ today|date:'Y-m-d' }}" aria-label="Due date">
+      {% if can_filter_people %}<select name="assignee" aria-label="Assign to">{% for u in users %}<option value="{{ u.pk }}" {% if u.pk == user.pk %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select>{% endif %}
+      {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
+      <button class="btn btn-sm btn-dark" type="submit">Add</button>
+      <div id="quickErr" class="span2"></div>
+    </form>
+    {% endif %}
+    {% for label, items, tone in groups %}
+    <h3 class="grp {{ tone }}">{{ label }} <span class="n">{{ items|length }}</span></h3>
+    <ul class="mini tlist">{% for t in items %}{% include "tasks/_task_row.html" %}{% endfor %}</ul>
+    {% empty %}{% if status == 'open' %}<div class="empty"><b>All clear.</b><span>Nothing open{% if who == 'me' %} for you{% endif %}. Add a task above{% if can_filter_people %} or switch to Everyone{% endif %}.</span></div>{% endif %}{% endfor %}
+    {% if done %}
+    <h3 class="grp">Done <span class="n">{{ done|length }}</span></h3>
+    <ul class="mini tlist">{% for t in done %}{% include "tasks/_task_row.html" %}{% endfor %}</ul>
+    {% elif status == 'done' %}<div class="empty"><b>Nothing finished yet.</b><span>Completed tasks show here for a month.</span></div>{% endif %}
+  </div>
+</section>
+{% if open_task %}<div hx-get="{% url 'tasks:edit' open_task %}" hx-trigger="load" hx-target="#drawer" hx-swap="innerHTML"></div>{% endif %}
+{% endblock %}

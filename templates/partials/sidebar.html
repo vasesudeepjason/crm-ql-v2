@@ -29,7 +29,12 @@
     {% if perms_set|can:"contracts.view" %}<a class="ni" href="{% url 'dashboard:soon' 'contracts' %}" title="Contracts"><svg class="ic"><use href="#i-file"/></svg><span class="tx">Contracts</span></a>{% endif %}
     {% if perms_set|can:"invoices.view" %}<a class="ni" href="{% url 'dashboard:soon' 'invoices' %}" title="Invoices"><svg class="ic"><use href="#i-inv"/></svg><span class="tx">Invoices</span></a>{% endif %}
     {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
-    <a class="ni" href="{% url 'dashboard:soon' 'tasks' %}" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span></a>
+    {% if perms_set|can:"tasks.view" %}
+    <div class="ng {% if request.resolver_match.namespace == 'tasks' %}open{% endif %}">
+      <button class="ni" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span>{% if tasks_due %}<em class="count" style="font-style:normal">{{ tasks_due }}</em>{% endif %}<svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'tasks:my' %}" href="{% url 'tasks:my' %}">My tasks</a><a class="{% active 'tasks:projects' 'tasks:project' %}" href="{% url 'tasks:projects' %}">Projects</a></div>
+    </div>
+    {% endif %}
     {% if perms_set|can:"reports.view" %}<a class="ni {% active 'reports' %}" href="{% url 'reports:index' %}" title="Reports"><svg class="ic"><use href="#i-bars"/></svg><span class="tx">Reports</span></a>{% endif %}
     <div class="ng {% if request.resolver_match.url_name in 'profile,users,totp_setup,audit,workspace' or request.resolver_match.namespace == 'imports' %}open{% endif %}">
       <button class="ni" title="Set up"><svg class="ic"><use href="#i-set"/></svg><span class="tx">Set up</span><svg class="ic chev"><use href="#i-down"/></svg></button>

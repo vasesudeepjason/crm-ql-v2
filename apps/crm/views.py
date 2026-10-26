@@ -17,6 +17,7 @@ from .duplicates import find_duplicates
 from .forms import ActivityForm, LeadForm, StageForm
 from .models import Activity, Company, Lead, LeadStageHistory
 from .scoping import scoped
+from apps.tasks.models import Task
 
 SOURCES = ["Referral", "Telecalling", "Field visit", "IndiaMART", "JustDial", "Website", "Walk-in", "WhatsApp", "Exhibition"]
 
@@ -139,8 +140,10 @@ def lead_detail(request, pk):
     activities = list(lead.activities.select_related("created_by").order_by("-created_at")[:100])
     history = list(lead.history.select_related("changed_by").order_by("-created_at")[:50])
     approvals = list(Approval.objects.filter(content_type=ContentType.objects.get_for_model(Lead), object_id=lead.id).select_related("submitter", "reviewer"))
+    tasks = list(lead.tasks.select_related("assignee", "created_by").order_by("-created_at")[:50])
     timeline = sorted(
         [*({"kind": "activity", "at": a.created_at, "obj": a} for a in activities),
+         *({"kind": "task", "at": t.created_at, "obj": t} for t in tasks),
          *({"kind": "stage", "at": h.created_at, "obj": h} for h in history),
          *({"kind": "approval", "at": a.decided_at or a.submitted_at, "obj": a} for a in approvals)],
         key=lambda x: x["at"], reverse=True,
@@ -148,7 +151,7 @@ def lead_detail(request, pk):
     ctx = {
         "lead": lead, "timeline": timeline, "can_edit": _can_edit(request, lead), "approval": next((a for a in approvals if a.is_open), None),
         "stage_form": StageForm(initial={"stage": lead.stage, "next_follow_up": lead.next_follow_up}), "activity_form": ActivityForm(initial={"type": "call"}),
-        "open_tasks": [a for a in activities if a.type == Activity.Type.TASK and a.done_at is None],
+        "open_tasks": [t for t in tasks if not t.is_done],
         "dups": find_duplicates(phone=lead.phone, email=lead.email, exclude_id=lead.id, limit=3),
     }
     return render(request, "crm/lead_detail.html", ctx)
@@ -191,6 +194,17 @@ def activity_add(request, pk):
     form = ActivityForm(request.POST)
     if not form.is_valid():
         return HttpResponse(f'<div class="field-err" role="alert">{"; ".join(e[0] for e in form.errors.values())}</div>', status=422)
+    if form.cleaned_data["type"] == Activity.Type.TASK:
+        t = Task(title=form.cleaned_data["notes"].strip()[:200] or "Follow up", lead=lead, company=lead.company, assignee=request.user, due_date=form.cleaned_data["due_at"].date())
+        t.created_by = request.user
+        t.save()
+        if form.cleaned_data.get("next_follow_up"):
+            lead.next_follow_up = form.cleaned_data["next_follow_up"]
+            lead.save(update_fields=["next_follow_up", "updated_at"])
+        audit(request, "task.create", t, after={"title": t.title, "lead": lead.id})
+        resp = HttpResponse(status=204)
+        resp["HX-Refresh"] = "true"
+        return resp
     a = form.save(commit=False)
     a.lead, a.company = lead, lead.company
     if form.cleaned_data.get("duration_minutes") is not None:
@@ -214,9 +228,8 @@ def activity_add(request, pk):
 @require_POST
 def task_done(request, pk, activity_id):
     lead = _visible_lead(request, pk)
-    a = get_object_or_404(Activity, pk=activity_id, lead=lead)
-    a.done_at = timezone.now()
-    a.save(update_fields=["done_at", "updated_at"])
+    t = get_object_or_404(Task, pk=activity_id, lead=lead)
+    t.set_status(Task.Status.DONE)
     resp = HttpResponse(status=204)
     resp["HX-Refresh"] = "true"
     return resp

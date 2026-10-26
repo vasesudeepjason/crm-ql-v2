@@ -1,0 +1,10 @@
+{% load ql %}<li id="task-{{ t.pk }}" class="trow {% if t.is_done %}done{% endif %}">
+  <button type="button" class="tick {% if t.is_done %}on{% endif %}" aria-label="{% if t.is_done %}Reopen{% else %}Mark done{% endif %}" hx-post="{% url 'tasks:toggle' t.pk %}" hx-target="#task-{{ t.pk }}" hx-swap="outerHTML"><svg class="ic"><use href="#i-check"/></svg></button>
+  <div class="t" hx-get="{% url 'tasks:edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer">
+    <b>{{ t.title }}</b>
+    <small>{% if t.due_date %}<span class="{% if t.is_overdue %}od{% elif t.due_date == today %}td{% endif %}">{% if t.is_overdue %}overdue · {% endif %}{{ t.due_date|date:"D j M" }}</span>{% else %}no date{% endif %}{% if t.project_id %} · <span class="pdot {{ t.project.color }}"></span>{{ t.project.name }}{% endif %}{% if t.lead_id %} · {{ t.lead.name }}{% elif t.company_id %} · {{ t.company.name }}{% endif %}</small>
+  </div>
+  {% if t.priority == 'high' %}<span class="pill pill-danger hide-m">High</span>{% elif t.priority == 'low' %}<span class="pill pill-neutral hide-m">Low</span>{% endif %}
+  {% if t.status == 'doing' and not t.is_done %}<span class="pill pill-info hide-m">In progress</span>{% endif %}
+  <span class="avatar sm" title="{{ t.assignee.name|default:'Unassigned' }}">{{ t.assignee.name|default:"?"|initials }}</span>
+</li>

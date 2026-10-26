@@ -31,7 +31,8 @@
   <div class="card-h" style="padding:0 0 16px"><div><h2>Email notifications</h2><p>In-app notifications are always on; choose which also reach your inbox.</p></div></div>
   <form method="post" action="{% url 'notifications:prefs' %}" class="form-grid">{% csrf_token %}
     <label style="display:flex;gap:10px;align-items:center;color:var(--ink)"><input type="checkbox" class="switch" name="email_approvals" {% if prefs.email_approvals %}checked{% endif %}> Approvals — decisions on what I submitted, and items for me to review</label>
-    <label style="display:flex;gap:10px;align-items:center;color:var(--ink)"><input type="checkbox" class="switch" name="email_reminders" {% if prefs.email_reminders %}checked{% endif %}> Morning digest — follow-ups due and approvals waiting</label>
+    <label style="display:flex;gap:10px;align-items:center;color:var(--ink)"><input type="checkbox" class="switch" name="email_reminders" {% if prefs.email_reminders %}checked{% endif %}> Morning digest — follow-ups, tasks due and approvals waiting</label>
+    <label style="display:flex;gap:10px;align-items:center;color:var(--ink)"><input type="checkbox" class="switch" name="email_tasks" {% if prefs.email_tasks %}checked{% endif %}> Tasks — when someone assigns one to me</label>
     <div><button class="btn btn-dark" type="submit">Save preferences</button></div>
   </form>
 </div>

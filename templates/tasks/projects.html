@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Projects</h1><p>Group tasks for a customer onboarding, a renewal push or any piece of work with a deadline</p></div>
+  <div class="actions">
+    <div class="seg sm">
+      <a class="{% if status == 'active' %}on{% endif %}" href="?status=active">Active <span class="n">{{ counts.active|default:0 }}</span></a>
+      <a class="{% if status == 'on_hold' %}on{% endif %}" href="?status=on_hold">On hold <span class="n">{{ counts.on_hold|default:0 }}</span></a>
+      <a class="{% if status == 'done' %}on{% endif %}" href="?status=done">Completed <span class="n">{{ counts.done|default:0 }}</span></a>
+      <a class="{% if status == 'all' %}on{% endif %}" href="?status=all">All</a>
+    </div>
+    <a class="btn btn-outline" href="{% url 'tasks:my' %}">My tasks</a>
+    {% if can_manage %}<button class="btn btn-primary" hx-get="{% url 'tasks:project_new' %}" hx-target="#drawer" hx-swap="innerHTML"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>New project</button>{% endif %}
+  </div>
+</section>
+<section class="grid">
+  {% for r in rows %}{% with p=r.p %}
+  <a class="card s4 pcard" href="{% url 'tasks:project' p.pk %}">
+    <div class="pc-top"><span class="pdot big {{ p.color }}"></span><b>{{ p.name }}</b>{% if p.status == 'done' %}<span class="pill pill-success">Done</span>{% elif p.status == 'on_hold' %}<span class="pill pill-neutral">On hold</span>{% elif p.is_overdue %}<span class="pill pill-danger">Overdue</span>{% endif %}</div>
+    <div class="muted" style="font-size:12.5px">{% if p.company %}{{ p.company.name }} · {% endif %}{% if p.due_date %}due {{ p.due_date|date:"j M Y" }}{% else %}no due date{% endif %}</div>
+    <div class="track" style="margin:12px 0 6px"><div class="fill" style="width:{{ r.pct }}%;background:{% if r.pct == 100 %}var(--green){% else %}var(--brand-500){% endif %}"></div></div>
+    <div class="pc-foot"><span>{{ r.done }}/{{ r.n }} done{% if r.overdue %} · <span style="color:var(--red-700)">{{ r.overdue }} overdue</span>{% endif %}</span><span class="avatars">{% for m in p.members.all|slice:":4" %}<span class="avatar sm" title="{{ m.name }}">{{ m.name|initials }}</span>{% endfor %}{% if p.members.count > 4 %}<span class="avatar sm">+{{ p.members.count|add:"-4" }}</span>{% endif %}</span></div>
+  </a>
+  {% endwith %}{% empty %}
+  <div class="card s12 empty"><b>No {% if status != 'all' %}{{ status|cut:"_" }} {% endif %}projects.</b><span>{% if can_manage %}Create one and add the team; tasks on the board show on each member's My tasks.{% else %}Your manager can add you to a project.{% endif %}</span></div>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -22,6 +22,7 @@ from apps.approvals.models import Approval
 from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
 from apps.field.models import FieldSession, Visit
+from apps.tasks.models import Project, Task
 from apps.telecaller.models import CallTarget
 from apps.tenants.models import Plan, Tenant
 
@@ -125,6 +126,37 @@ class Command(BaseCommand):
                 l = Lead(name=f"{random.choice(FIRST)} {random.choice(LAST)}", phone=f"+91 9{random.randint(100000000, 999999999)}", stage="new", owner=sneha, source="Telecalling", est_value_paise=2400000)
                 l.created_by = sneha
                 l.save()
+
+            # Projects and tasks
+            today = (now + timedelta(hours=5, minutes=30)).date()  # IST
+            onboarding = Project(name="Anand Pharma onboarding", description="Get the AMC contract signed, systems installed and the first invoice out.", company=companies[0], owner=vikram, status="active", color="brand", start_date=today - timedelta(days=10), due_date=today + timedelta(days=20))
+            onboarding.created_by = vikram
+            onboarding.save()
+            onboarding.members.set([vikram, ravi, mohan, sneha])
+            renewals = Project(name="Q3 renewal push", description="Call every customer whose AMC ends this quarter.", owner=vikram, status="active", color="green", start_date=today - timedelta(days=30), due_date=today + timedelta(days=5))
+            renewals.created_by = vikram
+            renewals.save()
+            renewals.members.set([vikram, sneha, kavya])
+            old = Project(name="Website leads cleanup", owner=aisha, status="done", color="grey", start_date=today - timedelta(days=60), due_date=today - timedelta(days=20))
+            old.created_by = aisha
+            old.save()
+            old.members.set([aisha, sneha])
+            plan = [
+                (onboarding, "Collect signed AMC contract", ravi, -2, "high", "todo"), (onboarding, "Site survey at Anand Pharma plant", mohan, 0, "normal", "doing"),
+                (onboarding, "Share installation schedule", vikram, 3, "normal", "todo"), (onboarding, "Raise first invoice", vikram, 15, "normal", "todo"),
+                (onboarding, "Kick-off call with their IT head", sneha, -5, "normal", "done"),
+                (renewals, "Call Nova Textiles about renewal", sneha, 0, "high", "todo"), (renewals, "Send revised quote to Krishna Motors", kavya, 1, "normal", "todo"),
+                (renewals, "Chase Sri Lakshmi Traders PO", sneha, -1, "high", "doing"), (renewals, "Update renewal tracker sheet", vikram, 4, "low", "todo"),
+                (renewals, "List customers expiring this quarter", kavya, -12, "normal", "done"),
+                (old, "Delete duplicate website leads", sneha, -25, "normal", "done"), (old, "Re-tag sources", aisha, -22, "low", "done"),
+                (None, "Book conference room for Friday review", aisha, 2, "low", "todo"), (None, "Prepare monthly sales deck", vikram, -1, "high", "todo"),
+            ]
+            for proj, title, who, offset, prio, st in plan:
+                t = Task(title=title, project=proj, assignee=who, due_date=today + timedelta(days=offset), priority=prio, status=st, company=proj.company if proj else None)
+                if st == "done":
+                    t.done_at = now - timedelta(days=max(0, -offset))
+                t.created_by = vikram
+                t.save()
 
             # Pending approvals: telecaller leads + field visits
             ct_lead = ContentType.objects.get_for_model(Lead)
