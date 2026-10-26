@@ -15,6 +15,7 @@ class Notification(TenantModel):
         TASK_ASSIGNED = "task_assigned", "Task assigned"
         TASKS_DUE = "tasks_due", "Tasks due"
         CONTRACT_RENEWAL = "contract_renewal", "Renewal"
+        LEAVE = "leave", "Leave"
         SYSTEM = "system", "System"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")

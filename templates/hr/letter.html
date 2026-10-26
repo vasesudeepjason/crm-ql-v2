@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ title }} · {{ emp.name }}</title>
+<style>
+body{font:14px/1.6 Georgia,"Times New Roman",serif;color:#1b1b1f;max-width:720px;margin:48px auto;padding:0 32px}
+header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #ccc;padding-bottom:16px;margin-bottom:28px}
+header b{font:600 18px/1.2 Arial,sans-serif}header small{color:#666;font-family:Arial,sans-serif;font-size:12px}
+h1{font:600 16px Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase;margin:0 0 20px}
+pre{white-space:pre-wrap;font:inherit;margin:0}
+.bar{position:fixed;top:0;left:0;right:0;background:#293359;color:#fff;font:13px Arial,sans-serif;padding:10px 20px;display:flex;gap:14px;align-items:center}
+.bar a,.bar button{color:#fff;background:transparent;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:5px 14px;text-decoration:none;font:inherit;cursor:pointer}
+@media print{.bar{display:none}body{margin:0}}
+</style></head>
+<body>
+<div class="bar"><span>{{ title }} for {{ emp.name }} — generated from the HR template; edit the wording in HR settings.</span><button onclick="window.print()">Print / Save as PDF</button><a href="{% url 'hr:employee' emp.pk %}">Back</a></div>
+<header><div><b>{{ tenant.name }}</b><br><small style="white-space:pre-line">{{ tenant.address }}</small></div><small>{{ today|date:"j F Y" }}<br>Ref: {{ emp.code }}</small></header>
+<h1>{{ title }}</h1>
+<pre>{{ body }}</pre>
+</body></html>

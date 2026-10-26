@@ -1,0 +1,10 @@
+{% load ql %}
+<div class="dr-h"><div><small>{{ title }}</small><h3>{% if form.instance.pk %}{{ form.instance }}{% else %}New {{ title|lower }}{% endif %}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <form hx-post="{{ action }}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    {% for f in form %}{% if f.field.widget.input_type == 'checkbox' %}<label class="chk-row"><input type="checkbox" class="switch" name="{{ f.name }}" {% if f.value %}checked{% endif %}> {{ f.label }}</label>{% elif f.field.widget.input_type == 'select' %}<label>{{ f.label }}<span class="input select">{{ f }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>{% else %}<label>{{ f.label }}<span class="input">{{ f }}</span></label>{% endif %}{% endfor %}
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Save</button>{% if deletable %}<button class="btn btn-outline" name="delete" value="1" type="submit" hx-confirm="Delete this?">Delete</button>{% endif %}</div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

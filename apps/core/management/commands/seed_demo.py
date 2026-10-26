@@ -10,7 +10,7 @@ Safe to re-run: it deletes and recreates the demo tenants only.
       ravi@quantumloop.in    Field Executive (reports to Vikram)
 """
 import random
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
@@ -23,6 +23,7 @@ from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Activity, Company, Contact, Lead
 from apps.field.models import FieldSession, Visit
 from apps.contracts.models import Contract, Product
+from apps.hr.models import Attendance, Department, Employee, Holiday, HRSettings, LeaveRequest, LeaveType
 from apps.invoices.models import Invoice, InvoiceLine, InvoiceSettings, Payment
 from apps.tasks.models import Project, Task
 from apps.telecaller.models import CallTarget
@@ -51,7 +52,7 @@ class Command(BaseCommand):
         with rls_bypass():
             demo = Tenant.objects.filter(slug__in=["quantumloop-hq", "other-co"])
             Visit.all_objects.filter(tenant__in=demo).delete()  # Visit.session is PROTECT; clear visits before the cascade
-            for M in (Payment, Invoice, Contract):  # PROTECT chains: payment→invoice→company, contract→company/product
+            for M in (Payment, Invoice, Contract, LeaveRequest):  # PROTECT chains: payment→invoice→company, contract→company/product
                 M.all_objects.filter(tenant__in=demo).delete()
             demo.delete()
             User.objects.filter(email__endswith="@quantumloop.in").delete()
@@ -75,6 +76,7 @@ class Command(BaseCommand):
         kavya, _ = user("kavya@quantumloop.in", "Kavya Venkat", hq, "telecaller", m_vikram)
         ravi, _ = user("ravi@quantumloop.in", "Ravi Kumar", hq, "field", m_vikram)
         mohan, _ = user("mohan@quantumloop.in", "Mohan Agarwal", hq, "field", m_vikram)
+        nidhi, _ = user("nidhi@quantumloop.in", "Nidhi Verma", hq, "hr")
         owner_pool = [vikram, sneha, kavya, ravi, mohan]
         other_owner, _ = user("owner@other.co", "Other Owner", other, "owner")
 
@@ -240,6 +242,77 @@ class Command(BaseCommand):
             d.save()
             InvoiceLine(invoice=d, product=cat["Installation service"], description="Installation service", hsn_sac="995461", rate_paise=1500000, gst_rate=18).save()
             d.recompute()
+
+            # HR: settings, departments, employees, leave, attendance
+            HRSettings.objects.update_or_create(tenant=hq, defaults={"week_off": [6]})
+            depts = {}
+            for dn in ("Sales", "Field Sales", "Telecalling", "Accounts", "HR", "Management"):
+                dp = Department(name=dn)
+                dp.created_by = nidhi
+                dp.save()
+                depts[dn] = dp
+            lts = {}
+            for nm, code, days, paid in (("Casual leave", "CL", 12, True), ("Sick leave", "SL", 8, True), ("Earned leave", "EL", 15, True), ("Leave without pay", "LWP", 0, False)):
+                lt = LeaveType(name=nm, code=code, days_per_year=days, paid=paid, color={"CL": "brand", "SL": "yellow", "EL": "green", "LWP": "grey"}[code])
+                lt.created_by = nidhi
+                lt.save()
+                lts[code] = lt
+            for hd, hn, opt in ((today.replace(month=11, day=8) if today.month < 11 else today + timedelta(days=20), "Diwali", False), (today + timedelta(days=45), "Christmas" if (today + timedelta(days=45)).month == 12 else "Company day", False), (today + timedelta(days=70), "Makar Sankranti" if (today + timedelta(days=70)).month == 1 else "Founders' day", True)):
+                h = Holiday(date=hd, name=hn, optional=opt)
+                h.created_by = nidhi
+                h.save()
+            emps = {}
+            staff = [
+                (aisha, "Aisha", "Rao", "Founder & CEO", "Management", None, 1200), (vikram, "Vikram", "Sen", "Sales Manager", "Sales", "aisha", 700),
+                (sneha, "Sneha", "Pillai", "Telecaller", "Telecalling", "vikram", 400), (kavya, "Kavya", "Venkat", "Telecaller", "Telecalling", "vikram", 380),
+                (ravi, "Ravi", "Kumar", "Field Executive", "Field Sales", "vikram", 300), (mohan, "Mohan", "Agarwal", "Field Executive", "Field Sales", "vikram", 250),
+                (nidhi, "Nidhi", "Verma", "HR Executive", "HR", "aisha", 500), (None, "Suresh", "Babu", "Office Assistant", "Management", "nidhi", 60), (None, "Lakshmi", "Devi", "Accounts Assistant", "Accounts", "aisha", 150),
+            ]
+            for u, fn, ln, desig, dept, mgr, joined_days in staff:
+                e = Employee(user=u, first_name=fn, last_name=ln, email=u.email if u else "", phone=f"+91 9{random.randint(100000000, 999999999)}", designation=desig, department=depts[dept], manager=emps.get(mgr), join_date=today - timedelta(days=joined_days),
+                             date_of_birth=today - timedelta(days=random.randint(9000, 16000)), gender=random.choice(["female", "male"]), address="Hyderabad, Telangana", emergency_name=f"{random.choice(FIRST)} {ln}", emergency_phone=f"+91 9{random.randint(100000000, 999999999)}", emergency_relation=random.choice(["Spouse", "Father", "Mother", "Brother"]))
+                e.set_sensitive("bank_name", "HDFC Bank")
+                e.set_sensitive("bank_account", f"5020001{random.randint(1000000, 9999999)}")
+                e.set_sensitive("bank_ifsc", "HDFC0001234")
+                e.set_sensitive("pan", f"{random.choice('ABCDEFGH')}{random.choice('ABCDEFGH')}{random.choice('ABCDEFGH')}P{fn[0]}{random.randint(1000, 9999)}{ln[0]}")
+                e.set_sensitive("aadhaar", str(random.randint(200000000000, 999999999999)))
+                e.set_sensitive("salary", str(random.choice([360000, 480000, 600000, 840000, 1200000, 2400000]) * 100))
+                e.checklist = {"onboarding": {i: True for i in HRSettings.for_tenant(hq).onboarding_list[: random.randint(3, 6)]}}
+                e.created_by = nidhi
+                e.save()
+                emps[fn.lower()] = e
+            depts["Sales"].head = emps["vikram"]
+            depts["Sales"].save(update_fields=["head"])
+            # attendance for the last 30 days (skip Sundays), a few absences, leave for sneha
+            for e in emps.values():
+                for back in range(30, 0, -1):
+                    d = today - timedelta(days=back)
+                    if d.weekday() == 6 or d < e.join_date:
+                        continue
+                    r = random.random()
+                    if r < 0.06:
+                        st, ci, co = "absent", None, None
+                    elif r < 0.12:
+                        st, ci, co = "half_day", timezone.make_aware(datetime.combine(d, time(9, random.randint(20, 50)))), timezone.make_aware(datetime.combine(d, time(13, random.randint(0, 40))))
+                    else:
+                        st, ci, co = "present", timezone.make_aware(datetime.combine(d, time(9, random.randint(15, 55)))), timezone.make_aware(datetime.combine(d, time(18, random.randint(10, 59))))
+                    a = Attendance(employee=e, date=d, status=st, check_in=ci, check_out=co, source="field" if e.designation == "Field Executive" and st == "present" else ("hr" if st == "absent" else "self"))
+                    a.created_by = nidhi
+                    a.save()
+            for e in list(emps.values())[:5]:  # today: checked in
+                a = Attendance(employee=e, date=today, status="present", check_in=timezone.make_aware(datetime.combine(today, time(9, random.randint(20, 50)))), source="self")
+                a.created_by = e.user
+                a.save()
+            for emp_key, code, s_off, e_off, status, reason in (("sneha", "SL", -9, -8, "approved", "Fever"), ("ravi", "CL", 3, 4, "pending", "Family function"), ("kavya", "CL", 10, 10, "pending", ""), ("mohan", "EL", -20, -16, "approved", "Village trip"), ("suresh", "CL", 1, 1, "approved", "")):
+                lr = LeaveRequest(employee=emps[emp_key], leave_type=lts[code], start_date=today + timedelta(days=s_off), end_date=today + timedelta(days=e_off), days=max(1, (e_off - s_off + 1) - sum(1 for k in range(s_off, e_off + 1) if (today + timedelta(days=k)).weekday() == 6)), reason=reason, status=status)
+                if status == "approved":
+                    lr.decided_by, lr.decided_at, lr.decision_note = vikram, now - timedelta(days=max(0, -s_off) + 1), "Approved"
+                lr.created_by = emps[emp_key].user or nidhi
+                lr.save()
+                if status == "approved":
+                    for d in lr.dates():
+                        if d.weekday() != 6:
+                            Attendance.objects.update_or_create(employee=lr.employee, date=d, defaults={"status": "leave", "source": "leave", "note": lr.leave_type.name, "check_in": None, "check_out": None, "tenant_id": hq.id})
 
             # Pending approvals: telecaller leads + field visits
             ct_lead = ContentType.objects.get_for_model(Lead)

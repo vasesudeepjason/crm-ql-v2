@@ -1,0 +1,14 @@
+{% load ql %}
+<div class="dr-h"><div><small>Upload document</small><h3>{{ emp.name }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <form hx-post="{% url 'hr:doc_upload' emp.pk %}" hx-encoding="multipart/form-data" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2">{% csrf_token %}
+    <label>Kind<span class="input select">{{ form.kind }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>Expires<span class="input">{{ form.expires_on }}</span></label>
+    <label class="span2">Title *<span class="input">{{ form.title }}</span></label>
+    <label class="span2">File * <small class="muted">(PDF, JPG, PNG or Word, under 10 MB)</small><span class="input" style="height:auto;padding:8px 12px">{{ form.file }}</span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>Upload</button></div>
+  </form>
+  <p class="muted" style="font-size:12.5px;margin-top:12px">Documents are stored privately and served only to HR and the employee.</p>
+</div>
+<script>QL.openDrawer()</script>

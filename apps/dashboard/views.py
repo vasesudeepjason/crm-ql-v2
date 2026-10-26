@@ -17,6 +17,7 @@ from apps.crm.scoping import scoped
 from apps.tasks.models import Task
 from apps.contracts import services as contract_services
 from apps.invoices import services as invoice_services
+from apps.hr import services as hr_services
 
 PHASES = {
     "field": ("Field sales", "Phase 1"), "telecaller": ("Telecaller", "Phase 1"), "contracts": ("Contracts & renewals", "Phase 2"),
@@ -124,8 +125,10 @@ def home(request):
         ibase = invoice_services.scoped_invoices(request)
         inv_summary = invoice_services.outstanding_summary(ibase, today)
         overdue_invoices = list(ibase.filter(status__in=["issued", "part_paid"], due_date__lt=today).order_by("due_date")[:5])
+    my_emp = hr_services.my_employee(request)
+    my_att = hr_services.today_for(my_emp) if my_emp else None
     return render(request, "dashboard/home.html", {
-        "inv_summary": inv_summary, "overdue_invoices": overdue_invoices, "renewals": renewals, "renewal_risk": renewal_risk, "my_tasks": my_tasks, "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
+        "my_emp": my_emp, "my_att": my_att, "inv_summary": inv_summary, "overdue_invoices": overdue_invoices, "renewals": renewals, "renewal_risk": renewal_risk, "my_tasks": my_tasks, "now": now, "kpis": kpis, "chart_json": json.dumps(chart),
         "pending": pending_list, "pending_total": pending.count(), "stale": stale,
         "follow_ups": follow_ups, "due_total": due.count(), "overdue": overdue, "pipeline": pipeline, "open_leads": sum(pipeline.values()),
         "can_review": m.has_perm("leads.approve") or m.has_perm("visits.approve"), "my_targets": my_targets,

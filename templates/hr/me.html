@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}My HR{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Good {% if now.hour < 12 %}morning{% elif now.hour < 17 %}afternoon{% else %}evening{% endif %}, {{ emp.first_name }}</h1><p>{{ emp.code }} · {{ emp.designation|default:"" }}{% if emp.department %} · {{ emp.department.name }}{% endif %}{% if emp.manager %} · reports to {{ emp.manager.name }}{% endif %} · {{ today|date:"D, j M Y" }}</p></div>
+  <div class="actions">
+    {% if pending_for_me %}<a class="btn btn-outline" href="{% url 'hr:leave' %}?status=pending">Approve leave <em class="count hot" style="font-style:normal;margin-left:6px">{{ pending_for_me }}</em></a>{% endif %}
+    <button class="btn btn-secondary" hx-get="{% url 'hr:leave_apply' %}" hx-target="#drawer" hx-swap="innerHTML">Apply for leave</button>
+    <form method="post" action="{% url 'hr:punch' %}">{% csrf_token %}{% if today_att and today_att.check_in and not today_att.check_out %}<input type="hidden" name="action" value="out"><button class="btn btn-danger"><svg class="ic"><use href="#i-out"/></svg>Check out</button>{% elif today_att and today_att.check_out %}<button class="btn btn-outline" disabled>Done for today</button>{% elif today_att and today_att.status == 'leave' %}<button class="btn btn-outline" disabled>On leave today</button>{% else %}<input type="hidden" name="action" value="in"><button class="btn btn-primary"><svg class="ic"><use href="#i-check"/></svg>Check in</button>{% endif %}</form>
+  </div>
+</section>
+<section class="grid">
+  <div class="card kpi s3"><div class="lbl">Today</div><span class="when">{{ now|date:"H:i" }}</span><div class="val" style="font-size:20px">{% if today_att and today_att.check_in %}In {{ today_att.check_in|date:"H:i" }}{% if today_att.check_out %} · out {{ today_att.check_out|date:"H:i" }}{% endif %}{% elif today_att %}{{ today_att.get_status_display }}{% else %}Not checked in{% endif %}</div><div class="rows"><div>Working hours<b>{{ cfg.work_start|date:"H:i" }} – {{ cfg.work_end|date:"H:i" }}</b></div>{% if today_att.hours %}<div>Hours today<b>{{ today_att.hours }}</b></div>{% endif %}</div></div>
+  <div class="card kpi s3"><div class="lbl">{{ reg.label }}</div><span class="when">SO FAR</span><div class="val">{{ row.summary.payable|floatformat:"-1" }}</div><div class="rows"><div>Present<b>{{ row.summary.present }}</b></div><div>Leave<b>{{ row.summary.leave }}</b></div><div>Half days<b>{{ row.summary.half }}</b></div></div></div>
+  {% for b in balances|slice:":2" %}<div class="card kpi s3"><div class="lbl">{{ b.type.name }}</div><span class="when">BALANCE</span><div class="val">{{ b.available|floatformat:"-1" }}</div><div class="rows"><div>Allocated<b>{{ b.allocated|floatformat:"-1" }}</b></div><div>Used<b>{{ b.used|floatformat:"-1" }}</b></div>{% if b.pending %}<div>Pending<b>{{ b.pending|floatformat:"-1" }}</b></div>{% endif %}</div></div>{% endfor %}
+
+  <div class="card s8">
+    <div class="card-h"><div><h2>My month</h2><p>P present · H half day · L leave · W from home · A absent · WO week-off · HO holiday</p></div></div>
+    <div class="cal">{% for d in reg.days %}{% with c=row.cells|slice:forloop.counter0|last %}{% endwith %}{% endfor %}
+      {% for c in row.cells %}<div class="cell {{ c.1 }}"><small>{{ forloop.counter }}</small><b>{{ c.0 }}</b></div>{% endfor %}
+    </div>
+  </div>
+  <div class="card s4">
+    <div class="card-h"><div><h2>Leave requests</h2></div></div>
+    <ul class="mini">{% for l in leaves %}<li><span class="pdot {{ l.leave_type.color }}" style="width:10px;height:10px"></span><div class="t"><b style="font-weight:500">{{ l.leave_type.name }} · {{ l.days|floatformat:"-1" }}d · {{ l.start_date|date:"j M" }}{% if l.end_date != l.start_date %} – {{ l.end_date|date:"j M" }}{% endif %}</b><small>{{ l.get_status_display }}{% if l.decided_by %} by {{ l.decided_by.first_name }}{% endif %}{% if l.decision_note %} · "{{ l.decision_note }}"{% endif %}</small></div>{% if l.status == 'pending' or l.status == 'approved' and l.start_date >= today %}<form method="post" action="{% url 'hr:leave_cancel' l.pk %}" onsubmit="return confirm('Cancel this leave?')">{% csrf_token %}<button class="icon-btn" aria-label="Cancel"><svg class="ic"><use href="#i-x"/></svg></button></form>{% endif %}</li>{% empty %}<li><div class="t muted">Nothing yet. Apply above.</div></li>{% endfor %}</ul>
+    {% if holidays %}<div class="card-h" style="padding-top:4px"><div><h2 style="font-size:14px">Holidays ahead</h2></div></div><ul class="mini">{% for h in holidays %}<li><div class="t"><b style="font-weight:500">{{ h.name }}</b><small>{{ h.date|date:"D, j M" }}{% if h.optional %} · optional{% endif %}</small></div></li>{% endfor %}</ul>{% endif %}
+    {% if docs %}<div class="card-h" style="padding-top:4px"><div><h2 style="font-size:14px">My documents</h2></div></div><ul class="mini">{% for d in docs %}<li><div class="t"><b style="font-weight:500"><a href="{% url 'hr:doc_file' emp.pk d.pk %}" target="_blank" style="color:inherit;text-decoration:none">{{ d.title }}</a></b><small>{{ d.get_kind_display }}</small></div></li>{% endfor %}</ul>{% endif %}
+  </div>
+</section>
+{% endblock %}

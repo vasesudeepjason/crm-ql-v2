@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}My HR{% endblock %}
+{% block content %}
+<section class="page-head"><div><h1>My HR</h1><p>Check-in, leave and your documents</p></div></section>
+<section class="grid"><div class="card s12 empty"><b>No employee record is linked to your login yet.</b><span>{% if is_hr %}Open <a href="{% url 'hr:index' %}">Employees</a>, pick yourself and set the Login field, or add a new record.{% else %}Ask HR to link your login to your employee record; then check-in and leave appear here.{% endif %}</span></div></section>
+{% endblock %}

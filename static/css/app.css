@@ -202,3 +202,16 @@ input[type=file]{max-width:100%}
 .invoice-paper .ip-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}.ip-parties small{display:block;font:600 11px var(--font);letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.ip-parties b{display:block}
 .invoice-paper .tbl-wrap{margin:0 -20px}.invoice-paper .totals{padding-right:0}
 @media (max-width:640px){.invoice-paper .ip-parties{grid-template-columns:1fr}.totals div{grid-template-columns:1fr auto}.tbl.lines td:first-child{min-width:200px}}
+
+/* ---- HR ---- */
+.bal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:4px 20px 14px;font-size:13px}.bal b{display:inline-block;font-weight:600;margin-left:4px}.bal small{color:var(--muted);font-size:12px}
+.check{list-style:none;padding:0;display:grid;gap:8px;font-size:13.5px}.check li{display:flex;gap:10px;align-items:center}.check form{display:contents}.check .tick{width:22px;height:22px}.check .tick .ic{width:12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 20px 20px}
+.cal .cell{border-radius:10px;background:var(--field);min-height:46px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between}.cal .cell small{color:var(--muted);font-size:11px}.cal .cell b{font-size:13px;align-self:flex-end}
+.cell.present{background:var(--green-100);color:var(--green-700)}.cell.half_day{background:var(--yellow-100);color:var(--yellow-700)}.cell.leave{background:var(--brand-100);color:var(--brand)}.cell.wfh{background:var(--info-100);color:var(--info)}.cell.absent{background:var(--red-100);color:var(--red-700)}
+.cell.holiday{background:#EEE9FB;color:#5B3FB0}.cell.weekoff{background:var(--field);color:var(--muted)}.cell.unmarked{color:var(--muted)}.cell.future,.cell.na{background:transparent;color:transparent;border:1px dashed var(--line-2)}
+.register th,.register td{padding:6px 4px;text-align:center;font-size:12px;min-width:28px}.register th small{display:block;font-weight:400;color:var(--muted);font-size:10px}.register th.ho{color:#5B3FB0}
+.register .sticky{position:sticky;left:0;background:#fff;text-align:left;min-width:160px;z-index:1;padding-left:20px}.register td.cell{font-weight:600}.register td.cell.na,.register td.cell.future{color:transparent;background:transparent;border:0}
+.cellbtn{border:0;background:transparent;font:inherit;font-weight:600;color:inherit;cursor:pointer;width:100%;height:100%;padding:4px 0}
+.register .r{text-align:right;padding-right:10px}
+@media (max-width:640px){.cal{gap:4px;padding:0 12px 14px}.cal .cell{min-height:40px;padding:4px 6px}.bal{grid-template-columns:1fr 1fr}}

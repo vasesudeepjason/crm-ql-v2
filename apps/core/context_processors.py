@@ -20,6 +20,17 @@ def _overdue_invoices(request, m):
     return scoped_invoices(request).filter(status__in=["issued", "part_paid"], due_date__lt=timezone.localdate()).count()
 
 
+def _leave_pending(request, m):
+    if m is None:
+        return 0
+    from apps.hr.models import Employee, LeaveRequest
+
+    if m.has_perm("hr.edit"):
+        return LeaveRequest.objects.filter(status="pending").count()
+    me = Employee.objects.filter(user=request.user).only("id").first()
+    return LeaveRequest.objects.filter(status="pending", employee__manager=me).count() if me else 0
+
+
 def tenant_context(request):
     m = getattr(request, "membership", None)
     badge = 0
@@ -41,6 +52,7 @@ def tenant_context(request):
         "pending_badge": badge,
         "renewals_due": _renewals_due(request, m),
         "overdue_invoices": _overdue_invoices(request, m),
+        "leave_pending": _leave_pending(request, m),
         "tasks_due": __import__("apps.tasks.models", fromlist=["Task"]).Task.objects.filter(assignee=request.user, due_date__lte=timezone.localdate()).exclude(status="done").count() if m is not None and m.has_perm("tasks.view") else 0,
         "unread_count": __import__("apps.notifications.models", fromlist=["Notification"]).Notification.objects.filter(user=request.user, read_at__isnull=True).count() if m is not None else 0,
     }

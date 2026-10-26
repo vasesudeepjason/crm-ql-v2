@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}HR settings{% endblock %}
+{% block content %}
+<section class="page-head"><div><h1>HR settings</h1><p>Working week, leave types, holidays, departments, checklists and letter templates</p></div><div class="actions"><a class="btn btn-outline" href="{% url 'hr:index' %}">Employees</a></div></section>
+<section class="grid">
+  <div class="card s6">
+    <div class="card-h"><div><h2>Leave types</h2><p>Days per financial year (April to March)</p></div><button class="btn btn-sm btn-outline" hx-get="{% url 'hr:leave_type_new' %}" hx-target="#drawer" hx-swap="innerHTML">Add</button></div>
+    <ul class="mini">{% for t in types %}<li hx-get="{% url 'hr:leave_type_edit' t.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><span class="pdot big {{ t.color }}"></span><div class="t"><b style="font-weight:500">{{ t.name }} <span class="muted">({{ t.code }})</span>{% if not t.is_active %} <span class="pill pill-neutral" style="height:20px;font-size:11px">Inactive</span>{% endif %}</b><small>{{ t.days_per_year|floatformat:"-1" }} days · {% if t.paid %}paid{% else %}unpaid{% endif %}{% if t.carry_forward %} · carries forward{% endif %}</small></div></li>{% empty %}<li><div class="t muted">None yet. Typical: Casual 12, Sick 8, Earned 15.</div></li>{% endfor %}</ul>
+  </div>
+  <div class="card s6">
+    <div class="card-h"><div><h2>Holidays</h2><p>Per workspace; optional ones are not deducted from leave either way</p></div><button class="btn btn-sm btn-outline" hx-get="{% url 'hr:holiday_new' %}" hx-target="#drawer" hx-swap="innerHTML">Add</button></div>
+    <ul class="mini">{% for h in holidays %}<li hx-get="{% url 'hr:holiday_edit' h.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><div class="t"><b style="font-weight:500">{{ h.name }}</b><small>{{ h.date|date:"D, j M Y" }}{% if h.optional %} · optional{% endif %}</small></div></li>{% empty %}<li><div class="t muted">No holidays added.</div></li>{% endfor %}</ul>
+  </div>
+  <div class="card s6">
+    <div class="card-h"><div><h2>Departments</h2></div><button class="btn btn-sm btn-outline" hx-get="{% url 'hr:department_new' %}" hx-target="#drawer" hx-swap="innerHTML">Add</button></div>
+    <ul class="mini">{% for d in depts %}<li hx-get="{% url 'hr:department_edit' d.pk %}" hx-target="#drawer" hx-swap="innerHTML" style="cursor:pointer"><div class="t"><b style="font-weight:500">{{ d.name }}</b><small>{{ d.n }} employee{{ d.n|pluralize }}{% if d.head %} · head {{ d.head.name }}{% endif %}</small></div></li>{% empty %}<li><div class="t muted">No departments yet.</div></li>{% endfor %}</ul>
+  </div>
+  <form method="post" class="card s6 sec">{% csrf_token %}
+    <div class="card-h" style="padding:0 0 12px"><div><h2>Working week</h2></div></div>
+    <div class="form-2">
+      <label>Work starts<span class="input">{{ form.work_start }}</span></label><label>Ends<span class="input">{{ form.work_end }}</span></label>
+      <label>Half day below (hours)<span class="input">{{ form.half_day_hours }}</span></label>
+      <div class="span2"><div style="font:500 13px var(--font);color:var(--ink-2);margin-bottom:6px">Week-off days</div><div class="members" style="grid-template-columns:repeat(4,1fr)">{{ form.week_off_days }}</div></div>
+      <label class="span2">Onboarding checklist <small class="muted">(one per line)</small><span class="input" style="height:auto">{{ form.onboarding_items }}</span></label>
+      <label class="span2">Exit checklist<span class="input" style="height:auto">{{ form.exit_items }}</span></label>
+      <label class="span2">Offer letter template<span class="input" style="height:auto">{{ form.offer_letter }}</span></label>
+      <label class="span2">Appointment letter template<span class="input" style="height:auto">{{ form.appointment_letter }}</span></label>
+      <div class="span2 muted" style="font-size:12px">Placeholders: {% for p in placeholders %}<code>{{ "{" }}{{ p }}{{ "}" }}</code>{% if not forloop.last %} {% endif %}{% endfor %}</div>
+      <div class="span2"><button class="btn btn-dark" type="submit">Save settings</button></div>
+    </div>
+  </form>
+</section>
+{% endblock %}

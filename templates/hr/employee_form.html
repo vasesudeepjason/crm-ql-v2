@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% load ql %}
+{% block title %}{% if emp %}Edit {{ emp.name }}{% else %}Add employee{% endif %}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>{% if emp %}{{ emp.name }}{% else %}Add employee{% endif %}</h1><p>{% if emp %}{{ emp.code }} · {% endif %}An employee record is separate from a login; link one only if they use the app.</p></div>
+  <div class="actions"><a class="btn btn-outline" href="{% if emp %}{% url 'hr:employee' emp.pk %}{% else %}{% url 'hr:index' %}{% endif %}">Cancel</a></div>
+</section>
+<form method="post" enctype="multipart/form-data" class="grid">{% csrf_token %}
+  <div class="s8 stack">
+    <div class="card sec">
+      <div class="card-h" style="padding:0 0 14px"><div><h2>Profile</h2></div></div>
+      {% if form.non_field_errors %}<div class="field-err" style="margin-bottom:12px">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <div class="form-2">
+        <label>First name *<span class="input {% if form.first_name.errors %}error{% endif %}">{{ form.first_name }}</span></label>
+        <label>Last name<span class="input">{{ form.last_name }}</span></label>
+        <label>Email<span class="input">{{ form.email }}</span></label>
+        <label>Phone<span class="input">{{ form.phone }}</span></label>
+        <label>Designation<span class="input">{{ form.designation }}</span></label>
+        <label>Department<span class="input select">{{ form.department }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Reports to<span class="input select">{{ form.manager }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Login<span class="input select">{{ form.user }}<svg class="ic chev"><use href="#i-down"/></svg></span><small class="muted" style="font-size:12px">Links check-in, leave and field sessions to this person</small></label>
+        <label>Employment type<span class="input select">{{ form.employment_type }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Status<span class="input select">{{ form.status }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label>Joined *<span class="input">{{ form.join_date }}</span></label>
+        <label>Exit date<span class="input {% if form.exit_date.errors %}error{% endif %}">{{ form.exit_date }}</span>{% if form.exit_date.errors %}<div class="field-err">{{ form.exit_date.errors.0 }}</div>{% endif %}</label>
+        <label>Date of birth<span class="input">{{ form.date_of_birth }}</span></label>
+        <label>Gender<span class="input select">{{ form.gender }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+        <label class="span2">Address<span class="input" style="height:auto">{{ form.address }}</span></label>
+        <label>Photo<span class="input" style="height:auto;padding:8px 12px">{{ form.photo }}</span></label>
+      </div>
+    </div>
+    <div class="card sec">
+      <div class="card-h" style="padding:0 0 14px"><div><h2>Emergency contact</h2></div></div>
+      <div class="form-2"><label>Name<span class="input">{{ form.emergency_name }}</span></label><label>Phone<span class="input">{{ form.emergency_phone }}</span></label><label>Relation<span class="input">{{ form.emergency_relation }}</span></label></div>
+    </div>
+    {% if show_sensitive %}
+    <div class="card sec" style="border:1px solid var(--yellow-100)">
+      <div class="card-h" style="padding:0 0 14px"><div><h2>Bank, IDs and pay</h2><p>Encrypted at rest. Visible only to HR and the Owner; every change is audited.</p></div><span class="pill pill-warning"><svg class="ic" style="width:12px"><use href="#i-lock"/></svg>Restricted</span></div>
+      <div class="form-2">
+        <label>Bank<span class="input">{{ form.bank_name }}</span></label><label>Account number<span class="input">{{ form.bank_account }}</span></label><label>IFSC<span class="input">{{ form.bank_ifsc }}</span></label>
+        <label>PAN<span class="input {% if form.pan.errors %}error{% endif %}">{{ form.pan }}</span>{% if form.pan.errors %}<div class="field-err">{{ form.pan.errors.0 }}</div>{% endif %}</label>
+        <label>Aadhaar<span class="input {% if form.aadhaar.errors %}error{% endif %}">{{ form.aadhaar }}</span>{% if form.aadhaar.errors %}<div class="field-err">{{ form.aadhaar.errors.0 }}</div>{% endif %}</label>
+        <label>UAN (PF)<span class="input">{{ form.uan }}</span></label>
+        <label>{{ form.salary.label }}<span class="input">{{ form.salary }}</span></label>
+      </div>
+    </div>
+    {% endif %}
+    <div class="card sec"><div class="form-2"><label class="span2">Notes<span class="input" style="height:auto">{{ form.notes }}</span></label></div></div>
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec"><button class="btn btn-primary" type="submit" style="width:100%;height:46px"><svg class="ic"><use href="#i-check"/></svg>{% if emp %}Save changes{% else %}Add employee{% endif %}</button>
+      <p class="muted" style="font-size:12.5px;margin-top:10px">Onboarding and exit checklists, documents and letters live on the employee page once saved.</p></div>
+  </aside>
+</form>
+{% endblock %}

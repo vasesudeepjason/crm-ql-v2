@@ -38,7 +38,10 @@
       <div class="sub"><a class="{% active 'invoices:index' 'invoices:detail' 'invoices:edit' 'invoices:new' %}" href="{% url 'invoices:index' %}">All invoices</a><a class="{% active 'invoices:ageing' %}" href="{% url 'invoices:ageing' %}">Outstanding &amp; ageing</a>{% if perms_set|can:"settings.manage" %}<a href="{% url 'tenants:workspace' %}#invoicing">Invoice settings</a>{% endif %}</div>
     </div>
     {% endif %}
-    {% if perms_set|can:"hr.view" %}<a class="ni" href="{% url 'dashboard:soon' 'hr' %}" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span></a>{% endif %}
+    <div class="ng {% if request.resolver_match.namespace == 'hr' %}open{% endif %}">
+      <button class="ni" title="HR"><svg class="ic"><use href="#i-users"/></svg><span class="tx">HR</span>{% if leave_pending %}<em class="count hot" style="font-style:normal">{{ leave_pending }}</em>{% endif %}<svg class="ic chev"><use href="#i-down"/></svg></button>
+      <div class="sub"><a class="{% active 'hr:me' %}" href="{% url 'hr:me' %}">My HR</a>{% if perms_set|can:"hr.view" %}<a class="{% active 'hr:index' 'hr:employee' 'hr:employee_new' 'hr:employee_edit' %}" href="{% url 'hr:index' %}">Employees</a>{% endif %}{% if perms_set|can:"attendance.view" %}<a class="{% active 'hr:attendance' %}" href="{% url 'hr:attendance' %}">Attendance</a>{% endif %}{% if perms_set|can:"hr.view" or leave_pending %}<a class="{% active 'hr:leave' %}" href="{% url 'hr:leave' %}">Leave</a>{% endif %}{% if perms_set|can:"hr.edit" %}<a class="{% active 'hr:settings' %}" href="{% url 'hr:settings' %}">Settings</a>{% endif %}</div>
+    </div>
     {% if perms_set|can:"tasks.view" %}
     <div class="ng {% if request.resolver_match.namespace == 'tasks' %}open{% endif %}">
       <button class="ni" title="Tasks"><svg class="ic"><use href="#i-task"/></svg><span class="tx">Tasks &amp; projects</span>{% if tasks_due %}<em class="count" style="font-style:normal">{{ tasks_due }}</em>{% endif %}<svg class="ic chev"><use href="#i-down"/></svg></button>

@@ -1,0 +1,15 @@
+{% load ql %}
+<div class="dr-h"><div><small>{% if on_behalf %}Record leave{% else %}Apply for leave{% endif %}</small><h3>{{ emp.name }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <div class="bal" style="padding:0 0 14px">{% for b in balances %}<div><span class="pdot {{ b.type.color }}"></span><b>{{ b.type.name }}</b><small>{{ b.available|floatformat:"-1" }} left</small></div>{% endfor %}</div>
+  <form hx-post="{% if on_behalf %}{% url 'hr:leave_for' emp.pk %}{% else %}{% url 'hr:leave_apply' %}{% endif %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2" x-data="{half:false}">{% csrf_token %}
+    <label class="span2">Type<span class="input select">{{ form.leave_type }}<svg class="ic chev"><use href="#i-down"/></svg></span></label>
+    <label>From<span class="input">{{ form.start_date }}</span></label>
+    <label>To<span class="input">{{ form.end_date }}</span></label>
+    <label class="chk-row span2"><input type="checkbox" class="switch" name="half_day" x-model="half"> Half day (single date)</label>
+    <label class="span2">Reason<span class="input">{{ form.reason }}</span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" type="submit"><svg class="ic"><use href="#i-check"/></svg>{% if on_behalf %}Record and approve{% else %}Send request{% endif %}</button><span class="muted" style="font-size:12.5px">Week-offs and holidays in the range are not counted.</span></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

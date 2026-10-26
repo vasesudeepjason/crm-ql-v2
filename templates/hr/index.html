@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Employees</h1><p>{{ counts.active }} on the rolls · {{ counts.present }} in today · {{ counts.leave }} on leave{% if counts.exited %} · {{ counts.exited }} exited{% endif %}</p></div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'hr:attendance' %}">Attendance</a><a class="btn btn-outline" href="{% url 'hr:leave' %}">Leave</a>
+    {% if can_edit %}<a class="btn btn-outline" href="{% url 'hr:settings' %}">Settings</a><a class="btn btn-primary" href="{% url 'hr:employee_new' %}"><span class="plus"><svg class="ic"><use href="#i-plus"/></svg></span>Add employee</a>{% endif %}
+  </div>
+</section>
+<section class="grid"><div class="card s12">
+  <div class="tbl-tools">
+    <div class="seg sm"><a class="{% if status == 'active' %}on{% endif %}" href="?status=active&dept={{ dept }}">On rolls</a><a class="{% if status == 'notice' %}on{% endif %}" href="?status=notice&dept={{ dept }}">On notice</a><a class="{% if status == 'exited' %}on{% endif %}" href="?status=exited&dept={{ dept }}">Exited</a><a class="{% if status == 'all' %}on{% endif %}" href="?status=all&dept={{ dept }}">All</a></div>
+    <form method="get" style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap"><input type="hidden" name="status" value="{{ status }}">
+      <label class="input select" style="height:36px;border-radius:999px;width:180px"><select name="dept" onchange="this.form.submit()"><option value="">All departments</option>{% for d in depts %}<option value="{{ d.pk }}" {% if dept == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }} ({{ d.n }})</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label>
+      <label class="input grey" style="width:230px;height:36px"><svg class="ic"><use href="#i-search"/></svg><input name="q" value="{{ q }}" placeholder="Name, code, designation"></label></form>
+  </div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Employee</th><th class="hide-m">Department</th><th class="hide-m">Reports to</th><th>Joined</th><th>Today</th><th class="r hide-m">Login</th></tr></thead>
+    <tbody>{% for r in rows %}{% with e=r.e %}
+    <tr onclick="location.href='{% url 'hr:employee' e.pk %}'" style="cursor:pointer">
+      <td><div class="who">{% if e.photo %}<img class="avatar sm" src="{{ e.photo.url }}" alt="" style="object-fit:cover">{% else %}<span class="avatar sm">{{ e.name|initials }}</span>{% endif %}<div class="name"><b>{{ e.name }}</b><span class="sub">{{ e.code }}{% if e.designation %} · {{ e.designation }}{% endif %}</span></div></div></td>
+      <td class="hide-m">{{ e.department.name|default:"—" }}</td>
+      <td class="hide-m">{{ e.manager.name|default:"—" }}</td>
+      <td>{{ e.join_date|date:"j M Y" }}{% if e.status == 'notice' %}<div class="muted" style="font-size:12px">leaving {{ e.exit_date|date:"j M" }}</div>{% elif e.status == 'exited' %}<div class="muted" style="font-size:12px">left {{ e.exit_date|date:"j M Y" }}</div>{% endif %}</td>
+      <td>{% if r.today == 'present' %}<span class="pill pill-success">In</span>{% elif r.today == 'leave' %}<span class="pill pill-warning">Leave</span>{% elif e.status == 'exited' %}<span class="pill pill-neutral">Exited</span>{% else %}<span class="pill pill-neutral">—</span>{% endif %}</td>
+      <td class="r hide-m muted" style="font-size:12.5px">{% if e.user %}{{ e.user.email }}{% else %}no login{% endif %}</td>
+    </tr>{% endwith %}{% empty %}<tr><td colspan="6" class="muted" style="padding:28px 20px">No employees here.{% if can_edit %} <a href="{% url 'hr:employee_new' %}">Add the first one</a>.{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

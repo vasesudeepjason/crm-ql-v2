@@ -1,0 +1,16 @@
+{% load ql %}
+<div class="dr-h"><div><small>Leave request</small><h3>{{ lr.employee.name }}</h3></div><div class="btns"><button class="icon-btn" aria-label="Close" onclick="QL.closeDrawer()"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+<div class="dr-b">
+  <div class="info2">
+    <div class="info"><small>Asking for</small><b>{{ lr.days|floatformat:"-1" }} day{{ lr.days|pluralize }} {{ lr.leave_type.name }}</b><span>{{ lr.start_date|date:"D j M" }}{% if lr.end_date != lr.start_date %} → {{ lr.end_date|date:"D j M" }}{% endif %}{% if lr.half_day %} · half day{% endif %}</span></div>
+    {% for b in balances %}<div class="info"><small>Balance</small><b>{{ b.available|floatformat:"-1" }} left after this</b><span>{{ b.used|floatformat:"-1" }} used of {{ b.allocated|floatformat:"-1" }}{% if b.available < 0 %} · <span style="color:var(--red-700)">over the limit</span>{% endif %}</span></div>{% endfor %}
+  </div>
+  {% if lr.reason %}<div class="quote" style="margin-top:14px">{{ lr.reason }}</div>{% endif %}
+  {% if overlap %}<p class="muted" style="font-size:12.5px;margin-top:12px">Also away from {{ lr.employee.department.name|default:"the team" }} on those dates: {% for o in overlap %}{{ o.employee.first_name }} ({{ o.start_date|date:"j M" }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+  <form hx-post="{% url 'hr:leave_decide' lr.pk %}" hx-target="#drawerErr" hx-swap="innerHTML" class="form-2" style="margin-top:16px">{% csrf_token %}
+    <label class="span2">Note <small class="muted">(required when rejecting)</small><span class="input"><input name="note" placeholder="e.g. Enjoy · or · Month-end, please pick other dates"></span></label>
+    <div id="drawerErr" class="span2"></div>
+    <div class="span2" style="display:flex;gap:8px"><button class="btn btn-dark" name="decision" value="approve" type="submit"><svg class="ic"><use href="#i-check"/></svg>Approve</button><button class="btn btn-outline" name="decision" value="reject" type="submit">Reject</button></div>
+  </form>
+</div>
+<script>QL.openDrawer()</script>

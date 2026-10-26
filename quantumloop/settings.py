@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.tasks",
     "apps.contracts",
     "apps.invoices",
+    "apps.hr",
     "apps.dashboard",
 ]
 

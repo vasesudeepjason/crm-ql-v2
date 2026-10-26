@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Attendance</h1><p>{{ reg.label }} · {{ reg.rows|length }} employee{{ reg.rows|length|pluralize }} · week-off {% for d in cfg.week_off %}{{ d|date:"" }}{% endfor %}{% if cfg.week_off %}{% for n in cfg.week_off %}{% if n == 6 %}Sun{% elif n == 5 %}Sat{% elif n == 0 %}Mon{% elif n == 1 %}Tue{% elif n == 2 %}Wed{% elif n == 3 %}Thu{% else %}Fri{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}</p></div>
+  <div class="actions">
+    <div class="seg sm"><a href="?y={{ prev.year }}&m={{ prev.month }}&dept={{ dept }}">‹ {{ prev|date:"M" }}</a><a class="on" href="?y={{ reg.year }}&m={{ reg.month }}&dept={{ dept }}">{{ reg.label }}</a><a href="?y={{ next.year }}&m={{ next.month }}&dept={{ dept }}">{{ next|date:"M" }} ›</a></div>
+    <form method="get"><input type="hidden" name="y" value="{{ reg.year }}"><input type="hidden" name="m" value="{{ reg.month }}"><label class="input select" style="height:40px;border-radius:999px;width:170px"><select name="dept" onchange="this.form.submit()"><option value="">All departments</option>{% for d in depts %}<option value="{{ d.pk }}" {% if dept == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label></form>
+    <a class="btn btn-secondary" href="{% url 'hr:attendance_export' %}?y={{ reg.year }}&m={{ reg.month }}"><svg class="ic"><use href="#i-export"/></svg>Payroll CSV</a>
+  </div>
+</section>
+<section class="grid">
+  {% if is_today %}
+  <div class="card s12">
+    <div class="card-h"><div><h2>Today · {{ today|date:"D, j M" }}</h2><p>{% if can_edit %}Mark anyone who did not check in. Field executives are posted from their day automatically.{% else %}Who is in.{% endif %}</p></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Employee</th><th>Status</th><th class="hide-m">In</th><th class="hide-m">Out</th><th class="hide-m">Source</th>{% if can_edit %}<th class="r">Mark</th>{% endif %}</tr></thead>
+      <tbody>{% for e, a in today_rows %}<tr>
+        <td><div class="who"><span class="avatar sm">{{ e.name|initials }}</span><div class="name"><b><a href="{% url 'hr:employee' e.pk %}" style="color:inherit;text-decoration:none">{{ e.name }}</a></b><span class="sub">{{ e.department.name|default:"" }}</span></div></div></td>
+        <td>{% if a %}{% if a.status == 'present' %}<span class="pill pill-success">Present</span>{% elif a.status == 'half_day' %}<span class="pill pill-warning">Half day</span>{% elif a.status == 'leave' %}<span class="pill pill-info">Leave</span>{% elif a.status == 'wfh' %}<span class="pill pill-brand">WFH</span>{% else %}<span class="pill pill-danger">Absent</span>{% endif %}{% else %}<span class="pill pill-neutral">Not marked</span>{% endif %}</td>
+        <td class="hide-m">{{ a.check_in|date:"H:i"|default:"—" }}</td><td class="hide-m">{{ a.check_out|date:"H:i"|default:"—" }}</td><td class="hide-m muted">{{ a.get_source_display|default:"—" }}</td>
+        {% if can_edit %}<td class="r"><form method="post" action="{% url 'hr:attendance_mark' %}" style="display:inline-flex;gap:4px">{% csrf_token %}<input type="hidden" name="employee" value="{{ e.pk }}"><input type="hidden" name="date" value="{{ today|date:'Y-m-d' }}"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline" name="status" value="present" title="Present">P</button><button class="btn btn-sm btn-outline" name="status" value="half_day" title="Half day">H</button><button class="btn btn-sm btn-outline" name="status" value="wfh" title="Work from home">W</button><button class="btn btn-sm btn-outline" name="status" value="absent" title="Absent" style="color:var(--red-700)">A</button>{% if a %}<button class="btn btn-sm btn-outline" name="status" value="clear" title="Clear">×</button>{% endif %}</form></td>{% endif %}
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  {% endif %}
+  <div class="card s12">
+    <div class="card-h"><div><h2>Register · {{ reg.label }}</h2><p>P present · H half · W from home · L leave · A absent · WO week-off · HO holiday · – unmarked{% if can_edit %} · click a cell to mark{% endif %}</p></div></div>
+    <div class="tbl-wrap"><table class="tbl register">
+      <thead><tr><th class="sticky">Employee</th>{% for d in reg.days %}<th class="{% if d in reg.holidays %}ho{% endif %}" title="{{ d|date:'D j M' }}{% if d in reg.holidays %} · {{ reg.holidays|get_item:d }}{% endif %}">{{ d.day }}<small>{{ d|date:"D"|slice:":1" }}</small></th>{% endfor %}<th class="r">P</th><th class="r">L</th><th class="r">A</th><th class="r">Pay</th></tr></thead>
+      <tbody>{% for r in reg.rows %}<tr>
+        <td class="sticky"><a href="{% url 'hr:employee' r.employee.pk %}" style="color:inherit;text-decoration:none"><b>{{ r.employee.name }}</b></a><div class="muted" style="font-size:11.5px">{{ r.employee.code }}</div></td>
+        {% for c in r.cells %}<td class="cell {{ c.1 }}">{% if can_edit and c.1 != 'na' and c.1 != 'future' %}<span x-data="{o:false}" style="position:relative"><button type="button" class="cellbtn" @click="o=!o">{{ c.0 }}</button><div class="menu" x-show="o" x-cloak @click.outside="o=false" style="width:150px;left:0;right:auto"><form method="post" action="{% url 'hr:attendance_mark' %}">{% csrf_token %}<input type="hidden" name="employee" value="{{ r.employee.pk }}"><input type="hidden" name="date" value="{{ reg.year }}-{{ reg.month|stringformat:'02d' }}-{{ forloop.counter|stringformat:'02d' }}"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="menu-i" name="status" value="present">Present</button><button class="menu-i" name="status" value="half_day">Half day</button><button class="menu-i" name="status" value="wfh">From home</button><button class="menu-i" name="status" value="absent">Absent</button><button class="menu-i" name="status" value="clear">Clear</button></form></div></span>{% else %}{{ c.0 }}{% endif %}</td>{% endfor %}
+        <td class="r num">{{ r.summary.present }}{% if r.summary.half %}<small class="muted">+{{ r.summary.half }}h</small>{% endif %}</td><td class="r num">{{ r.summary.leave }}</td><td class="r num" {% if r.summary.absent %}style="color:var(--red-700)"{% endif %}>{{ r.summary.absent }}</td><td class="r num"><b>{{ r.summary.payable|floatformat:"-1" }}</b></td>
+      </tr>{% empty %}<tr><td colspan="40" class="muted" style="padding:20px">No employees.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</section>
+{% endblock %}

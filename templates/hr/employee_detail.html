@@ -1,0 +1,68 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}{{ emp.name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">{% if emp.photo %}<img class="avatar" src="{{ emp.photo.url }}" alt="" style="object-fit:cover;width:44px;height:44px">{% else %}<span class="avatar" style="width:44px;height:44px">{{ emp.name|initials }}</span>{% endif %}<h1>{{ emp.name }}</h1>{% if emp.status == 'exited' %}<span class="pill pill-neutral">Exited</span>{% elif emp.status == 'notice' %}<span class="pill pill-warning">On notice</span>{% else %}<span class="pill pill-success">Active</span>{% endif %}</div>
+    <p>{{ emp.code }} · {{ emp.designation|default:"no designation" }}{% if emp.department %} · {{ emp.department.name }}{% endif %} · {{ emp.get_employment_type_display|lower }} · joined {{ emp.join_date|date:"j M Y" }}{% if emp.manager %} · reports to <a href="{% url 'hr:employee' emp.manager.pk %}">{{ emp.manager.name }}</a>{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{% url 'hr:index' %}">Employees</a>
+    {% if can_edit %}<span x-data="{open:false}" style="position:relative"><button type="button" class="btn btn-outline" @click="open=!open">Letters</button><div class="menu" x-show="open" x-cloak @click.outside="open=false" style="width:200px"><a class="menu-i" href="{% url 'hr:letter' emp.pk 'offer' %}" target="_blank">Offer letter</a><a class="menu-i" href="{% url 'hr:letter' emp.pk 'appointment' %}" target="_blank">Appointment letter</a></div></span>
+    <button class="btn btn-outline" hx-get="{% url 'hr:leave_for' emp.pk %}" hx-target="#drawer" hx-swap="innerHTML">Record leave</button>
+    <button class="btn btn-secondary" hx-get="{% url 'hr:doc_upload' emp.pk %}" hx-target="#drawer" hx-swap="innerHTML"><svg class="ic"><use href="#i-file"/></svg>Upload document</button>
+    <a class="btn btn-primary" href="{% url 'hr:employee_edit' emp.pk %}">Edit</a>{% endif %}
+  </div>
+</section>
+<section class="grid">
+  <div class="s8 stack">
+    <div class="card sec">
+      <dl class="kv wide">
+        <dt>Email</dt><dd>{% if emp.email %}<a href="mailto:{{ emp.email }}">{{ emp.email }}</a>{% else %}—{% endif %}{% if emp.user %} <span class="muted" style="font-size:12px">· login {{ emp.user.email }}</span>{% else %} <span class="muted" style="font-size:12px">· no login</span>{% endif %}</dd>
+        <dt>Phone</dt><dd>{{ emp.phone|default:"—" }}</dd>
+        <dt>Emergency</dt><dd>{% if emp.emergency_name %}{{ emp.emergency_name }}{% if emp.emergency_relation %} ({{ emp.emergency_relation }}){% endif %} · {{ emp.emergency_phone }}{% else %}—{% endif %}</dd>
+        <dt>Born</dt><dd>{{ emp.date_of_birth|date:"j M Y"|default:"—" }}{% if emp.gender %} · {{ emp.get_gender_display }}{% endif %}</dd>
+        <dt>Address</dt><dd style="white-space:pre-line">{{ emp.address|default:"—" }}</dd>
+        {% if emp.exit_date %}<dt>Exit</dt><dd>{{ emp.exit_date|date:"j M Y" }}</dd>{% endif %}
+        {% if reports %}<dt>Reports</dt><dd>{% for r in reports %}<a href="{% url 'hr:employee' r.pk %}">{{ r.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</dd>{% endif %}
+        {% if emp.notes %}<dt>Notes</dt><dd style="white-space:pre-line">{{ emp.notes }}</dd>{% endif %}
+      </dl>
+    </div>
+    {% if show_sensitive %}
+    <div class="card sec" style="border:1px solid var(--yellow-100)">
+      <div class="card-h" style="padding:0 0 12px"><div><h2>Bank, IDs and pay</h2><p>Encrypted at rest. Visible to HR and the Owner only.</p></div><span class="pill pill-warning"><svg class="ic" style="width:12px"><use href="#i-lock"/></svg>Restricted</span></div>
+      <dl class="kv wide">
+        <dt>Bank</dt><dd>{{ sens.bank_name|default:"—" }}{% if sens.bank_account %} · <span class="mono">{{ sens.bank_account }}</span>{% endif %}{% if sens.bank_ifsc %} · {{ sens.bank_ifsc }}{% endif %}</dd>
+        <dt>PAN</dt><dd class="mono">{{ sens.pan|default:"—" }}</dd>
+        <dt>Aadhaar</dt><dd class="mono">{% if sens.aadhaar %}XXXX XXXX {{ sens.aadhaar|slice:"-4:" }}{% else %}—{% endif %}</dd>
+        <dt>UAN</dt><dd class="mono">{{ sens.uan|default:"—" }}</dd>
+        <dt>Annual CTC</dt><dd>{% if emp.salary_paise %}{{ emp.salary_paise|rupees }}{% else %}—{% endif %}</dd>
+      </dl>
+    </div>
+    {% endif %}
+    <div class="card">
+      <div class="card-h"><div><h2>Attendance · {{ today|date:"F" }}</h2><p>{{ att_summary.present }} present · {{ att_summary.half }} half · {{ att_summary.leave }} leave · {{ att_summary.absent }} absent · {{ att_summary.payable }} payable days so far</p></div><a class="btn btn-sm btn-outline" href="{% url 'hr:attendance' %}?dept={{ emp.department_id|default:'' }}">Register</a></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Status</th><th class="hide-m">In</th><th class="hide-m">Out</th><th class="r">Hours</th><th class="hide-m">Source</th></tr></thead>
+        <tbody>{% for a in att %}<tr><td>{{ a.date|date:"D j M" }}</td><td>{% if a.status == 'present' %}<span class="pill pill-success">Present</span>{% elif a.status == 'half_day' %}<span class="pill pill-warning">Half day</span>{% elif a.status == 'leave' %}<span class="pill pill-info">Leave</span>{% elif a.status == 'wfh' %}<span class="pill pill-brand">WFH</span>{% else %}<span class="pill pill-danger">Absent</span>{% endif %}</td><td class="hide-m">{{ a.check_in|date:"H:i"|default:"—" }}</td><td class="hide-m">{{ a.check_out|date:"H:i"|default:"—" }}</td><td class="r num">{{ a.hours|default:"—" }}</td><td class="hide-m muted">{{ a.get_source_display }}{% if a.note %} · {{ a.note }}{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="muted" style="padding:16px 20px">No attendance this month yet.</td></tr>{% endfor %}</tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2>Leave</h2><p>Balances for this financial year</p></div></div>
+      <div class="bal">{% for b in balances %}<div><span class="pdot {{ b.type.color }}"></span><b>{{ b.type.name }}</b><div class="track" style="margin:6px 0"><div class="fill" style="width:{{ b.pct }}%;background:var(--brand-500)"></div></div><small>{{ b.available|floatformat:"-1" }} left of {{ b.allocated|floatformat:"-1" }}{% if b.pending %} · {{ b.pending|floatformat:"-1" }} pending{% endif %}</small></div>{% empty %}<div class="muted" style="font-size:13px">No leave types set up.{% if can_edit %} <a href="{% url 'hr:settings' %}">Add them</a>.{% endif %}</div>{% endfor %}</div>
+      {% if can_edit and balances %}<form method="post" action="{% url 'hr:leave_adjust' emp.pk %}" style="display:flex;gap:8px;padding:0 20px 14px;flex-wrap:wrap;align-items:center">{% csrf_token %}<label class="input select" style="height:34px;width:150px"><select name="leave_type">{% for b in balances %}<option value="{{ b.type.pk }}">{{ b.type.name }}</option>{% endfor %}</select><svg class="ic chev"><use href="#i-down"/></svg></label><label class="input" style="height:34px;width:90px"><input name="days" type="number" step="0.5" placeholder="+/- days"></label><label class="input" style="height:34px;width:200px"><input name="note" placeholder="Opening balance, carry forward…"></label><button class="btn btn-sm btn-outline">Adjust</button></form>{% endif %}
+      <ul class="mini">{% for l in leaves %}<li><span class="pdot {{ l.leave_type.color }}" style="width:10px;height:10px"></span><div class="t"><b style="font-weight:500">{{ l.leave_type.name }} · {{ l.days|floatformat:"-1" }} day{{ l.days|pluralize }} · {{ l.start_date|date:"j M" }}{% if l.end_date != l.start_date %} – {{ l.end_date|date:"j M" }}{% endif %}</b><small>{{ l.get_status_display }}{% if l.decided_by %} by {{ l.decided_by.first_name }}{% endif %}{% if l.reason %} · {{ l.reason }}{% endif %}{% if l.decision_note %} · "{{ l.decision_note }}"{% endif %}</small></div>{% if l.status == 'pending' %}<span class="pill pill-warning">Pending</span>{% elif l.status == 'approved' %}<span class="pill pill-success">Approved</span>{% elif l.status == 'rejected' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-neutral">Cancelled</span>{% endif %}</li>{% empty %}<li><div class="t muted">No leave taken.</div></li>{% endfor %}</ul>
+    </div>
+  </div>
+  <aside class="s4 stack">
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Documents</h2>
+      <ul class="mini" style="padding:0">{% for d in docs %}<li><span class="avatar sm" style="{% if d.is_expired %}background:var(--red-100);color:var(--red-700){% endif %}"><svg class="ic" style="width:14px"><use href="#i-file"/></svg></span><div class="t"><b style="font-weight:500"><a href="{% url 'hr:doc_file' emp.pk d.pk %}" target="_blank" style="color:inherit;text-decoration:none">{{ d.title }}</a></b><small>{{ d.get_kind_display }} · {{ d.created_at|date:"j M Y" }}{% if d.expires_on %} · {% if d.is_expired %}<span style="color:var(--red-700)">expired {{ d.expires_on|date:"j M Y" }}</span>{% else %}expires {{ d.expires_on|date:"j M Y" }}{% endif %}{% endif %}</small></div>{% if can_edit %}<form method="post" action="{% url 'hr:doc_delete' emp.pk d.pk %}" onsubmit="return confirm('Remove this document?')">{% csrf_token %}<button class="icon-btn" aria-label="Remove"><svg class="ic"><use href="#i-x"/></svg></button></form>{% endif %}</li>{% empty %}<li><div class="t muted" style="font-size:13px">No documents yet.</div></li>{% endfor %}</ul>
+    </div>
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Onboarding</h2>
+      <ul class="check">{% for item, done in onboarding %}<li>{% if can_edit %}<form hx-post="{% url 'hr:checklist' emp.pk %}" hx-swap="none">{% csrf_token %}<input type="hidden" name="kind" value="onboarding"><input type="hidden" name="item" value="{{ item }}"><button type="submit" class="tick {% if done %}on{% endif %}"><svg class="ic"><use href="#i-check"/></svg></button></form>{% else %}<span class="tick {% if done %}on{% endif %} ghost"><svg class="ic"><use href="#i-check"/></svg></span>{% endif %}<span {% if done %}class="muted" style="text-decoration:line-through"{% endif %}>{{ item }}</span></li>{% empty %}<li class="muted" style="font-size:13px">No checklist configured.</li>{% endfor %}</ul>
+    </div>
+    {% if emp.status != 'active' or exit|length %}{% if emp.status != 'active' %}
+    <div class="card sec"><h2 style="font:600 15px var(--font);margin-bottom:8px">Exit</h2>
+      <ul class="check">{% for item, done in exit %}<li>{% if can_edit %}<form hx-post="{% url 'hr:checklist' emp.pk %}" hx-swap="none">{% csrf_token %}<input type="hidden" name="kind" value="exit"><input type="hidden" name="item" value="{{ item }}"><button type="submit" class="tick {% if done %}on{% endif %}"><svg class="ic"><use href="#i-check"/></svg></button></form>{% else %}<span class="tick {% if done %}on{% endif %} ghost"><svg class="ic"><use href="#i-check"/></svg></span>{% endif %}<span {% if done %}class="muted" style="text-decoration:line-through"{% endif %}>{{ item }}</span></li>{% endfor %}</ul>
+    </div>{% endif %}{% endif %}
+  </aside>
+</section>
+{% endblock %}

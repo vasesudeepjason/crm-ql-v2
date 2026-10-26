@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load humanize ql %}
+{% block title %}Leave{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div><h1>Leave</h1><p>{% if is_hr %}Every request in the workspace{% else %}Requests from people who report to you{% endif %} · {{ counts.pending|default:0 }} waiting</p></div>
+  <div class="actions"><a class="btn btn-outline" href="{% url 'hr:me' %}">My HR</a>{% if can_edit %}<a class="btn btn-outline" href="{% url 'hr:settings' %}">Leave types &amp; holidays</a>{% endif %}</div>
+</section>
+<section class="grid">
+  <div class="card {% if is_hr %}s8{% else %}s12{% endif %}">
+    <div class="tbl-tools"><div class="seg sm"><a class="{% if status == 'pending' %}on{% endif %}" href="?status=pending">Pending <span class="n">{{ counts.pending|default:0 }}</span></a><a class="{% if status == 'approved' %}on{% endif %}" href="?status=approved">Approved <span class="n">{{ counts.approved|default:0 }}</span></a><a class="{% if status == 'rejected' %}on{% endif %}" href="?status=rejected">Rejected</a><a class="{% if status == 'all' %}on{% endif %}" href="?status=all">All</a></div></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Employee</th><th>Leave</th><th class="hide-m">Reason</th><th>Status</th><th class="r">Decide</th></tr></thead>
+      <tbody>{% for l in rows %}<tr>
+        <td><div class="who"><span class="avatar sm">{{ l.employee.name|initials }}</span><div class="name"><b><a href="{% url 'hr:employee' l.employee.pk %}" style="color:inherit;text-decoration:none">{{ l.employee.name }}</a></b><span class="sub">{{ l.employee.department.name|default:"" }}</span></div></div></td>
+        <td><span class="pdot {{ l.leave_type.color }}"></span>{{ l.leave_type.name }} · <b>{{ l.days|floatformat:"-1" }}d</b><div class="muted" style="font-size:12px">{{ l.start_date|date:"D j M" }}{% if l.end_date != l.start_date %} → {{ l.end_date|date:"D j M" }}{% endif %}{% if l.half_day %} · half day{% endif %}</div></td>
+        <td class="hide-m" style="white-space:normal;max-width:260px">{{ l.reason|default:"—" }}{% if l.decision_note %}<div class="muted" style="font-size:12px">"{{ l.decision_note }}" — {{ l.decided_by.first_name }}</div>{% endif %}</td>
+        <td>{% if l.status == 'pending' %}<span class="pill pill-warning">Pending</span>{% elif l.status == 'approved' %}<span class="pill pill-success">Approved</span>{% elif l.status == 'rejected' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-neutral">Cancelled</span>{% endif %}</td>
+        <td class="r">{% if l.status == 'pending' %}<button class="btn btn-sm btn-dark" hx-get="{% url 'hr:leave_decide' l.pk %}" hx-target="#drawer" hx-swap="innerHTML">Review</button>{% elif l.status == 'approved' and can_edit %}<form method="post" action="{% url 'hr:leave_cancel' l.pk %}" onsubmit="return confirm('Cancel this approved leave?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline">Cancel</button></form>{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="5" class="muted" style="padding:28px 20px">Nothing {% if status != 'all' %}{{ status }}{% endif %}.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  {% if is_hr %}<div class="card s4">
+    <div class="card-h"><div><h2>Who is away</h2><p>Next two weeks</p></div></div>
+    <ul class="mini">{% for l in upcoming %}<li><span class="avatar sm">{{ l.employee.name|initials }}</span><div class="t"><b style="font-weight:500">{{ l.employee.name }}</b><small>{{ l.leave_type.name }} · {{ l.start_date|date:"j M" }}{% if l.end_date != l.start_date %} – {{ l.end_date|date:"j M" }}{% endif %}</small></div></li>{% empty %}<li><div class="t muted">Everyone is around.</div></li>{% endfor %}</ul>
+    {% if holidays %}<div class="card-h" style="padding-top:4px"><div><h2 style="font-size:14px">Holidays</h2></div></div><ul class="mini">{% for h in holidays %}<li><div class="t"><b style="font-weight:500">{{ h.name }}</b><small>{{ h.date|date:"D, j M" }}{% if h.optional %} · optional{% endif %}</small></div></li>{% endfor %}</ul>{% endif %}
+  </div>{% endif %}
+</section>
+{% endblock %}
