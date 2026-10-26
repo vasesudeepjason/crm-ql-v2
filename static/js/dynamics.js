@@ -19,9 +19,10 @@
     for (let g = 0; g <= 4; g++) { const v = max * g / 4, yy = y(v); s += `<line class="gl" x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}"/><text class="yl" x="${padL - 8}" y="${yy + 4}" text-anchor="end">${fmtK(v)}</text>`; }
     for (let i = 0; i < days; i++) {
       const x = padL + i * slot + (slot - bw) / 2;
-      if (cur[i] != null) { const h = plotH - (y(cur[i]) - padT); s += `<rect class="bar" data-i="${i}" x="${x}" y="${y(cur[i])}" width="${bw}" height="${Math.max(h, 2)}" rx="4"/><rect class="bar-hatch" x="${x}" y="${y(cur[i])}" width="${bw}" height="${Math.max(h, 2)}" rx="4"/>`; }
-      else { const h = plotH - (y(last[i]) - padT); s += `<rect class="bar-future" x="${x}" y="${y(last[i])}" width="${bw}" height="${Math.max(h, 2)}" rx="4"/>`; }
-      s += `<line class="lm" x1="${x - 2}" x2="${x + bw + 2}" y1="${y(last[i])}" y2="${y(last[i])}"/>`;
+      // Zero days draw nothing: a stub or a dash on every empty day turns a sparse month into noise.
+      if (cur[i] != null && cur[i] > 0) { const h = plotH - (y(cur[i]) - padT); s += `<rect class="bar" data-i="${i}" x="${x}" y="${y(cur[i])}" width="${bw}" height="${Math.max(h, 3)}" rx="4"/><rect class="bar-hatch" x="${x}" y="${y(cur[i])}" width="${bw}" height="${Math.max(h, 3)}" rx="4"/>`; }
+      else if (cur[i] == null && last[i] > 0) { const h = plotH - (y(last[i]) - padT); s += `<rect class="bar-future" x="${x}" y="${y(last[i])}" width="${bw}" height="${Math.max(h, 3)}" rx="4"/>`; }
+      if (last[i] > 0) s += `<line class="lm" x1="${x - 2}" x2="${x + bw + 2}" y1="${y(last[i])}" y2="${y(last[i])}"/>`;
       s += `<rect class="hit" data-i="${i}" x="${padL + i * slot}" y="${padT}" width="${slot}" height="${plotH}"/>`;
       if (i === 0 || (i + 1) % 5 === 0) s += `<text class="xl" x="${x + bw / 2}" y="${H - 8}" text-anchor="middle">${i + 1} ${data.month}</text>`;
     }

@@ -267,12 +267,12 @@ button{font:inherit}
 .chart .gl{stroke:var(--line);stroke-width:1}
 .chart .yl{font:500 11px var(--font);fill:var(--muted)}
 .chart .xl{font:500 11px var(--font);fill:var(--muted)}
-.chart .bar{fill:#E6E5EE;transition:fill .12s}
-.chart .bar.on{fill:var(--brand-500)}
+.chart .bar{fill:var(--brand-400);transition:fill .12s}
+.chart .bar.on{fill:var(--brand)}
 .chart .bar-hatch{fill:url(#hatchOn);opacity:0}
 .chart .bar.on+.bar-hatch{opacity:1}
 .chart .bar-future{fill:url(#hatchOff)}
-.chart .lm{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.chart .lm{stroke:var(--ink-2);stroke-width:2.5;stroke-linecap:round;opacity:.85}
 .chart .hit{fill:transparent}
 .tip{position:absolute;z-index:5;background:#fff;border-radius:14px;box-shadow:var(--shadow-pop);padding:12px 14px;min-width:200px;pointer-events:none;display:none}
 .tip b{font-weight:600;display:block;margin-bottom:6px}
