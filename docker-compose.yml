@@ -1,3 +1,6 @@
+# Local development: Postgres 16 and Redis 7. The app runs on the host (manage.py runserver).
+# The app connects as quantum_app (not a superuser) so row-level security is enforced
+# exactly as in production; see docker/initdb/01-app-role.sql.
 services:
   db:
     image: postgres:16-alpine
@@ -6,7 +9,9 @@ services:
       POSTGRES_USER: quantum
       POSTGRES_PASSWORD: quantum
     ports: ["5432:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U quantum -d quantumloop"]
       interval: 5s

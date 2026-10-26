@@ -1,0 +1,89 @@
+# Production on a single VPS (India region). Caddy terminates TLS and proxies to gunicorn;
+# the same image runs the web process, the RQ worker and the daily scheduler.
+#
+#   cp .env.production.example .env.production   # fill it in
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
+#
+# Backups: see DEPLOY.md (pg_dump nightly + volume snapshot).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quantumloop}
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-quantum}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set POSTGRES_SUPERUSER_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb-prod:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-quantum} -d ${POSTGRES_DB:-quantumloop}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes: ["redisdata:/data"]
+
+  web:
+    build: .
+    image: quantumloop-erp:latest
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DJANGO_DEBUG: "0"
+      RQ_ENABLED: "1"
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+    volumes: ["media:/app/media"]
+    expose: ["8000"]
+
+  worker:
+    image: quantumloop-erp:latest
+    restart: unless-stopped
+    command: ["worker"]
+    env_file: .env.production
+    environment:
+      DJANGO_DEBUG: "0"
+      RQ_ENABLED: "1"
+      REDIS_URL: redis://redis:6379/0
+    depends_on: [web, redis]
+    volumes: ["media:/app/media"]
+
+  scheduler:
+    image: quantumloop-erp:latest
+    restart: unless-stopped
+    command: ["scheduler"]
+    env_file: .env.production
+    environment:
+      DJANGO_DEBUG: "0"
+      RQ_ENABLED: "1"
+      REDIS_URL: redis://redis:6379/0
+    depends_on: [web, redis]
+    volumes: ["media:/app/media"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN, e.g. app.quantumloop.in}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - media:/srv/media:ro
+    depends_on: [web]
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
+  caddydata:

@@ -1,0 +1,17 @@
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	# Media (visit photos, employee documents, invoice logos) is never served directly:
+	# Django checks who may see each file. Only the proxy below reaches them.
+	reverse_proxy web:8000 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+	request_body {
+		max_size 25MB
+	}
+}

@@ -51,6 +51,8 @@ class SupportSession(models.Model):
     inside that workspace; every action is audited with the session id.
     """
 
+    rls_exempt = True  # opened from the platform side, before the staff member has a tenant
+
     DEFAULT_MINUTES = 60
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="support_sessions")

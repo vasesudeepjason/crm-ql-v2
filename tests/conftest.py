@@ -3,11 +3,21 @@ from django.contrib.contenttypes.models import ContentType
 
 from apps.accounts.models import Membership, User
 from apps.approvals.models import Approval
-from apps.core.tenancy import tenant_context
+from apps.core.tenancy import rls_bypass, tenant_context
 from apps.crm.models import Company, Lead
 from apps.tenants.models import Tenant
 
 PW = "test-password-123"
+
+
+@pytest.fixture(autouse=True)
+def _tests_see_every_tenant(db):
+    """Test code inspects the database across tenants (``all_objects`` peeks), so the test
+    body runs with RLS bypassed. Requests made through the client go through the middleware,
+    which switches bypass off for ordinary users, and ``tenant_context`` always switches it
+    off — so views and jobs are still exercised under real row-level security."""
+    with rls_bypass():
+        yield
 
 
 @pytest.fixture

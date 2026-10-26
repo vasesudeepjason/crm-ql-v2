@@ -82,6 +82,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Membership(models.Model):
+    rls_exempt = True  # read by the middleware before a tenant is chosen; see apps/core/rls.py
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="memberships")
     tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="memberships")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
@@ -148,6 +150,8 @@ class OneTimeCode(models.Model):
 
 
 class Invitation(models.Model):
+    rls_exempt = True  # accepted by token before the user belongs to any tenant
+
     """An admin invites an email into the tenant with a role; accepting creates the user and membership."""
 
     tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE, related_name="invitations")

@@ -41,8 +41,13 @@ def test_save_outside_tenant_context_is_refused(db):
 
 def test_every_tenant_model_is_covered_by_rls_list():
     tables = tenant_tables()
-    for expected in ("crm_company", "crm_lead", "crm_activity", "approvals_approval", "core_auditlog"):
+    for expected in ("crm_company", "crm_lead", "crm_activity", "approvals_approval", "core_auditlog", "invoices_invoice", "hr_employee", "contracts_contract", "tasks_task", "notifications_notification"):
         assert expected in tables
+    # the only tables allowed outside RLS are the three that let a session find its tenant
+    from apps.core.rls import exempt_tables
+
+    assert sorted(exempt_tables()) == ["accounts_invitation", "accounts_membership", "tenants_supportsession"]
+    assert not set(exempt_tables()) & set(tables)
 
 
 @pytest.mark.skipif(connection.vendor != "postgresql", reason="row-level security exists only on PostgreSQL")

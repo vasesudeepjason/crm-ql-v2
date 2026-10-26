@@ -44,13 +44,15 @@ def _apply_to_connection():
 
 @contextmanager
 def tenant_context(tenant_id: int | None):
-    """Run a block scoped to one tenant (jobs, seeds, tests)."""
+    """Run a block scoped to one tenant (jobs, seeds, tests). A tenant context never bypasses RLS."""
     token = _current_tenant_id.set(tenant_id)
+    btoken = _bypass.set(False)
     try:
         _apply_to_connection()
         yield
     finally:
         _current_tenant_id.reset(token)
+        _bypass.reset(btoken)
         _apply_to_connection()
 
 

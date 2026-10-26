@@ -18,7 +18,7 @@ python manage.py runserver
 
 Open http://localhost:8010 and sign in as `aisha@quantumloop.in` / `quantum-demo-2026` (Owner). Other demo users: `vikram@` (Manager), `sneha@` / `kavya@` (Telecallers), `ravi@` / `mohan@` (Field Executives) — same domain and password.
 
-Without Docker, leave `DATABASE_URL` unset and the app runs on SQLite. Row-level security and its test only exist on PostgreSQL, so use Postgres for anything beyond a first look.
+Without Docker, leave `DATABASE_URL` unset and the app runs on SQLite. Row-level security only exists on PostgreSQL, so use Postgres for anything beyond a first look. The compose file creates `quantum_app`, a role that is **not** a superuser, and `.env.example` connects as it: a superuser bypasses row-level security, and `manage.py check` refuses to start in production on one.
 
 Sign-in options: email + password, or "Email me a sign-in code" (6-digit code, 10 minutes, printed to the console in development). Owners and admins can turn on two-step verification (TOTP) under **Set up → Profile & security**; the seed is stored encrypted with `FIELD_ENCRYPTION_KEY`. Login and code requests are rate-limited.
 
@@ -58,11 +58,17 @@ Platform staff (`is_staff`): `python manage.py createsuperuser`, then http://loc
 
 ## Tests
 
+The suite runs on whatever `DATABASE_URL` points at. On PostgreSQL every test runs under real row-level security (views and jobs cannot see another tenant even with raw SQL); on SQLite the raw-SQL test is skipped. CI runs on PostgreSQL as the plain role.
+
 ```bash
 pytest
 ```
 
 CI runs `manage.py check`, `makemigrations --check` and the test suite against PostgreSQL on every push and pull request.
+
+## Deploy
+
+`Dockerfile` builds one image for the web process (gunicorn), the RQ worker and the daily scheduler; `docker-compose.prod.yml` runs them with Postgres, Redis and Caddy (automatic TLS) on a single server. `web` migrates, runs `check --deploy` (it refuses a superuser database role, a dev secret key or a missing `FIELD_ENCRYPTION_KEY`) and then serves. Step-by-step: [DEPLOY.md](DEPLOY.md). CI (`.github/workflows/ci.yml`) runs the suite on PostgreSQL as the non-superuser role, checks migrations are committed, scans dependencies and builds the image.
 
 ## Layout
 
